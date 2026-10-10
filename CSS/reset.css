@@ -1,0 +1,30 @@
+/* ==========================================================================
+   RESET.CSS — SISTEMA DE RESETEO MODERNO
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 100%; /* 16px base para unidades rem */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-Background, #fefae0);
+  color: var(--color-primary, #283618);
+  line-height: 1.5;
+  min-block-size: 100vh;
+}
+
+img, picture, svg {
+  max-inline-size: 100%;
+  display: block;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}

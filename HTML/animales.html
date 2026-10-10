@@ -1,25 +1,303 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apartado de Animales</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Inventario y catálogo de ganado de la finca GuateGanado. Control de aretes, razas, potreros y pesajes.">
+  <title>Catálogo de Ganado | GuateGanado</title>
+
+  <!-- Tipografía moderna Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de estilo del sistema de diseño (Rutas relativas a carpeta CSS) -->
+  <link rel="stylesheet" href="../CSS/reset.css">
+  <link rel="stylesheet" href="../CSS/variables.css">
+  <link rel="stylesheet" href="../CSS/layout.css">
+  <link rel="stylesheet" href="../CSS/componentes.css">
+  <link rel="stylesheet" href="../CSS/catalogo.css">
 </head>
-<body>
-    <header>
-        <nav>
+<body class="site-body">
 
-        </nav>
-    </header>
+  <div class="site-layout">
+    <!-- NAVEGACIÓN GLOBAL (Multi-entidad del Backend) -->
+    <aside class="sidebar" aria-label="Navegación del sistema">
+      <div class="sidebar-brand">
+        <svg class="brand-icon" aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+          <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+          <line x1="9" y1="9" x2="9.01" y2="9"/>
+          <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+        <span class="brand-text">GuateGanado</span>
+      </div>
 
-    <main>
-        <section>
+      <nav class="sidebar-nav">
+        <ul class="nav-list" role="list">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">📊</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="animales.html" class="nav-link nav-link--active" aria-current="page">
+              <span class="nav-icon" aria-hidden="true">🐄</span>
+              <span>Animales</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">🌿</span>
+              <span>Potreros</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">⚖️</span>
+              <span>Pesajes</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">💉</span>
+              <span>Tratamientos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">📦</span>
+              <span>Insumos</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
 
-        </section>
+      <!-- Contenedor del pie de la barra lateral (sin rol quemado en texto) -->
+      <div class="sidebar-footer" id="sidebar-user-footer"></div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL: CATÁLOGO DE GANADO (PERSONA 2) -->
+    <main class="main-content" id="main-content">
+      
+      <!-- ENCABEZADO DE PÁGINA: ÚNICO H1 -->
+      <header class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">Inventario y Catálogo del Ganado</h1>
+          <p class="page-subtitle">Listado oficial de cabezas de ganado, control de pesos y asignación de potreros de la finca.</p>
+        </div>
+        <div class="page-header-actions">
+          <!-- Acción que enlaza a la Pantalla 3 del equipo -->
+          <a href="registro-animal.html" class="btn btn-primary">
+            <span aria-hidden="true">+</span>
+            <span>Registrar Animal</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- BARRA DE FILTROS SEMÁNTICA (<search> mapeado con AnimalService::listarAnimales) -->
+      <section class="filter-section" aria-label="Filtros de búsqueda de animales">
+        <search class="filter-search-container">
+          <form class="filter-form" action="#" method="get">
+            
+            <!-- Filtro por Potrero (Model Potrero) -->
+            <div class="filter-group">
+              <label for="filtro-potrero" class="filter-label">Potrero asignado:</label>
+              <select id="filtro-potrero" name="potrero_id" class="form-select">
+                <option value="">Todos los potreros</option>
+                <option value="1">Potrero Norte (Pasto: Excelente)</option>
+                <option value="2">Potrero El Río (Pasto: Bueno)</option>
+                <option value="3">Potrero La Laguna (Pasto: Regular)</option>
+              </select>
+            </div>
+
+            <!-- Filtro por Raza (Model Raza) -->
+            <div class="filter-group">
+              <label for="filtro-raza" class="filter-label">Raza:</label>
+              <select id="filtro-raza" name="raza_id" class="form-select">
+                <option value="">Todas las razas</option>
+                <option value="1">Brahman</option>
+                <option value="2">Simmental</option>
+                <option value="3">Angus</option>
+                <option value="4">Gyr Lechero</option>
+              </select>
+            </div>
+
+            <!-- Filtro por Sexo (Rule::in(['Macho', 'Hembra'])) -->
+            <div class="filter-group">
+              <label for="filtro-sexo" class="filter-label">Sexo:</label>
+              <select id="filtro-sexo" name="sexo" class="form-select">
+                <option value="">Cualquier sexo</option>
+                <option value="Macho">Macho</option>
+                <option value="Hembra">Hembra</option>
+              </select>
+            </div>
+
+            <!-- Filtro por Estado (scopePorEstado) -->
+            <div class="filter-group">
+              <label for="filtro-estado" class="filter-label">Estado:</label>
+              <select id="filtro-estado" name="estado" class="form-select">
+                <option value="">Todos los estados</option>
+                <option value="Activo">Activo</option>
+                <option value="Tratamiento">En Tratamiento</option>
+                <option value="Vendido">Vendido</option>
+              </select>
+            </div>
+
+          </form>
+        </search>
+      </section>
+
+      <!-- REJILLA DE TARJETAS (CSS Grid bidimensional) -->
+      <section class="catalog-section" aria-label="Tarjetas de animales registrados">
+        <h2 class="visually-hidden">Listado de cabezas de ganado</h2>
+
+        <div class="animal-grid">
+          
+          <!-- ANIMAL 1: Hembra Brahman -->
+          <article class="card-animal" data-categoria="bovino">
+            <header class="card-animal-header">
+              <span class="arete-tag">Arete: GT-0101</span>
+              <span class="badge badge-success">Activo</span>
+            </header>
+            
+            <figure class="card-animal-figure">
+              <img 
+                src="https://media.istockphoto.com/id/2228331404/es/foto/vista-lateral-de-una-vaca-toro-brahman-blanca-con-una-vista-frontal-de-un-ternero-parado-de.webp?a=1&b=1&s=612x612&w=0&k=20&c=MyeyPDSDSsmf9s_sI5EvJLHSCaFRUuRsoWcONE2Bbx8=" 
+                alt="Ejemplar Brahman hembra en Potrero Norte" 
+                class="card-animal-img"
+                loading="lazy"
+                decoding="async">
+              <figcaption class="visually-hidden">Animal GT-0101 en potrero</figcaption>
+            </figure>
+
+            <div class="card-animal-body">
+              <h3 class="animal-name">Brahman (Hembra)</h3>
+              
+              <dl class="animal-specs">
+                <div class="spec-row">
+                  <dt class="spec-term">Potrero actual:</dt>
+                  <dd class="spec-desc">Potrero Norte</dd>
+                </div>
+                <div class="spec-row">
+                  <dt class="spec-term">Último peso:</dt>
+                  <dd class="spec-desc"><data value="540.5">540.5 kg</data></dd>
+                </div>
+                <div class="spec-row">
+                  <dt class="spec-term">Fecha nacimiento:</dt>
+                  <dd class="spec-desc"><time datetime="2024-03-15">15 Mar 2024</time></dd>
+                </div>
+                <div class="spec-row">
+                  <dt class="spec-term">Tratamientos activos:</dt>
+                  <dd class="spec-desc">Ninguno</dd>
+                </div>
+              </dl>
+            </div>
+
+            <footer class="card-animal-footer">
+              <a href="#" class="btn btn-secondary btn-sm" aria-label="Consultar historial clínico del animal GT-0101">Ver Historial</a>
+              <a href="registro-animal.html" class="btn btn-accent btn-sm" aria-label="Registrar nuevo pesaje para GT-0101">Nuevo Pesaje</a>
+            </footer>
+          </article>
+
+          <!-- ANIMAL 2: Macho Nelore -->
+          <article class="card-animal" data-categoria="bovino">
+            <header class="card-animal-header">
+              <span class="arete-tag">Arete: GT-0102</span>
+              <span class="badge badge-warning">En Tratamiento</span>
+            </header>
+            
+            <figure class="card-animal-figure">
+              <img 
+                src="https://images.unsplash.com/photo-1555070319-a51174cb9529?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D" 
+                alt="Ejemplar Nelore macho en Potrero El Río" 
+                class="card-animal-img"
+                loading="lazy"
+                decoding="async">
+              <figcaption class="visually-hidden">Animal GT-0102 en observación</figcaption>
+            </figure>
+
+            <div class="card-animal-body">
+              <h3 class="animal-name">Nelore (Macho)</h3>
+              
+              <dl class="animal-specs">
+                <div class="spec-row">
+                  <dt class="spec-term">Potrero actual:</dt>
+                  <dd class="spec-desc">Potrero El Río</dd>
+                </div>
+                <div class="spec-row">
+                  <dt class="spec-term">Último peso:</dt>
+                  <dd class="spec-desc"><data value="485.0">485.0 kg</data></dd>
+                </div>
+                <div class="spec-row">
+                  <dt class="spec-term">Fecha nacimiento:</dt>
+                  <dd class="spec-desc"><time datetime="2023-11-20">20 Nov 2023</time></dd>
+                </div>
+                <div class="spec-row">
+                  <dt class="spec-term">Tratamientos activos:</dt>
+                  <dd class="spec-desc">Desparasitante (10 ml)</dd>
+                </div>
+              </dl>
+            </div>
+
+            <footer class="card-animal-footer">
+              <a href="#" class="btn btn-secondary btn-sm" aria-label="Consultar historial clínico del animal GT-0102">Ver Historial</a>
+              <a href="registro-animal.html" class="btn btn-accent btn-sm" aria-label="Registrar nuevo pesaje para GT-0102">Nuevo Pesaje</a>
+            </footer>
+          </article>
+
+          <!-- ANIMAL 3: Macho Angus -->
+          <article class="card-animal" data-categoria="bovino">
+            <header class="card-animal-header">
+              <span class="arete-tag">Arete: GT-0103</span>
+              <span class="badge badge-success">Activo</span>
+            </header>
+            
+            <figure class="card-animal-figure">
+              <img 
+                src="https://images.unsplash.com/photo-1651438034537-fdb4e927fc5d?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D" 
+                alt="Toro Angus pastando en Potrero La Laguna" 
+                class="card-animal-img"
+                loading="lazy"
+                decoding="async">
+              <figcaption class="visually-hidden">Animal GT-0103 reproductor</figcaption>
+            </figure>
+
+            <div class="card-animal-body">
+              <h3 class="animal-name">Angus Negro (Macho)</h3>
+              
+              <dl class="animal-specs">
+                <div class="spec-row">
+                  <dt class="spec-term">Potrero actual:</dt>
+                  <dd class="spec-desc">Potrero La Laguna</dd>
+                </div>
+                <div class="spec-row">
+                  <dt class="spec-term">Último peso:</dt>
+                  <dd class="spec-desc"><data value="610.2">610.2 kg</data></dd>
+                </div>
+                <div class="spec-row">
+                  <dt class="spec-term">Fecha nacimiento:</dt>
+                  <dd class="spec-desc"><time datetime="2023-05-10">10 May 2023</time></dd>
+                </div>
+                <div class="spec-row">
+                  <dt class="spec-term">Tratamientos activos:</dt>
+                  <dd class="spec-desc">Ninguno</dd>
+                </div>
+              </dl>
+            </div>
+
+            <footer class="card-animal-footer">
+              <a href="#" class="btn btn-secondary btn-sm" aria-label="Consultar historial del animal GT-0103">Ver Historial</a>
+              <a href="registro-animal.html" class="btn btn-accent btn-sm" aria-label="Registrar nuevo pesaje para GT-0103">Nuevo Pesaje</a>
+            </footer>
+          </article>
+
+        </div>
+      </section>
+
     </main>
+  </div>
 
-    <footer>
-        
-    </footer>
 </body>
 </html>
