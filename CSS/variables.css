@@ -1,14 +1,14 @@
 root {
     /*Paleta de colores*/
-    --color-primary: #1e3a8a; /*cambiar*/
-    --color-primary-light: #3b82f6; 
+    --color-primary: #283618;
     --color-secondary: #0d9488;
-    --color-bg: #f8fafc; /*investigar*/
+    --color-bg: #f8fafc;
     --color-surface: #ffffff; 
     --color-text: #0f172a;
     --color-text-muted: #64748b; 
     --color-error: #dc2626;
     --color-success: #16a34a;
+    --color-Background:#FEFAE0;
 
     /*Escala tipografica*/
     --font-base: 1rem;
