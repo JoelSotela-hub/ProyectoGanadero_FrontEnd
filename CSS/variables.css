@@ -1,25 +1,98 @@
+/* ==========================================================================
+   VARIABLES.CSS — TOKENS DE DISEÑO (Persona 4: Arquitecto CSS)
+   Correcciones del Lab 7: contraste WCAG 2.1 AA, foco accesible y estados.
+   Todas las medidas de texto y espacio en rem para funcionar al 200 % de zoom.
+   ========================================================================== */
 :root {
-    /*Paleta de colores*/
-    --color-primary: #283618;
-    --color-secondary: #0d9488;
-    --color-bg: #f8fafc;
-    --color-surface: #ffffff; 
-    --color-text: #0f172a;
-    --color-text-muted: #64748b; 
-    --color-error: #dc2626;
-    --color-success: #16a34a;
-    --color-Background:#FEFAE0;
+  /* ------------------------------------------------------------------------
+     1. PALETA BASE
+     Razones de contraste calculadas con la fórmula de luminancia WCAG 2.1.
+     ------------------------------------------------------------------------ */
+  --color-primary: #606C38;        /* Verde hoja. Texto blanco encima: 5.68:1 ✔ AA */
+  --color-primary-hover: #475226;
+  --color-secondary: #283618;      /* Verde bosque. Sobre crema: 12.24:1 ✔ */
+  --color-earth-dark: #8C4A10;     /* Marrón tierra. Texto blanco encima: 6.77:1 ✔ AA
+                                      (reemplaza #BC6C25, que daba 3.95:1 ✘) */
+  --color-earth-dark-hover: #6A370B;
+  --color-accent: #DDA15E;         /* Solo decorativo: NO usar para texto ni foco (2.14:1 ✘) */
 
-    /*Escala tipografica*/
-    --font-base: 1rem;
-    --font-sm: 0.875rem;
-    --font-lg: 1.25rem;
-    --font-2xl: 2rem;
+  /* Superficies */
+  --color-Background: #FEFAE0;     /* Crema: fondo general */
+  --color-bg: var(--color-Background);
+  --color-surface: #FFFFFF;
 
-    /*Espacio relativo*/
-    --space-xs: 0.5rem;
-    --space-sm: 0.75rem;
-    --space-md: 1rem;
-    --space-lg: 1.5rem;
-    --space-xl: 2rem;
+  /* Texto */
+  --color-text: var(--color-secondary);
+  --color-text-muted: #64748B;     /* Sobre crema: 4.52:1 ✔ AA */
+  --color-on-primary: #FFFFFF;
+
+  /* ------------------------------------------------------------------------
+     2. FOCO ACCESIBLE
+     Antes: #DDA15E sobre crema = 2.14:1 ✘. Ahora: #283618 = 12.24:1 ✔
+     (WCAG 2.1 pide al menos 3:1 para indicadores de foco).
+     ------------------------------------------------------------------------ */
+  --focus-ring-color: var(--color-secondary);
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+  --focus-ring: var(--focus-ring-width) solid var(--focus-ring-color);
+
+  /* ------------------------------------------------------------------------
+     3. ESTADOS (cada uno con su propia terna fondo / borde / texto)
+     ------------------------------------------------------------------------ */
+  /* Error: texto sobre fondo = 7.60:1 ✔ */
+  --color-error-bg: #FEF2F2;
+  --color-error-border: #DC2626;
+  --color-error-text: #991B1B;
+  --color-error: var(--color-error-border);
+
+  /* Deshabilitado: escala de grises neutra e independiente de la marca.
+     (WCAG 1.4.3 exime a los controles inactivos del mínimo de contraste) */
+  --color-disabled-bg: #E5E7EB;
+  --color-disabled-border: #D1D5DB;
+  --color-disabled-text: #6B7280;
+
+  /* Éxito: #15803D con texto blanco = 5.02:1 ✔
+     (el anterior #16A34A daba 3.30:1 ✘ en los badges "Activo") */
+  --color-success: #15803D;
+  --color-on-success: #FFFFFF;
+
+  /* ------------------------------------------------------------------------
+     4. ESCALA TIPOGRÁFICA — Major Third (razón 1.25), solo rem
+     Cada paso = anterior × 1.25. Base 1rem = 16px por defecto del navegador,
+     así respeta el tamaño de letra y el zoom que elija la persona usuaria.
+     ------------------------------------------------------------------------ */
+  --font-ratio: 1.25;
+  --font-sm: 0.8rem;      /* 1 ÷ 1.25  ≈ 12.8px */
+  --font-base: 1rem;      /* 16px */
+  --font-lg: 1.25rem;     /* 20px */
+  --font-xl: 1.563rem;    /* 25px */
+  --font-2xl: 1.953rem;   /* 31.25px */
+  --font-3xl: 2.441rem;   /* 39px */
+  --font-4xl: 3.052rem;   /* 48.8px */
+
+  --line-height-tight: 1.2;
+  --line-height-base: 1.5;
+
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* ------------------------------------------------------------------------
+     5. ESPACIADO RELATIVO
+     ------------------------------------------------------------------------ */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  /* ------------------------------------------------------------------------
+     6. FORMA
+     ------------------------------------------------------------------------ */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-pill: 9999px;
 }
