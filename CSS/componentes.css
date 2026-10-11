@@ -1,0 +1,1419 @@
+:root {
+  --shadow-1: 0 1px 2px rgba(40, 54, 24, 0.06);
+  --shadow-2: 0 4px 12px rgba(40, 54, 24, 0.08);
+  --shadow-3: 0 12px 32px rgba(40, 54, 24, 0.14);
+
+  --rail-w: 16.25rem;        /* Ancho del rail lateral (260px) */
+  --content-max: 75rem;      /* Contenedor centrado en pantallas 80rem+ */
+  --tap-target: 2.75rem;     /* 44px: alto mínimo táctil accesible (WCAG 2.5.5) */
+
+  --z-topbar: 20;   /* Barra superior móvil */
+  --z-rail: 30;     /* Rail lateral fijo */
+  --z-menu: 40;     /* Menú desplegado / overlays internos */
+  --z-overlay: 50;  /* Modales o capas por encima de todo */
+
+
+  --tint-sage:  #E8EBD2;
+  --tint-peach: #FBE9DC;
+  --tint-rose:  #F9E3E0;
+  --tint-gold:  #F7EDD9;
+}
+
+
+
+html {
+  overflow-x: clip;
+}
+
+body,
+.site-layout,
+.main-content {
+  max-inline-size: 100%;
+}
+
+/* Hijos de grid/flex: pueden encogerse por debajo de su contenido.*/
+.site-layout > *,
+.main-content > *,
+.animal-grid > *,
+.kpi-grid > *,
+.potrero-grid > *,
+.form-grid > *,
+.panel > * {
+  min-inline-size: 0;
+}
+
+/* Las imágenes nunca superan su contenedor (refuerza reset.css). */
+img,
+svg,
+video {
+  max-inline-size: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-inline-size: 100%;
+}
+
+
+fieldset {
+  min-inline-size: 0;
+}
+
+/* Títulos largos y salts de contenido: equilibrados y sin romper línea. */
+.page-title,
+.panel__title,
+.kpi-card__value {
+  overflow-wrap: break-word;
+}
+
+
+
+.site-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);   /* minmax(0,…) previene desbordes */
+  min-block-size: 100vh;
+  background-color: var(--color-Background, #fefae0);
+}
+
+/* --- Barra lateral: móvil primero (barra superior) --- */
+.site-layout .sidebar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  display: flex;
+  flex-direction: row;         /* horizontal en móvil: marca + tira de menú */
+  align-items: center;
+  align-self: start;           /* que el grid no estire la barra: alto = contenido */
+  justify-content: flex-start;
+  gap: var(--space-sm, 0.75rem);
+  padding: var(--space-sm, 0.75rem) var(--space-md, 1rem);
+  background-color: var(--color-secondary, #283618); /* Verde bosque */
+  color: var(--color-on-primary, #ffffff);
+  /* Foco crema sobre fondo oscuro: 12.24:1 */
+  --focus-ring-color: var(--color-Background, #fefae0);
+}
+
+/* La marca del logo en la barra superior */
+.site-layout .sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 0.75rem);
+  flex-shrink: 0;
+  font-size: var(--font-lg, 1.25rem);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-on-primary, #ffffff);
+  text-decoration: none;
+}
+
+/* En móvil el ícono del logo se reduce ligeramente */
+.site-layout .brand-icon {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  stroke: var(--color-accent, #dda15e); /* Decorativo: permitido */
+}
+
+.site-layout .brand-text {
+  letter-spacing: 0.01em;
+}
+
+/* Etiqueta del logo (GESTIÓN GANADERA) — se oculta en la barra compacta. */
+.site-layout .brand-tagline {
+  display: none;
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-regular, 400);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #64748b);
+}
+
+/* Contenedor principal */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg, 1.5rem);
+  padding: var(--space-md, 1rem);
+  background-color: var(--color-Background, #fefae0);
+  width: 100%;
+  max-inline-size: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   PUNTO DE QUIEBRE 1 — 40rem (640px): tablet
+   Más aire; sidebar se prepara para dos filas pero sigue arriba.
+   -------------------------------------------------------------------------- */
+@media (min-width: 40rem) {
+  .main-content {
+    padding: var(--space-lg, 1.5rem);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   PUNTO DE QUIEBRE 2 — 64rem (1024px): laptop / escritorio estándar
+   El sidebar pasa a ser un RAIL LATERAL fijo a la izquierda, 100vh.
+   -------------------------------------------------------------------------- */
+@media (min-width: 64rem) {
+  .site-layout {
+    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .site-layout .sidebar {
+    position: sticky;
+    top: 0;
+    block-size: 100vh;
+    flex-direction: column;      /* vertical: marca arriba, menú centro, usuario abajo */
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: var(--space-lg, 1.5rem);
+    padding: var(--space-md, 1rem);
+    z-index: var(--z-rail);
+  }
+
+  .site-layout .sidebar-brand {
+    flex-shrink: 0;
+  }
+
+  .site-layout .brand-icon {
+    inline-size: 1.75rem;         /* 28px en escritorio */
+    block-size: 1.75rem;
+  }
+
+  .site-layout .brand-tagline {
+    display: block;
+  }
+
+  .main-content {
+    padding: var(--space-xl, 2rem);
+  }
+}
+
+
+@media (min-width: 80rem) {
+  .site-layout {
+    grid-template-columns: 17rem minmax(0, 1fr);
+  }
+
+  .main-content {
+    max-inline-size: var(--content-max, 75rem);
+    margin-inline: auto;
+    padding: var(--space-xl, 2rem) var(--space-lg, 1.5rem);
+  }
+}
+
+
+
+.site-layout .sidebar-nav {
+  flex-grow: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;          /* Firefox */
+}
+
+.site-layout .sidebar-nav::-webkit-scrollbar {
+  display: none;                  /* Chrome/Safari */
+}
+
+/* El chip de usuario no cabe en la barra móvil: se reserva para el rail. */
+.site-layout .sidebar-footer {
+  display: none;
+  flex-shrink: 0;
+}
+
+/* Botón hamburguesa: solo visible en móvil. */
+.sidebar__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--tap-target, 2.75rem);
+  block-size: var(--tap-target, 2.75rem);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-sm, 0.375rem);
+  background-color: transparent;
+  color: var(--color-on-primary, #ffffff);
+  cursor: pointer;
+}
+
+/* Las "barras" del ícono hamburguesa se dibujan con pseudo-elementos. */
+.sidebar__toggle::before {
+  content: "";
+  inline-size: 1.25rem;
+  block-size: 2px;
+  background-color: currentColor;
+  box-shadow:
+    0 -6px 0 currentColor,
+    0 6px 0 currentColor;
+}
+
+/* El checkbox real queda oculto pero accesible al teclado. */
+.sidebar-toggle {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+.site-layout:has(.sidebar-toggle) .sidebar-nav {
+  display: none;
+}
+
+/* Al marcarlo, el menú se despliega. */
+.site-layout:has(.sidebar-toggle:checked) .sidebar-nav {
+  display: block;
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  z-index: var(--z-menu);
+  padding: var(--space-sm, 0.75rem);
+  background-color: var(--color-secondary, #283618);
+  box-shadow: var(--shadow-3);
+}
+
+
+@media (min-width: 64rem) {
+  .sidebar__toggle {
+    display: none;
+  }
+
+  .site-layout:has(.sidebar-toggle) .sidebar-nav {
+    display: block;
+    position: static;
+    padding: 0;
+    box-shadow: none;
+  }
+}
+
+/* --- Lista y enlaces de navegación --- */
+.site-layout .nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: row;         /* tira horizontal en la barra móvil */
+  gap: var(--space-xs, 0.5rem);
+}
+
+
+.site-layout .nav-item {
+  flex: 0 0 auto;
+}
+
+.site-layout .nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 0.75rem);
+  min-block-size: var(--tap-target, 2.75rem);  /* alto táctil */
+  padding: var(--space-sm, 0.75rem) var(--space-md, 1rem);
+  border-radius: var(--radius-md, 0.5rem);
+  color: var(--color-Background, #fefae0);
+  text-decoration: none;
+  font-weight: var(--font-weight-semibold, 600);
+  white-space: nowrap;                 /* el texto no parte la barra */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.site-layout .nav-icon {
+  flex-shrink: 0;
+  inline-size: 1.25rem;
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.site-layout .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Estado activo: fondo verde hoja + barra indicadora a la derecha. */
+.site-layout .nav-link--active,
+.site-layout .nav-link[aria-current="page"] {
+  position: relative;
+  background-color: var(--color-primary, #606c38);  /* 5.68:1 con texto blanco */
+  color: var(--color-on-primary, #ffffff);
+}
+
+.site-layout .nav-link--active::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  inline-size: 3px;
+  block-size: 1.25rem;
+  border-radius: var(--radius-pill, 9999px);
+  background-color: var(--color-on-primary, #ffffff);
+}
+
+
+@media (min-width: 64rem) {
+  .site-layout .sidebar-nav {
+    overflow-x: visible;
+  }
+
+  .site-layout .nav-list {
+    flex-direction: column;
+  }
+
+  .site-layout .sidebar-footer {
+    display: block;
+  }
+}
+
+/* --- Etiqueta "MENÚ PRINCIPAL" (solo en el rail de escritorio) --- */
+.sidebar__label {
+  display: none;
+  margin: 0;
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #64748b);
+  opacity: 0.85;
+}
+
+@media (min-width: 64rem) {
+  .sidebar__label {
+    display: block;
+  }
+}
+
+/* --- Chip de usuario (pie del rail) ---
+   .sidebar-footer se oculta en móvil y se muestra desde 64rem (regla base
+   más arriba + breakpoint). Solo aquí se define su contenido. */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 0.75rem);
+  padding: var(--space-sm, 0.75rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.user-chip__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 50%;
+  background-color: var(--color-accent, #dda15e);
+  color: var(--color-secondary, #283618);  /* texto accesible sobre el ámbar */
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-bold, 700);
+}
+
+.user-chip__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-chip__name {
+  font-size: var(--font-base, 1rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-on-primary, #ffffff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-chip__role {
+  font-size: var(--font-sm, 0.8rem);
+  color: var(--color-Background, #fefae0);
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* ==========================================================================
+   FASE 5 — SUPERFICIES Y ÁTOMOS
+   --------------------------------------------------------------------------
+   Paneles (tarjetas blancas), encabezados de sección, eyebrows, icon-tiles
+   con tintes decorativos y barras de progreso.
+   ========================================================================== */
+
+/* --- Panel / tarjeta de superficie --- */
+.panel {
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid rgba(40, 54, 24, 0.1);
+  border-radius: var(--radius-lg, 1rem);
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm, 0.75rem);
+  flex-wrap: wrap;
+  padding: var(--space-md, 1rem);
+  border-bottom: 1px solid rgba(40, 54, 24, 0.08);
+}
+
+.panel__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.panel__title {
+  margin: 0;
+  font-size: var(--font-xl, 1.563rem);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-secondary, #283618);
+}
+
+.panel__body {
+  padding: var(--space-md, 1rem);
+}
+
+/* Panel sin padding (para tablas que gestionan su propio espaciado). */
+.panel--flush .panel__body {
+  padding: 0;
+}
+
+/* --- Eyebrow: etiqueta pequeña sobre un título --- */
+.eyebrow {
+  display: block;
+  margin: 0;
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #64748b);
+}
+
+/* En tablas densas el eyebrow es más pequeño (12px, nunca por debajo). */
+.eyebrow--micro {
+  font-size: 0.75rem;
+}
+
+/* --- Link con flecha ("Ver todos →") --- */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  color: var(--color-secondary, #283618);
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-semibold, 600);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.link-arrow:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* --- Icon-tile: cuadro redondeado con tinte decorativo --- */
+.icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: var(--radius-md, 0.5rem);
+  background-color: var(--tint-sage, #E8EBD2);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.icon-tile--sage  { background-color: var(--tint-sage, #E8EBD2); }
+.icon-tile--peach { background-color: var(--tint-peach, #FBE9DC); }
+.icon-tile--rose  { background-color: var(--tint-rose, #F9E3E0); }
+.icon-tile--gold  { background-color: var(--tint-gold, #F7EDD9); }
+
+/* --- Barra de progreso (capacidad de potrero) --- */
+.progress {
+  inline-size: 100%;
+  block-size: 0.5rem;
+  border-radius: var(--radius-pill, 9999px);
+  background-color: rgba(40, 54, 24, 0.12);
+  overflow: hidden;
+}
+
+.progress__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background-color: var(--color-primary, #606c38);
+}
+
+.progress__fill--high   { background-color: var(--color-error, #dc2626); }
+.progress__fill--medium { background-color: var(--color-accent, #dda15e); }
+.progress__fill--low    { background-color: var(--color-primary, #606c38); }
+
+
+/* --- Botón base --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-block-size: var(--tap-target, 2.75rem);
+  padding: var(--space-sm, 0.75rem) var(--space-lg, 1.5rem);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md, 0.5rem);
+  font-family: inherit;
+  font-size: var(--font-base, 1rem);
+  font-weight: var(--font-weight-semibold, 600);
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* --- Variantes --- */
+.btn-primary {
+  background-color: var(--color-primary, #606c38);   /* texto blanco: 5.68:1 */
+  color: var(--color-on-primary, #ffffff);
+  border-color: var(--color-primary-hover, #475226);
+  box-shadow: var(--shadow-1);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover, #475226);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
+}
+
+.btn-secondary {
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-secondary, #283618);
+  border-color: var(--color-secondary, #283618);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(40, 54, 24, 0.05);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-secondary, #283618);
+  border-color: transparent;
+}
+
+.btn-ghost:hover {
+  background-color: rgba(40, 54, 24, 0.06);
+}
+
+/* Botón de icono (cuadrado, solo glifo). */
+.btn--icon {
+  padding: 0;
+  inline-size: var(--tap-target, 2.75rem);
+  min-inline-size: var(--tap-target, 2.75rem);
+}
+
+.btn-sm {
+  min-block-size: 2rem;
+  padding: 0.35rem 0.75rem;
+  font-size: var(--font-sm, 0.8rem);
+}
+
+
+.btn-block-mobile {
+  inline-size: 100%;
+}
+
+@media (min-width: 40rem) {
+  .btn-block-mobile {
+    inline-size: auto;
+  }
+}
+
+/* --- Píldoras de estado --- */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill, 9999px);
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-semibold, 600);
+  white-space: nowrap;
+}
+
+.status-pill--ok {
+  background-color: #E4F2E6;
+  color: #14532D;
+}
+
+.status-pill--warn {
+  background-color: var(--tint-gold, #F7EDD9);
+  color: var(--color-earth-dark, #8c4a10);
+}
+
+.status-pill--danger {
+  background-color: var(--color-error-bg, #FEF2F2);
+  color: var(--color-error-text, #991B1B);
+}
+
+.status-pill--neutral {
+  background-color: rgba(40, 54, 24, 0.1);
+  color: var(--color-secondary, #283618);
+}
+
+
+/* --------------------------------------------------------------------------
+   7.1 Encabezado de página (compartido con las pantallas 2 y 3)
+   Mobile-first: columna → fila a partir de 40rem.
+   -------------------------------------------------------------------------- */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md, 1rem);
+}
+
+.page-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.5rem;              /* base smartphone */
+  font-weight: var(--font-weight-bold, 700);
+  line-height: var(--line-height-tight, 1.2);
+  color: var(--color-secondary, #283618);
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: var(--font-base, 1rem);
+  color: var(--color-text-muted, #64748b);
+}
+
+.page-header__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 0.75rem);
+}
+
+@media (min-width: 40rem) {
+  .page-header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-lg, 1.5rem);
+  }
+
+  .page-title {
+    font-size: 1.75rem;
+  }
+
+  .page-header__actions {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+  }
+}
+
+@media (min-width: 64rem) {
+  .page-title {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  .page-title {
+    font-size: 2.25rem;
+  }
+}
+
+/* --- Tarjeta "próxima tarea" --- */
+.next-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: var(--space-sm, 0.75rem) var(--space-md, 1rem);
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid rgba(40, 54, 24, 0.1);
+  border-radius: var(--radius-lg, 1rem);
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+
+.next-action__value {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-secondary, #283618);
+}
+
+/* --- Encabezado de sección (título + link a la derecha) --- */
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-sm, 0.75rem);
+  margin-block-end: var(--space-md, 1rem);
+  min-width: 0;
+}
+
+.section-title {
+  margin: 0;
+  font-size: var(--font-xl, 1.563rem);
+  color: var(--color-secondary, #283618);
+}
+
+@media (min-width: 64rem) {
+  .section-title {
+    font-size: var(--font-2xl, 1.953rem);
+  }
+}
+
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md, 1rem);
+}
+
+.kpi-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md, 1rem);
+  padding: var(--space-md, 1rem);
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid rgba(40, 54, 24, 0.1);
+  border-radius: var(--radius-lg, 1rem);
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+
+.kpi-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.kpi-card__label {
+  margin: 0;
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #64748b);
+}
+
+.kpi-card__value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold, 700);
+  line-height: 1.1;
+  color: var(--color-secondary, #283618);
+}
+
+.kpi-card__foot {
+  margin: 0;
+  font-size: var(--font-sm, 0.8rem);
+  color: var(--color-text-muted, #64748b);
+}
+
+@media (min-width: 40rem) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Con 2 columnas la tarjeta de alerta ocupa la fila entera. */
+  .kpi-card--alert {
+    grid-column: 1 / -1;
+  }
+
+  .kpi-card__value {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  /* 3 columnas; la de alerta algo más ancha, como en el diseño. */
+  .kpi-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr);
+  }
+
+  .kpi-card--alert {
+    grid-column: auto;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7.3 Tarjetas de potrero con barra de ocupación
+   -------------------------------------------------------------------------- */
+.potrero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md, 1rem);
+}
+
+.potrero-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 0.75rem);
+  padding: var(--space-md, 1rem);
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid rgba(40, 54, 24, 0.1);
+  border-radius: var(--radius-lg, 1rem);
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+
+.potrero-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm, 0.75rem);
+  min-width: 0;
+}
+
+.potrero-card__name {
+  margin: 0;
+  font-size: var(--font-base, 1rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-secondary, #283618);
+  overflow-wrap: break-word;
+}
+
+.potrero-card__meta {
+  margin: 0;
+  font-size: var(--font-sm, 0.8rem);
+  color: var(--color-text-muted, #64748b);
+}
+
+@media (min-width: 40rem) {
+  .potrero-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .potrero-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+
+.activity-card {
+  /* Declarado aquí porque en animales.html gana a catalogo.css al ser
+     .activity-card una clase que solo existe aquí. */
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+}
+
+.activity-table {
+  inline-size: 100%;
+  min-inline-size: 38rem;      /* fuerza el scroll interno en móvil */
+  border-collapse: collapse;
+  font-size: var(--font-sm, 0.8rem);
+}
+
+.activity-table caption {
+  text-align: start;
+}
+
+.activity-table th,
+.activity-table td {
+  padding: var(--space-sm, 0.75rem);
+  text-align: start;
+  vertical-align: middle;
+  border-block-end: 1px solid rgba(40, 54, 24, 0.08);
+}
+
+.activity-table thead th {
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #64748b);
+  white-space: nowrap;
+}
+
+.activity-table tbody th,
+.activity-table__id {
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-secondary, #283618);
+  white-space: nowrap;
+}
+
+.activity-table tbody tr:last-child th,
+.activity-table tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+@media (min-width: 64rem) {
+  /* Ya hay sitio: la tabla se muestra completa y sin scroll propio. */
+  .activity-card {
+    overflow-x: visible;
+  }
+
+  .activity-table {
+    min-inline-size: 0;
+  }
+}
+
+
+.activity-table--stacked {
+  min-inline-size: 0;
+}
+
+.activity-table--stacked tbody tr {
+  display: block;
+  padding-block: var(--space-sm, 0.75rem);
+  border-block-end: 1px solid rgba(40, 54, 24, 0.08);
+}
+
+.activity-table--stacked thead {
+  display: none;                /* los encabezados de columna no aplican */
+}
+
+.activity-table--stacked tbody th,
+.activity-table--stacked tbody td {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md, 1rem);
+  padding: 0.25rem var(--space-md, 1rem);
+  border: 0;
+  text-align: end;
+}
+
+.activity-table--stacked tbody td::before {
+  content: attr(data-label);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-text-muted, #64748b);
+  text-align: start;
+}
+
+@media (min-width: 40rem) {
+  /* Hay sitio de sobra: vuelve a ser una tabla normal. */
+  .activity-table--stacked tbody tr {
+    display: table-row;
+    padding-block: 0;
+  }
+
+  .activity-table--stacked thead {
+    display: table-header-group;
+  }
+
+  .activity-table--stacked tbody th,
+  .activity-table--stacked tbody td {
+    display: table-cell;
+    padding: var(--space-sm, 0.75rem);
+    border-block-end: 1px solid rgba(40, 54, 24, 0.08);
+    text-align: start;
+  }
+
+  /* El label inyectado por ::before ya no tiene sentido en modo tabla. */
+  .activity-table--stacked tbody td::before {
+    content: none;
+  }
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md, 1rem);
+  padding: var(--space-md, 1rem);
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid rgba(40, 54, 24, 0.1);
+  border-radius: var(--radius-lg, 1rem);
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+
+.filter-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 0.75rem);
+  padding-inline: var(--space-md, 1rem);
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-earth-dark, #8c4a10);  /* borde de control: 6.77:1 */
+  border-radius: var(--radius-md, 0.5rem);
+  min-width: 0;
+}
+
+.search-input {
+  flex: 1 1 auto;
+  min-width: 0;                 /* permite encogerse dentro del flex */
+  min-block-size: var(--tap-target, 2.75rem);
+  padding-block: var(--space-sm, 0.75rem);
+  border: 0;
+  background-color: transparent;
+  color: var(--color-text, #283618);
+  font-size: var(--font-base, 1rem);
+}
+
+.search-input:focus {
+  outline: none;                /* el foco lo dibuja el contenedor .filter-search */
+}
+
+.search-input::placeholder {
+  color: var(--color-text-muted, #64748b);
+}
+
+/* El contenedor muestra el anillo de foco cuando el input recibe el teclado. */
+.filter-search:focus-within {
+  outline: var(--focus-ring-width, 3px) solid var(--focus-ring-color, #283618);
+  outline-offset: var(--focus-ring-offset, 2px);
+}
+
+.filter-selects {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md, 1rem);
+  min-width: 0;
+}
+
+.filter-select {
+  inline-size: 100%;            /* nunca más ancho que su columna */
+  min-block-size: var(--tap-target, 2.75rem);
+  padding: var(--space-sm, 0.75rem);
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-secondary, #283618);
+  border: 1px solid var(--color-earth-dark, #8c4a10);
+  border-radius: var(--radius-md, 0.5rem);
+  font-size: var(--font-base, 1rem);
+  cursor: pointer;
+}
+
+@media (min-width: 40rem) {
+  .filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-search {
+    grid-column: 1 / -1;        /* el buscador ocupa toda la fila superior */
+  }
+}
+
+@media (min-width: 64rem) {
+  .filter-bar {
+    grid-template-columns: minmax(12rem, 1fr) repeat(3, minmax(8rem, 12rem));
+    align-items: center;
+  }
+
+  .filter-search {
+    grid-column: auto;
+  }
+
+  .filter-selects {
+    display: contents;          /* los selects pasan a ser columnas de la barra */
+  }
+}
+
+
+.catalog-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs, 0.5rem);
+  font-size: var(--font-sm, 0.8rem);
+  color: var(--color-text-muted, #64748b);
+  min-width: 0;
+}
+
+.catalog-meta__showing {
+  white-space: nowrap;
+}
+
+
+.card-animal-figure {
+  position: relative;           /* catalogo.css no declara position aquí */
+}
+
+.card-status-pill {
+  position: absolute;
+  inset-block-end: var(--space-sm, 0.75rem);
+  inset-inline-end: var(--space-sm, 0.75rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  background-color: var(--color-surface, #ffffff);
+  border-radius: var(--radius-pill, 9999px);
+  box-shadow: var(--shadow-2);
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-secondary, #283618);
+  max-inline-size: calc(100% - var(--space-lg, 1.5rem));
+}
+
+.card-status-pill__dot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: var(--color-success, #15803d);
+}
+
+.card-status-pill--warn .card-status-pill__dot {
+  background-color: var(--color-earth-dark, #8c4a10);
+}
+
+.card-status-pill--danger .card-status-pill__dot {
+  background-color: var(--color-error, #dc2626);
+}
+
+
+.card-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm, 0.75rem);
+  margin: 0;
+}
+
+.card-meta__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: var(--space-sm, 0.75rem);
+  background-color: var(--color-Background, #fefae0);
+  border-radius: var(--radius-md, 0.5rem);
+  min-width: 0;
+}
+
+.card-meta__label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-text-muted, #64748b);
+}
+
+.card-meta__value {
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-secondary, #283618);
+  overflow-wrap: break-word;
+}
+
+/* Botón circular de edición sobre el nombre del animal */
+.card-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: var(--tap-target, 2.75rem);
+  block-size: var(--tap-target, 2.75rem);
+  border: 1px solid rgba(40, 54, 24, 0.15);
+  border-radius: 50%;
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-secondary, #283618);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.card-edit:hover {
+  background-color: var(--color-Background, #fefae0);
+}
+
+
+.form-section {
+  min-width: 0;
+}
+
+.animal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg, 1.5rem);
+  min-width: 0;
+}
+
+/* --- Fieldset: panel blanco agrupador --- */
+.form-fieldset {
+  display: block;                /* neutralize el comportamiento peculiar del legend */
+  margin: 0;
+  padding: var(--space-md, 1rem);
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid rgba(40, 54, 24, 0.1);
+  border-radius: var(--radius-lg, 1rem);
+  box-shadow: var(--shadow-1);
+  min-inline-size: 0;            /* ya declarado en la Fase 2 */
+}
+
+.form-legend {
+  display: block;
+  float: none;
+  padding: 0;                    /* el fieldset ya aporta el padding */
+  font-size: var(--font-lg, 1.25rem);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-secondary, #283618);
+}
+
+.fieldset-desc {
+  margin: var(--space-xs, 0.5rem) 0 var(--space-md, 1rem);
+  font-size: var(--font-sm, 0.8rem);
+  color: var(--color-text-muted, #64748b);
+}
+
+/* --- Rejilla del formulario --- */
+.form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);   /* móvil: una sola columna */
+  gap: var(--space-md, 1rem);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.form-label {
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-secondary, #283618);
+}
+
+.required-indicator {
+  color: var(--color-error, #dc2626);
+  font-weight: var(--font-weight-bold, 700);
+}
+
+/* --- Controles --- */
+.form-control {
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: var(--tap-target, 2.75rem);
+  padding: var(--space-sm, 0.75rem) var(--space-md, 1rem);
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-text, #283618);
+  border: 1px solid var(--color-earth-dark, #8c4a10);  /* borde de control: 6.77:1 */
+  border-radius: var(--radius-md, 0.5rem);
+  font-size: var(--font-base, 1rem);
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+textarea.form-control {
+  min-block-size: 6rem;
+  resize: vertical;             /* el usuario puede agrandarla, no encogerla */
+}
+
+select.form-control {
+  cursor: pointer;
+}
+
+/* El anillo de foco global lo aplica reset.css vía :focus-visible. */
+
+.form-help {
+  font-size: var(--font-sm, 0.8rem);
+  color: var(--color-text-muted, #64748b);
+}
+
+/* --- Acciones del formulario --- */
+.form-actions {
+  display: flex;
+  flex-direction: column;       /* móvil: botones apilados a ancho completo */
+  gap: var(--space-sm, 0.75rem);
+}
+
+.form-actions .btn {
+  inline-size: 100%;
+}
+
+@media (min-width: 40rem) {
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Los campos que ocupan toda la fila (select de potrero, textarea) */
+  .form-group--full {
+    grid-column: 1 / -1;
+  }
+
+  .form-fieldset {
+    padding: var(--space-lg, 1.5rem);
+  }
+
+  .form-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .form-actions .btn {
+    inline-size: auto;
+  }
+}
+
+
+
+
+@media (prefers-contrast: more) {
+  .panel,
+  .kpi-card,
+  .potrero-card,
+  .filter-bar,
+  .form-fieldset {
+    border-color: var(--color-secondary, #283618);
+    box-shadow: none;
+  }
+
+  .activity-table th,
+  .activity-table td,
+  .activity-table--stacked tbody tr {
+    border-block-end-color: var(--color-secondary, #283618);
+  }
+}
+
+@media print {
+  /* La navegación no aporta en papel. */
+  .site-layout .sidebar,
+  .page-header__actions,
+  .filter-bar,
+  .card-edit {
+    display: none;
+  }
+
+  .site-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .main-content {
+    max-inline-size: 100%;
+    padding: 0;
+    background-color: #ffffff;
+  }
+
+  .panel,
+  .kpi-card,
+  .potrero-card,
+  .form-fieldset {
+    box-shadow: none;
+    border: 1px solid #000000;
+    break-inside: avoid;
+  }
+
+  .activity-card {
+    overflow-x: visible;
+  }
+
+  .activity-table {
+    min-inline-size: 0;
+  }
+
+  .activity-table th,
+  .activity-table td {
+    border-block-end: 1px solid #000000;
+  }
+}
