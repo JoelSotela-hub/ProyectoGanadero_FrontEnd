@@ -1,30 +1,98 @@
 /* ==========================================================================
-   RESET.CSS — SISTEMA DE RESETEO MODERNO
+   RESET.CSS — RESETEO MODERNO Y BASE ACCESIBLE (Persona 4: Arquitecto CSS)
+   Depende de variables.css (cargar variables.css antes o después: los
+   valores de respaldo en var() evitan que algo se rompa).
    ========================================================================== */
+
+/* 1. Reseteo de caja */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* 2. Raíz: 100 % respeta el tamaño de letra elegido en el navegador,
+      requisito para que el sitio funcione al 200 % de zoom */
 html {
-  font-size: 100%; /* 16px base para unidades rem */
+  font-size: 100%;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--color-Background, #fefae0);
-  color: var(--color-primary, #283618);
-  line-height: 1.5;
+  font-family: var(--font-family-base, 'Inter', system-ui, sans-serif);
+  font-size: var(--font-base, 1rem);
+  line-height: var(--line-height-base, 1.5);
+  background-color: var(--color-Background, #FEFAE0);
+  color: var(--color-text, #283618);
   min-block-size: 100vh;
 }
 
-img, picture, svg {
+/* 3. Encabezados según la escala Major Third */
+h1, h2, h3, h4 {
+  line-height: var(--line-height-tight, 1.2);
+  font-weight: var(--font-weight-bold, 700);
+  text-wrap: balance;
+}
+h1 { font-size: var(--font-3xl, 2.441rem); }
+h2 { font-size: var(--font-2xl, 1.953rem); }
+h3 { font-size: var(--font-xl, 1.563rem); }
+h4 { font-size: var(--font-lg, 1.25rem); }
+
+small { font-size: var(--font-sm, 0.8rem); }
+
+/* 4. Medios y formularios */
+img, picture, svg, video {
   max-inline-size: 100%;
   display: block;
 }
 
 input, button, textarea, select {
   font: inherit;
+  color: inherit;
+}
+
+button { cursor: pointer; }
+
+/* 5. Anillo de foco accesible (corrección Lab 7)
+      Se aplica a TODO elemento enfocable con teclado. */
+:focus-visible {
+  /* Se arma aquí (no con --focus-ring) para que .sidebar pueda cambiar solo el color */
+  outline: var(--focus-ring-width, 3px) solid var(--focus-ring-color, #283618);
+  outline-offset: var(--focus-ring-offset, 2px);
+}
+
+/* 6. Estados base de formulario (corrección Lab 7) */
+
+/* Error: se activa con aria-invalid="true" o la clase .is-error */
+[aria-invalid="true"],
+.is-error {
+  background-color: var(--color-error-bg, #FEF2F2);
+  border-color: var(--color-error-border, #DC2626);
+  color: var(--color-error-text, #991B1B);
+}
+
+.form-error {
+  color: var(--color-error-text, #991B1B);
+  font-size: var(--font-sm, 0.8rem);
+}
+
+/* Deshabilitado: escala de grises independiente */
+:disabled,
+[aria-disabled="true"] {
+  background-color: var(--color-disabled-bg, #E5E7EB);
+  border-color: var(--color-disabled-border, #D1D5DB);
+  color: var(--color-disabled-text, #6B7280);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* 7. Movimiento reducido para quien lo pida en su sistema */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

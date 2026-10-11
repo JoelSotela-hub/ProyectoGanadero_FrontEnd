@@ -2,6 +2,7 @@
    CATALOGO.CSS — PANTALLA 2 (CATÁLOGO DE ANIMALES) - PERSONA 2
    Cumple con Criterio 2: Grid y Flexbox justificados en comentarios
    Cumple con Criterio 3: Diseño responsivo Mobile-First con 3 breakpoints
+   Colores: solo tokens de variables.css (corrección Lab 7, Persona 4)
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -26,8 +27,10 @@
 }
 
 .sidebar {
-  background-color: var(--color-primary, #283618);
-  color: #ffffff;
+  background-color: var(--color-secondary, #283618); /* Verde bosque: el ítem activo (#606C38) se distingue */
+  color: var(--color-on-primary, #ffffff);
+  /* Foco crema sobre fondo oscuro: 12.24:1 (el verde oscuro aquí daba 2.27:1) */
+  --focus-ring-color: var(--color-Background, #fefae0);
   padding: var(--space-md, 1rem);
   display: flex;
   flex-direction: column;
@@ -40,11 +43,11 @@
   gap: var(--space-sm, 0.75rem);
   font-size: var(--font-lg, 1.25rem);
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-on-primary, #ffffff);
 }
 
 .brand-icon {
-  stroke: #dda15e;
+  stroke: var(--color-accent, #dda15e); /* Decorativo: permitido */
 }
 
 .sidebar-nav {
@@ -74,8 +77,8 @@
 
 .nav-link:hover,
 .nav-link--active {
-  background-color: #606c38;
-  color: #ffffff !important;
+  background-color: var(--color-primary, #606c38); /* Texto blanco: 5.68:1 */
+  color: var(--color-on-primary, #ffffff);
 }
 
 .main-content {
@@ -116,7 +119,7 @@
 
 .page-title {
   font-size: clamp(1.5rem, 2.5vw, 2.25rem);
-  color: var(--color-primary, #283618);
+  color: var(--color-secondary, #283618);
   margin: 0;
   font-weight: 700;
   line-height: 1.2;
@@ -140,7 +143,7 @@
   font-family: inherit;
   font-size: 1rem;
   font-weight: 600;
-  text-decoration: none !important;
+  text-decoration: none;
   border: 1px solid transparent;
   cursor: pointer;
   line-height: 1.2;
@@ -150,16 +153,16 @@
 }
 
 .btn-primary {
-  background-color: #606c38 !important; /* Verde Hoja GuateGanado */
-  color: #ffffff !important;
-  border: 1px solid #475226;
+  background-color: var(--color-primary, #606c38); /* Verde hoja: 5.68:1 con texto blanco */
+  color: var(--color-on-primary, #ffffff);
+  border: 1px solid var(--color-primary-hover, #475226);
 }
 
 .btn-primary:hover {
-  background-color: #475226 !important;
+  background-color: var(--color-primary-hover, #475226);
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(96, 108, 56, 0.25);
-  color: #ffffff !important;
+  color: var(--color-on-primary, #ffffff);
 }
 
 .btn-primary:active {
@@ -168,7 +171,7 @@
 }
 
 .btn-primary:focus-visible {
-  outline: 3px solid #283618;
+  outline: var(--focus-ring-width, 3px) solid var(--focus-ring-color, #283618);
   outline-offset: 3px;
 }
 
@@ -238,8 +241,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.65rem 1rem;
-  background-color: var(--color-primary, #283618); /* Verde Foresta */
-  color: #ffffff;
+  background-color: var(--color-secondary, #283618); /* Verde bosque */
+  color: var(--color-on-primary, #ffffff);
 }
 
 .arete-tag {
@@ -272,7 +275,7 @@
 .animal-name {
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--color-primary, #283618);
+  color: var(--color-secondary, #283618);
   margin-top: 0;
   margin-bottom: 0.75rem;
   text-wrap: balance;
@@ -301,7 +304,7 @@
 
 .spec-desc {
   margin: 0;
-  color: var(--color-primary, #283618);
+  color: var(--color-secondary, #283618);
   font-weight: 500;
 }
 
@@ -344,15 +347,15 @@
 .filter-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--color-primary, #283618);
+  color: var(--color-secondary, #283618);
 }
 
 .form-select {
   padding: 0.5rem 0.75rem;
-  border: 1px solid #bc6c25;
+  border: 1px solid var(--color-earth-dark, #8c4a10); /* Borde de control: 6.77:1 */
   border-radius: 0.375rem;
-  background-color: #ffffff;
-  color: var(--color-primary, #283618);
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-secondary, #283618);
   font-family: inherit;
   font-size: 0.95rem;
   cursor: pointer;
@@ -360,7 +363,7 @@
 }
 
 .form-select:focus-visible {
-  outline: 3px solid var(--color-primary, #283618);
+  outline: var(--focus-ring-width, 3px) solid var(--focus-ring-color, #283618);
   outline-offset: 2px;
 }
 
@@ -376,13 +379,13 @@
 }
 
 .badge-success {
-  background-color: var(--color-success, #16a34a);
-  color: #ffffff;
+  background-color: var(--color-success, #15803d); /* 5.02:1 */
+  color: var(--color-on-success, #ffffff);
 }
 
 .badge-warning {
-  background-color: #dda15e;
-  color: #283618;
+  background-color: var(--color-accent, #dda15e);
+  color: var(--color-secondary, #283618); /* 5.72:1 */
 }
 
 /* Botones secundarios de tarjeta */
@@ -392,9 +395,9 @@
 }
 
 .btn-secondary {
-  background-color: #ffffff;
-  color: var(--color-primary, #283618);
-  border: 1px solid var(--color-primary, #283618);
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-secondary, #283618);
+  border: 1px solid var(--color-secondary, #283618);
 }
 
 .btn-secondary:hover {
@@ -402,12 +405,12 @@
 }
 
 .btn-accent {
-  background-color: #8c4a10;
-  color: #ffffff;
+  background-color: var(--color-earth-dark, #8c4a10); /* 6.77:1 con texto blanco */
+  color: var(--color-on-primary, #ffffff);
 }
 
 .btn-accent:hover {
-  background-color: #6a370b;
+  background-color: var(--color-earth-dark-hover, #6a370b);
 }
 
 /* Ocultar visualmente manteniendo accesibilidad */
