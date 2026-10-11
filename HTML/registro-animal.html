@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Formulario accesible para el registro de nuevos animales y pesaje inicial en la finca GuateGanado.">
+  <title>Registro de Nuevo Animal | GuateGanado</title>
+
+  <!-- Tipografía Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de estilo del sistema de diseño -->
+  <link rel="stylesheet" href="../CSS/reset.css">
+  <link rel="stylesheet" href="../CSS/variables.css">
+  <link rel="stylesheet" href="../CSS/layout.css">
+  <link rel="stylesheet" href="../CSS/componentes.css">
+</head>
+<body class="site-body">
+
+  <div class="site-layout">
+    <!-- NAVEGACIÓN GLOBAL -->
+    <aside class="sidebar" aria-label="Navegación del sistema">
+      <div class="sidebar-brand">
+        <svg class="brand-icon" aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+          <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+          <line x1="9" y1="9" x2="9.01" y2="9"/>
+          <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+        <span class="brand-text">GuateGanado</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul class="nav-list" role="list">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">📊</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="animales.html" class="nav-link nav-link--active">
+              <span class="nav-icon" aria-hidden="true">🐄</span>
+              <span>Animales</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">🌿</span>
+              <span>Potreros</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">⚖️</span>
+              <span>Pesajes</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">💉</span>
+              <span>Tratamientos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="nav-icon" aria-hidden="true">📦</span>
+              <span>Insumos</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer" id="sidebar-user-footer"></div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL: FORMULARIO ACCESIBLE (PERSONA 3) -->
+    <main class="main-content" id="main-content">
+      
+      <!-- ENCABEZADO DE PÁGINA: ÚNICO H1 -->
+      <header class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">Registro de Nuevo Animal</h1>
+          <p class="page-subtitle">Complete la información requerida para registrar el animal en el inventario y asignar su primer pesaje.</p>
+        </div>
+        <div class="page-header-actions">
+          <a href="animales.html" class="btn btn-secondary">
+            <span aria-hidden="true">←</span>
+            <span>Volver al catálogo</span>
+          </a>
+        </div>
+      </header>
+
+     <!-- FORMULARIO DE REGISTRO ACCESIBLE -->
+      <section class="form-section" aria-label="Formulario de registro">
+        <form class="animal-form" action="#" method="post" novalidate>
+          
+          <!-- FIELDSET 1: IDENTIFICACIÓN DEL GANADO -->
+          <fieldset class="form-fieldset">
+            <legend class="form-legend">Identificación del Ganado</legend>
+            <p class="fieldset-desc">Ingrese los datos básicos de filiación y registro zootécnico del animal.</p>
+
+            <div class="form-grid">
+              <!-- Arete ID -->
+              <div class="form-group">
+                <label for="arete-id" class="form-label">
+                  Número de Arete <span class="required-indicator" aria-hidden="true">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="arete-id" 
+                  name="arete_id" 
+                  class="form-control" 
+                  placeholder="Ej. GG-1004"
+                  required 
+                  pattern="^GG-[0-9]{4}$"
+                  aria-describedby="arete-help">
+                <small id="arete-help" class="form-help">Formato obligatorio: GG seguido de 4 dígitos (Ej. GG-1234).</small>
+              </div>
+
+              <!-- Nombre del Animal -->
+              <div class="form-group">
+                <label for="nombre-animal" class="form-label">Nombre o alias:</label>
+                <input 
+                  type="text" 
+                  id="nombre-animal" 
+                  name="nombre" 
+                  class="form-control" 
+                  placeholder="Ej. Tormento, Canela...">
+              </div>
+
+              <!-- Especie -->
+              <div class="form-group">
+                <label for="especie-animal" class="form-label">
+                  Especie <span class="required-indicator" aria-hidden="true">*</span>
+                </label>
+                <select id="especie-animal" name="especie" class="form-control" required>
+                  <option value="" disabled selected>Seleccione una especie</option>
+                  <option value="Bovino">Bovino</option>
+                  <option value="Equino">Equino</option>
+                </select>
+              </div>
+
+              <!-- Raza -->
+              <div class="form-group">
+                <label for="raza-animal" class="form-label">
+                  Raza <span class="required-indicator" aria-hidden="true">*</span>
+                </label>
+                <select id="raza-animal" name="raza_id" class="form-control" required>
+                  <option value="" disabled selected>Seleccione la raza</option>
+                  <option value="1">Brahman</option>
+                  <option value="2">Simmental</option>
+                  <option value="3">Nelore</option>
+                  <option value="4">Angus</option>
+                  <option value="5">Gyr Lechero</option>
+                </select>
+              </div>
+
+              <!-- Sexo -->
+              <div class="form-group">
+                <label for="sexo-animal" class="form-label">
+                  Sexo <span class="required-indicator" aria-hidden="true">*</span>
+                </label>
+                <select id="sexo-animal" name="sexo" class="form-control" required>
+                  <option value="" disabled selected>Seleccione el sexo</option>
+                  <option value="Macho">Macho</option>
+                  <option value="Hembra">Hembra</option>
+                </select>
+              </div>
+
+              <!-- Fecha de Nacimiento -->
+              <div class="form-group">
+                <label for="fecha-nacimiento" class="form-label">
+                  Fecha de Nacimiento <span class="required-indicator" aria-hidden="true">*</span>
+                </label>
+                <input 
+                  type="date" 
+                  id="fecha-nacimiento" 
+                  name="fecha_nacimiento" 
+                  class="form-control" 
+                  required>
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- FIELDSET 2: ASIGNACIÓN DE POTRERO -->
+          <fieldset class="form-fieldset">
+            <legend class="form-legend">Asignación de Potrero</legend>
+            <p class="fieldset-desc">Seleccione el área de pastoreo inicial donde residirá el animal.</p>
+
+            <div class="form-grid">
+              <div class="form-group form-group--full">
+                <label for="potrero-asignado" class="form-label">
+                  Potrero Disponible <span class="required-indicator" aria-hidden="true">*</span>
+                </label>
+                <select 
+                  id="potrero-asignado" 
+                  name="potrero_id" 
+                  class="form-control" 
+                  required
+                  aria-describedby="potrero-help">
+                  <option value="" disabled selected>Seleccione un potrero</option>
+                  <option value="1">Potrero Norte (Capacidad: 45/60 cabezas - Pasto excelente)</option>
+                  <option value="2">Potrero El Río (Capacidad: 28/40 cabezas - Pasto bueno)</option>
+                  <option value="3">Potrero La Laguna (Capacidad: 15/30 cabezas - Pasto regular)</option>
+                </select>
+                <small id="potrero-help" class="form-help">Verifique la carga máxima antes de asignar animales adicionales.</small>
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- FIELDSET 3: CONDICIÓN SANITARIA Y PESAJE INICIAL -->
+          <fieldset class="form-fieldset">
+            <legend class="form-legend">Condición Sanitaria y Pesaje Inicial</legend>
+            <p class="fieldset-desc">Registre los parámetros biométricos y clínicos de ingreso.</p>
+
+            <div class="form-grid">
+              <!-- Peso inicial en Kg -->
+              <div class="form-group">
+                <label for="peso-inicial" class="form-label">
+                  Peso Inicial (kg) <span class="required-indicator" aria-hidden="true">*</span>
+                </label>
+                <input 
+                  type="number" 
+                  id="peso-inicial" 
+                  name="peso_inicial" 
+                  class="form-control" 
+                  placeholder="Ej. 450.5" 
+                  step="0.1" 
+                  min="1" 
+                  max="1500" 
+                  required
+                  aria-describedby="peso-help">
+                <small id="peso-help" class="form-help">Rango admitido: entre 1.0 kg y 1500.0 kg.</small>
+              </div>
+
+              <!-- Estado de Salud -->
+              <div class="form-group">
+                <label for="estado-salud" class="form-label">
+                  Condición de Salud <span class="required-indicator" aria-hidden="true">*</span>
+                </label>
+                <select id="estado-salud" name="estado_salud" class="form-control" required>
+                  <option value="" disabled selected>Seleccione estado sanitario</option>
+                  <option value="Saludable">Saludable / Óptimo</option>
+                  <option value="Tratamiento">En Tratamiento</option>
+                  <option value="Cuarentena">En Cuarentena</option>
+                </select>
+              </div>
+
+              <!-- Observaciones -->
+              <div class="form-group form-group--full">
+                <label for="observaciones-sanitarias" class="form-label">Observaciones generales:</label>
+                <textarea 
+                  id="observaciones-sanitarias" 
+                  name="observaciones" 
+                  rows="3" 
+                  class="form-control" 
+                  placeholder="Detalles sobre marcas particulares, cicatrices o vacunas aplicadas al ingreso..."></textarea>
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- BOTONES DE ACCIÓN -->
+          <div class="form-actions">
+            <a href="animales.html" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Registrar Animal e Ingresar Pesaje</button>
+          </div>
+
+        </form>
+      </section>
+
+
+      
+
+    </main>
+  </div>
+
+</body>
+</html>
