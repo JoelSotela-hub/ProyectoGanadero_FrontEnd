@@ -189,6 +189,13 @@
   margin-top: var(--space-md, 1rem);
 }
 
+.animal-grid-statistics{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-lg, 1.5rem);
+  margin-top: var(--space-md, 1rem);
+}
+
 /* Breakpoint 1: Tablet / Pantallas medianas (>= 40rem / 640px) */
 @media (min-width: 40rem) {
   .animal-grid {
@@ -316,6 +323,23 @@
   padding: 0.75rem 1rem;
   background-color: var(--color-Background, #fefae0);
   border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.card-animal-statistics {
+    display: flex;
+    gap: 2rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    flex-direction: column;
+    background-color: var(--color-surface, #fefae0);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.card-statistics-header{
+  display: flex; 
+  gap: 20px;
 }
 
 /* --------------------------------------------------------------------------
