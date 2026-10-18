@@ -1,4 +1,4 @@
-export const DEFAULT_API_BASE_URL = 'http://localhost/ProyectoGanadero_BackEnd/public/api/v1';
+﻿export const DEFAULT_API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
 
 export const ENDPOINTS = Object.freeze({
   AUTH: Object.freeze({
