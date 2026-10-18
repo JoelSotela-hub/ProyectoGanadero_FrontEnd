@@ -76,7 +76,7 @@
       <div class="sidebar-footer" id="sidebar-user-footer"></div>
     </aside>
 
-    <!-- CONTENIDO PRINCIPAL: FORMULARIO ACCESIBLE (PERSONA 3) -->
+    <!-- CONTENIDO PRINCIPAL: FORMULARIO ACCESIBLE -->
     <main class="main-content" id="main-content">
       
       <!-- ENCABEZADO DE PÁGINA: ÚNICO H1 -->
@@ -95,7 +95,7 @@
 
      <!-- FORMULARIO DE REGISTRO ACCESIBLE -->
       <section class="form-section" aria-label="Formulario de registro">
-        <form class="animal-form" action="#" method="post" novalidate>
+        <form id="form-animal" class="animal-form" action="#" method="post" novalidate>
           
           <!-- FIELDSET 1: IDENTIFICACIÓN DEL GANADO -->
           <fieldset class="form-fieldset">
@@ -111,13 +111,14 @@
                 <input 
                   type="text" 
                   id="arete-id" 
-                  name="arete_id" 
+                  name="numero_arete" 
                   class="form-control" 
                   placeholder="Ej. GG-1004"
                   required 
                   pattern="^GG-[0-9]{4}$"
                   aria-describedby="arete-help">
                 <small id="arete-help" class="form-help">Formato obligatorio: GG seguido de 4 dígitos (Ej. GG-1234).</small>
+                <span id="error-numero_arete" class="error-message" role="alert"></span>
               </div>
 
               <!-- Nombre del Animal -->
@@ -129,6 +130,7 @@
                   name="nombre" 
                   class="form-control" 
                   placeholder="Ej. Tormento, Canela...">
+                <span id="error-nombre" class="error-message" role="alert"></span>
               </div>
 
               <!-- Especie -->
@@ -141,6 +143,7 @@
                   <option value="Bovino">Bovino</option>
                   <option value="Equino">Equino</option>
                 </select>
+                <span id="error-especie" class="error-message" role="alert"></span>
               </div>
 
               <!-- Raza -->
@@ -156,6 +159,7 @@
                   <option value="4">Angus</option>
                   <option value="5">Gyr Lechero</option>
                 </select>
+                <span id="error-raza_id" class="error-message" role="alert"></span>
               </div>
 
               <!-- Sexo -->
@@ -168,6 +172,7 @@
                   <option value="Macho">Macho</option>
                   <option value="Hembra">Hembra</option>
                 </select>
+                <span id="error-sexo" class="error-message" role="alert"></span>
               </div>
 
               <!-- Fecha de Nacimiento -->
@@ -181,6 +186,7 @@
                   name="fecha_nacimiento" 
                   class="form-control" 
                   required>
+                <span id="error-fecha_nacimiento" class="error-message" role="alert"></span>
               </div>
             </div>
           </fieldset>
@@ -207,6 +213,7 @@
                   <option value="3">Potrero La Laguna (Capacidad: 15/30 cabezas - Pasto regular)</option>
                 </select>
                 <small id="potrero-help" class="form-help">Verifique la carga máxima antes de asignar animales adicionales.</small>
+                <span id="error-potrero_id" class="error-message" role="alert"></span>
               </div>
             </div>
           </fieldset>
@@ -234,6 +241,7 @@
                   required
                   aria-describedby="peso-help">
                 <small id="peso-help" class="form-help">Rango admitido: entre 1.0 kg y 1500.0 kg.</small>
+                <span id="error-peso_inicial" class="error-message" role="alert"></span>
               </div>
 
               <!-- Estado de Salud -->
@@ -247,6 +255,7 @@
                   <option value="Tratamiento">En Tratamiento</option>
                   <option value="Cuarentena">En Cuarentena</option>
                 </select>
+                <span id="error-estado_salud" class="error-message" role="alert"></span>
               </div>
 
               <!-- Observaciones -->
@@ -258,6 +267,7 @@
                   rows="3" 
                   class="form-control" 
                   placeholder="Detalles sobre marcas particulares, cicatrices o vacunas aplicadas al ingreso..."></textarea>
+                <span id="error-observaciones" class="error-message" role="alert"></span>
               </div>
             </div>
           </fieldset>
@@ -271,11 +281,10 @@
         </form>
       </section>
 
-
-      
-
     </main>
   </div>
 
+  <!-- SCRIPT DE LA VISTA DE FORMULARIO (PERSONA 5) -->
+  <script type="module" src="../JavaScript/features/formulario/FormularioView.js"></script>
 </body>
 </html>
