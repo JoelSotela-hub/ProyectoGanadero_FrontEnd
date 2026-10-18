@@ -1,12 +1,18 @@
 ﻿/**
- * Componente nativo de Paginacion Accesible (Laboratorio 9 - Rol 3)
+ *
  * @param {HTMLElement} container - Contenedor en el DOM
- * @param {Object} options - Metadatos de paginacion (currentPage, lastPage, total)
- * @param {Function} onPageChange - Callback al cambiar de pagina
+ * @param {Object} meta - Metadatos de paginación (current_page / currentPage, last_page / lastPage, total)
+ * @param {Function} onPageChange - Callback al cambiar de página
  */
-export function renderPagination(container, { currentPage = 1, lastPage = 1, total = 0 } = {}, onPageChange) {
+export function renderPagination(container, meta = {}, onPageChange) {
   if (!container) return;
 
+  // Soporta tanto camelCase como snake_case de Laravel
+  const currentPage = Number(meta.currentPage ?? meta.current_page ?? 1);
+  const lastPage = Number(meta.lastPage ?? meta.last_page ?? 1);
+  const total = Number(meta.total ?? 0);
+
+  // Si solo hay una página o ninguna, se limpia el contenedor
   if (lastPage <= 1) {
     container.innerHTML = '';
     return;
@@ -41,14 +47,37 @@ export function renderPagination(container, { currentPage = 1, lastPage = 1, tot
     </nav>
   `;
 
+  // Función interna para sincronizar la página con URLSearchParams
+  const sincronizarUrlYCambiarPagina = (nuevaPagina) => {
+    if (nuevaPagina < 1 || nuevaPagina > lastPage || nuevaPagina === currentPage) return;
+
+    // Manejo de parámetros de búsqueda con URLSearchParams
+    const url = new URL(window.location.href);
+    const searchParams = new URLSearchParams(url.search);
+
+    if (nuevaPagina > 1) {
+      searchParams.set('page', nuevaPagina);
+    } else {
+      searchParams.delete('page');
+    }
+
+    const nuevaRuta = `${url.pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    window.history.pushState({ page: nuevaPagina }, '', nuevaRuta);
+
+    // Notificar al controlador de vista
+    if (typeof onPageChange === 'function') {
+      onPageChange(nuevaPagina);
+    }
+  };
+
   const prevBtn = container.querySelector('#btn-page-prev');
   const nextBtn = container.querySelector('#btn-page-next');
 
-  if (prevBtn && !prevDisabled && typeof onPageChange === 'function') {
-    prevBtn.addEventListener('click', () => onPageChange(currentPage - 1));
+  if (prevBtn && !prevDisabled) {
+    prevBtn.addEventListener('click', () => sincronizarUrlYCambiarPagina(currentPage - 1));
   }
 
-  if (nextBtn && !nextDisabled && typeof onPageChange === 'function') {
-    nextBtn.addEventListener('click', () => onPageChange(currentPage + 1));
+  if (nextBtn && !nextDisabled) {
+    nextBtn.addEventListener('click', () => sincronizarUrlYCambiarPagina(currentPage + 1));
   }
 }
