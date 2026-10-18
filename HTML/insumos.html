@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Potreros | Guateganado</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Hojas de estilo del sistema de diseño (Rutas relativas a carpeta CSS) -->
+    <link rel="stylesheet" href="../CSS/reset.css">
+    <link rel="stylesheet" href="../CSS/variables.css">
+    <link rel="stylesheet" href="../CSS/layout.css">
+    <link rel="stylesheet" href="../CSS/componentes.css">
+    <link rel="stylesheet" href="../CSS/catalogo.css">
+</head>
+<body>
+    <div class="site-layout">
+        <aside class="sidebar" aria-label="Navegación del sistema">
+            <div class="sidebar-brand">
+                <svg class="brand-icon" aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                <line x1="15" y1="9" x2="15.01" y2="9"/>
+                </svg>
+                <span class="brand-text">GuateGanado</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list" role="list">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                        <span class="nav-icon" aria-hidden="true">📊</span>
+                        <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="animales.html" class="nav-link">
+                        <span class="nav-icon" aria-hidden="true">🐄</span>
+                        <span>Animales</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="potreros.html" class="nav-link" >
+                        <span class="nav-icon" aria-hidden="true">🌿</span>
+                        <span>Potreros</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="pesajes.html" class="nav-link">
+                        <span class="nav-icon" aria-hidden="true">⚖️</span>
+                        <span>Pesajes</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="tratamientos.html" class="nav-link">
+                        <span class="nav-icon" aria-hidden="true">💉</span>
+                        <span>Tratamientos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="insumos.html" class="nav-link nav-link--active" aria-current="page">
+                        <span class="nav-icon" aria-hidden="true">📦</span>
+                        <span>Insumos</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main class="main-content" id="main-content">
+            <header class="page-header">
+                <div class="page-header-text">
+                    <p class="page-subtitle">Lunes 24 de septiembre de 2026</p>
+                    <h1 class="page-title">Buenos Dias, Juan Carlos</h1>
+                    <p class="page-subtitle">Bienvenido este es el estado actual de tu operacion Ganadera.</p>
+                </div>
+                <div class="page-header-actions">
+                <!-- Acción que enlaza a la Pantalla 3 del equipo -->
+                    <a href="registro-animal.html" class="btn btn-primary">
+                        <span aria-hidden="true">+</span>
+                        <span>Registrar Animal</span>
+                    </a>
+                </div>
+            </header>
+
+            <section class="catalog-section" aria-label="Tarjetas de animales registrados">
+                <div class="animal-grid-statistics">
+                    <article class="card-animal-statistics" data-categoria="bovino">
+                        <header class="card-statistics-header">
+                        <span class="nav-icon" aria-hidden="true"> 🐄 </span>
+                        <span>  Total de Animales </span>
+                        </header>
+                    </article>
+
+                    <article class="card-animal-statistics" data-categoria="bovino">
+                        <header class="card-statistics-header">
+                        <span class="nav-icon" aria-hidden="true"> 🌿 </span>
+                        <span>  Total de Potreros Activos </span>
+                        </header>
+                    </article>
+
+                    <article class="card-animal-statistics" data-categoria="bovino">
+                        <header class="card-statistics-header">
+                        <span class="nav-icon" aria-hidden="true"> 💉 </span>
+                        <span>  Total de Tratamientos </span>
+                        </header>
+                    </article>
+
+                    
+                    <article class="card-animal-statistics" data-categoria="bovino">
+                        <header class="card-statistics-header">
+                        <span class="nav-icon" aria-hidden="true"> 📈 </span>
+                        <span>Total de Ganancias</span>
+                        </header>
+                    </article>
+
+                </div>
+            </section>
+
+                <footer>
+                <p> Sitio Web ganadero</p>
+                </footer>
+
+        </main>
+    </div>
+</body>
+</html>
