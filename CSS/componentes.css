@@ -1465,3 +1465,20 @@ select.form-control {
   block-size: 1.75rem;
   border-radius: 4px;
 }
+
+/* ==========================================================================
+   Laboratorio 9 - Rol 5: errores 422 por campo en el formulario de animales
+   ========================================================================== */
+.error-message {
+  display: block;
+  margin-block-start: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--color-error-text, #991b1b);
+}
+.error-message:empty { display: none; }
+.form-control.is-invalid,
+.form-control[aria-invalid="true"] {
+  border-color: var(--color-error-border, #dc2626);
+  background-color: var(--color-error-bg, #fef2f2);
+}
+.animal-form[aria-busy="true"] { opacity: 0.75; }

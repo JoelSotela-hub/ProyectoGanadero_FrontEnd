@@ -16,7 +16,10 @@ const VISTAS = {
   'login.html': [() => import('./features/auth/LoginView.js')],
   'dashboard.html': [() => import('./features/dashboard/DashboardView.js')],
   'animales.html': [() => import('./features/catalogo/CatalogoView.js')],
-  'registro-animal.html': [() => import('./features/formulario/draftRecovery.js')],
+  'registro-animal.html': [
+    () => import('./features/formulario/draftRecovery.js'),
+    () => import('./features/catalogo/FormularioView.js'),
+  ],
 };
 
 const paginaActual = () => window.location.pathname.split('/').pop() || 'dashboard.html';
