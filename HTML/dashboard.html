@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -73,8 +73,8 @@
         <main class="main-content" id="main-content">
             <header class="page-header">
                 <div class="page-header-text">
-                    <p class="page-subtitle">Lunes 24 de septiembre de 2026</p>
-                    <h1 class="page-title">Buenos Dias, Juan Carlos</h1>
+                    <p class="page-subtitle"><time id="dashboard-fecha"></time></p>
+                    <h1 class="page-title" id="dashboard-saludo">Bienvenido</h1>
                     <p class="page-subtitle">Bienvenido este es el estado actual de tu operacion Ganadera.</p>
                 </div>
                 <div class="page-header-actions">
@@ -83,40 +83,47 @@
                         <span aria-hidden="true">+</span>
                         <span>Registrar Animal</span>
                     </a>
+                    <button type="button" class="btn btn-secondary" id="btn-logout">Cerrar sesión</button>
                 </div>
             </header>
 
             <section class="catalog-section" aria-label="Tarjetas de animales registrados">
                 <div class="animal-grid-statistics">
-                    <article class="card-animal-statistics" data-categoria="bovino">
+                    <article class="card-animal-statistics metric-card" data-metric="animales" aria-busy="true">
                         <header class="card-statistics-header">
                         <span class="nav-icon" aria-hidden="true"> 🐄 </span>
-                        <span>  Total de Animales </span>
+                        <span>Total de Animales</span>
                         </header>
+                        <p class="kpi-card__value metric-value" aria-live="polite">—</p>
+                        <p class="kpi-card__foot metric-foot"></p>
                     </article>
 
-                    <article class="card-animal-statistics" data-categoria="bovino">
+                    <article class="card-animal-statistics metric-card" data-metric="potreros" aria-busy="true">
                         <header class="card-statistics-header">
                         <span class="nav-icon" aria-hidden="true"> 🌿 </span>
-                        <span>  Total de Potreros Activos </span>
+                        <span>Potreros Registrados</span>
                         </header>
+                        <p class="kpi-card__value metric-value" aria-live="polite">—</p>
+                        <p class="kpi-card__foot metric-foot"></p>
                     </article>
 
-                    <article class="card-animal-statistics" data-categoria="bovino">
+                    <article class="card-animal-statistics metric-card" data-metric="tratamientos" aria-busy="true">
                         <header class="card-statistics-header">
                         <span class="nav-icon" aria-hidden="true"> 💉 </span>
-                        <span>  Total de Tratamientos </span>
+                        <span>Tratamientos Registrados</span>
                         </header>
+                        <p class="kpi-card__value metric-value" aria-live="polite">—</p>
+                        <p class="kpi-card__foot metric-foot"></p>
                     </article>
 
-                    
-                    <article class="card-animal-statistics" data-categoria="bovino">
+                    <article class="card-animal-statistics metric-card" data-metric="insumos" aria-busy="true">
                         <header class="card-statistics-header">
-                        <span class="nav-icon" aria-hidden="true"> 📈 </span>
-                        <span>Total de Ganancias</span>
+                        <span class="nav-icon" aria-hidden="true"> 📦 </span>
+                        <span>Insumos en Inventario</span>
                         </header>
+                        <p class="kpi-card__value metric-value" aria-live="polite">—</p>
+                        <p class="kpi-card__foot metric-foot"></p>
                     </article>
-
                 </div>
             </section>
 
@@ -126,5 +133,6 @@
 
         </main>
     </div>
+  <script type="module" src="../JavaScript/main.js"></script>
 </body>
 </html>

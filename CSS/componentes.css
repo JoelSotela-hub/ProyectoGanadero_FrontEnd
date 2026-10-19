@@ -1415,3 +1415,53 @@ select.form-control {
     border-block-end: 1px solid #000000;
   }
 }
+
+/* ==========================================================================
+   Laboratorio 9 - Rol 6: alertas de sesión, errores por campo y métricas
+   ========================================================================== */
+.form-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block-end: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid transparent;
+  border-inline-start-width: 4px;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.form-alert[hidden] { display: none; }
+.form-alert--error   { background: var(--color-error-bg, #fef2f2); border-color: var(--color-error-border, #dc2626); color: var(--color-error-text, #991b1b); }
+.form-alert--warning { background: #fffbeb; border-color: #b45309; color: #78350f; }
+.form-alert--info    { background: #eff6ff; border-color: #1d4ed8; color: #1e3a8a; }
+.form-alert--success { background: #f0fdf4; border-color: var(--color-success, #15803d); color: #14532d; }
+
+.field-error {
+  display: block;
+  margin-block-start: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--color-error-text, #991b1b);
+}
+.field-error[hidden] { display: none; }
+[aria-invalid="true"] { border-color: var(--color-error-border, #dc2626) !important; }
+
+.metric-card { gap: 0.5rem; }
+.metric-card .metric-value { min-block-size: 2.1rem; }
+.metric-card .metric-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-block-size: 1.5rem;
+}
+.card-animal-statistics.metric-card--error { border-color: var(--color-error-border, #dc2626); background: var(--color-error-bg, #fef2f2); }
+.metric-card--error .metric-foot { color: var(--color-error-text, #991b1b); }
+.metric-skeleton {
+  display: inline-block;
+  inline-size: 5rem;
+  block-size: 1.75rem;
+  border-radius: 4px;
+}

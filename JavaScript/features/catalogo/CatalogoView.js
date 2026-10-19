@@ -178,7 +178,6 @@ export class CatalogoView {
 function bootCatalogo() {
   const catalogoView = new CatalogoView();
   catalogoView.init();
-  window.catalogoView = catalogoView;
 }
 
 if (document.readyState === 'loading') {

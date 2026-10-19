@@ -1,68 +1,71 @@
+/**
+ * Acciones del Store (Laboratorio 9 - Rol 2)
+ * Las vistas no modifican el estado directamente: llaman a estas acciones,
+ * que consultan la API mediante el ApiClient y actualizan el Store.
+ * El Store notifica a los suscriptores y cada vista se re-renderiza sola.
+ *
+ * Forma del estado de un recurso: store.getState()[key] =
+ *   { status: 'loading' | 'success' | 'empty' | 'error', data, meta, error }
+ * (es la misma forma que espera CatalogoView.connectStore() en state.catalogo).
+ */
 import { store } from './Store.js';
+import { apiClient, ApiClient } from '../api/ApiClient.js';
 
-export const actions = {
-    setTheme(themeName){
-        store.setState({theme: themeName});
-    },
+/** Un AbortController por recurso: una carga nueva cancela la anterior. */
+const controladores = new Map();
 
-    async fetchResorceData(resourceID){
-        store.setState({loading: true, error: null});
-
-        try {
-            const response = await fetch();
-
-            if (!response.ok) {
-                throw new Error('Error HTTP: ${response.status}');
-            }
-
-            const data = await response.json();
-
-            store.setState({
-                currentResource: data,
-                loading: false
-            });
-        } catch (error){
-            store.setState({
-                error: error.message,
-                loading: false
-            });
-        }
-    }
+const actualizarRecurso = (key, cambios) => {
+  store.setState((state) => ({
+    [key]: { ...state[key], ...cambios },
+  }));
 };
 
-/*
-Esta porcion de codigo seria para conectar la State-Driven UI
-import {store} from './core/store/Store.js';
-import {actions} from './core/store/actions.js';
+export const actions = {
+  setTheme(themeName) {
+    store.setState({ theme: themeName });
+  },
 
-export function initUserView() {
-  const container = document.getElementById('app-view');
+  /**
+   * Carga un recurso de la API y lo guarda en el Store bajo `key`.
+   * @param {string} key - Clave del estado (ej. 'catalogo').
+   * @param {string} endpoint - Ruta del recurso (ej. ENDPOINTS.ANIMALES.BASE).
+   * @param {Object} [params] - Query string (page, per_page, potrero_id...).
+   * @example actions.fetchResource('catalogo', ENDPOINTS.ANIMALES.BASE, { page: 2 });
+   */
+  async fetchResource(key, endpoint, params = {}) {
+    controladores.get(key)?.abort();
+    const controller = new AbortController();
+    controladores.set(key, controller);
 
-  const render = (state) => {
-    if (state.loading) {
-      container.innerHTML = `<p>Cargando datos...</p>`;
-      return;
+    actualizarRecurso(key, { status: 'loading', error: null });
+
+    try {
+      const response = await apiClient.get(endpoint, { params, signal: controller.signal });
+      const data = response?.data ?? response;
+      const vacio = Array.isArray(data) && data.length === 0;
+
+      actualizarRecurso(key, {
+        status: vacio ? 'empty' : 'success',
+        data,
+        meta: response?.meta ?? null,
+        error: null,
+      });
+    } catch (error) {
+      // Una carga cancelada por otra más reciente no debe mostrar error.
+      if (ApiClient.isAbortError(error)) return;
+
+      actualizarRecurso(key, {
+        status: 'error',
+        error: error?.mensaje || error?.message || 'Error al comunicarse con el servidor.',
+      });
+    } finally {
+      if (controladores.get(key) === controller) controladores.delete(key);
     }
+  },
 
-    if (state.error) {
-      container.innerHTML = `<p style="color: red;">Error: ${state.error}</p>`;
-      return;
-    }
-
-    container.innerHTML = `
-      <h2>Recurso: ${state.currentResource?.name || 'Ninguno'}</h2>
-      <button id="reload-btn">Actualizar Datos</button>
-    `;
-
-    // Vincular eventos de UI que disparan acciones
-    document.getElementById('reload-btn')?.addEventListener('click', () => {
-      actions.fetchResourceData(1);
-    });
-  };
-
-  const unsubscribe = store.subscribe(render);
-
-  render(store.getState());
-}
- La porcion de codigo va en otro archivo independiente.
-*/
+  /** Cancela la carga en curso de un recurso (ej. al salir de la vista). */
+  cancelResource(key) {
+    controladores.get(key)?.abort();
+    controladores.delete(key);
+  },
+};
