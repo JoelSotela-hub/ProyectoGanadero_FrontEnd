@@ -230,6 +230,16 @@
   color: var(--color-primary, #606c38);
 }
 
+/* Oculta -> ojo tachado; visible -> ojo abierto */
+.auth-field__toggle .icon-eye,
+.auth-field__toggle[aria-pressed="true"] .icon-eye-off {
+  display: none;
+}
+
+.auth-field__toggle[aria-pressed="true"] .icon-eye {
+  display: block;
+}
+
 /* Error de validación en el campo */
 .auth-field__input[aria-invalid="true"] {
   border-color: var(--color-error-border, #dc2626);
