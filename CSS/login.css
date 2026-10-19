@@ -1,0 +1,373 @@
+/* ==========================================================================
+   LOGIN.CSS — Pantalla de inicio de sesión (Laboratorio 9 - Rol 6)
+   Panel de marca a la izquierda + formulario a la derecha.
+   Usa solo los tokens de variables.css (paleta con contraste WCAG AA).
+   ========================================================================== */
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-block-size: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   1. Panel de marca
+   -------------------------------------------------------------------------- */
+.auth-panel {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 3rem 3.5rem 2.5rem;
+  background-color: var(--color-secondary, #283618);
+  color: var(--color-Background, #fefae0);
+  isolation: isolate;
+}
+
+.auth-panel__art {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: none;
+  z-index: -1;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--font-lg, 1.25rem);
+  font-weight: var(--font-weight-bold, 700);
+}
+
+.auth-brand__mark {
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: 0.6rem;
+  background: rgba(254, 250, 224, 0.12);
+  border: 1px solid rgba(254, 250, 224, 0.2);
+  color: var(--color-accent, #dda15e);
+}
+
+.auth-panel__info {
+  margin-block-start: clamp(3rem, 12vh, 7rem);
+  max-inline-size: 30rem;
+}
+
+.auth-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--font-sm, 0.8rem);
+  font-weight: var(--font-weight-semibold, 600);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent, #dda15e);
+}
+
+.auth-eyebrow::before {
+  content: "";
+  inline-size: 1.75rem;
+  block-size: 2px;
+  background: currentColor;
+}
+
+.auth-panel__title {
+  margin-block-start: 1rem;
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  letter-spacing: -0.02em;
+  color: var(--color-Background, #fefae0);
+}
+
+.auth-panel__title span {
+  color: var(--color-accent, #dda15e);
+}
+
+.auth-panel__text {
+  margin-block-start: 1.25rem;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: rgba(254, 250, 224, 0.82);
+}
+
+.auth-panel__copy {
+  margin-block-start: auto;
+  font-size: 0.85rem;
+  color: rgba(254, 250, 224, 0.75);
+}
+
+/* --------------------------------------------------------------------------
+   2. Columna del formulario
+   -------------------------------------------------------------------------- */
+.auth-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1.5rem 2.5rem;
+  background-color: var(--color-Background, #fefae0);
+}
+
+.auth-card {
+  inline-size: 100%;
+  max-inline-size: 24.5rem;
+  margin-block: auto;
+}
+
+.auth-header__eyebrow {
+  font-weight: 500;
+  color: var(--color-text-muted, #64748b);
+}
+
+.auth-header__title {
+  margin-block: 0.6rem 1.75rem;
+  font-size: var(--font-2xl, 1.953rem);
+  letter-spacing: -0.02em;
+  color: var(--color-secondary, #283618);
+}
+
+.auth-header__title span {
+  display: block;
+  color: var(--color-primary, #606c38);
+}
+
+/* --------------------------------------------------------------------------
+   3. Campos con etiqueta sobre el borde
+   -------------------------------------------------------------------------- */
+.auth-field {
+  position: relative;
+  margin-block-start: 1.6rem;
+}
+
+.auth-field__label {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0.9rem;
+  transform: translateY(-50%);
+  padding-inline: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-text-muted, #64748b);
+  /* Mitad superior del color del fondo, mitad inferior del campo: efecto "muesca" */
+  background: linear-gradient(var(--color-Background, #fefae0) 50%, var(--color-surface, #fff) 50%);
+  pointer-events: none;
+  transition: color 0.15s ease;
+}
+
+.auth-field__input {
+  inline-size: 100%;
+  block-size: 3.6rem;
+  padding: 0 3.25rem 0 1.15rem;
+  border: 1.5px solid #c9c5b2;
+  border-radius: 0.5rem;
+  background: var(--color-surface, #fff);
+  color: var(--color-secondary, #283618);
+  font-size: 0.95rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-field__input::placeholder {
+  color: #8a94a6;
+}
+
+.auth-field__input:hover {
+  border-color: #a8a38c;
+}
+
+/* Foco: borde verde hoja + halo (el anillo global de reset.css sigue activo con teclado) */
+.auth-field__input:focus {
+  outline: none;
+  border-color: var(--color-primary, #606c38);
+  box-shadow: 0 0 0 3px rgba(96, 108, 56, 0.2);
+}
+
+.auth-field:focus-within .auth-field__label {
+  color: var(--color-primary, #606c38);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.auth-field__icon,
+.auth-field__toggle {
+  position: absolute;
+  inset-block-start: 1.8rem;
+  inset-inline-end: 1rem;
+  transform: translateY(-50%);
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  color: #8a94a6;
+}
+
+.auth-field__icon {
+  pointer-events: none;
+}
+
+.auth-field:focus-within .auth-field__icon {
+  color: var(--color-primary, #606c38);
+}
+
+.auth-field__toggle {
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  inset-inline-end: 0.5rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+}
+
+.auth-field__toggle svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}
+
+.auth-field__toggle:hover,
+.auth-field__toggle[aria-pressed="true"] {
+  color: var(--color-primary, #606c38);
+}
+
+/* Error de validación en el campo */
+.auth-field__input[aria-invalid="true"] {
+  border-color: var(--color-error-border, #dc2626);
+}
+
+.auth-field__input[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18);
+}
+
+.auth-field .field-error {
+  margin-block-start: 0.4rem;
+  padding-inline-start: 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   4. Opciones, botón y pie
+   -------------------------------------------------------------------------- */
+.auth-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block-start: 1.1rem;
+  font-size: 0.9rem;
+}
+
+.auth-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.auth-check input {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  accent-color: var(--color-primary, #606c38);
+}
+
+.auth-link {
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-earth-dark, #8c4a10);
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  color: var(--color-earth-dark-hover, #6a370b);
+  text-decoration: underline;
+}
+
+.auth-submit {
+  inline-size: 100%;
+  block-size: 3.5rem;
+  margin-block-start: 1.6rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--color-primary, #606c38);
+  color: var(--color-on-primary, #fff);
+  font-size: var(--font-base, 1rem);
+  font-weight: var(--font-weight-semibold, 600);
+  box-shadow: 0 6px 16px -6px rgba(71, 82, 38, 0.55);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.auth-submit:hover {
+  background: var(--color-primary-hover, #475226);
+}
+
+.auth-submit:active {
+  transform: translateY(1px);
+}
+
+.auth-submit:disabled {
+  background: var(--color-disabled-bg, #e5e7eb);
+  color: var(--color-disabled-text, #6b7280);
+  box-shadow: none;
+  cursor: progress;
+}
+
+.auth-card .form-alert {
+  margin-block-end: 0.5rem;
+}
+
+.auth-footer {
+  inline-size: 100%;
+  max-inline-size: 24.5rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.auth-footer strong {
+  color: var(--color-earth-dark, #8c4a10);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+/* --------------------------------------------------------------------------
+   5. Responsive: en pantallas angostas el panel pasa arriba, compacto
+   -------------------------------------------------------------------------- */
+@media (max-width: 56rem) {
+  .auth-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .auth-panel {
+    padding: 1.5rem 1.25rem 1.75rem;
+  }
+
+  .auth-panel__art,
+  .auth-panel__copy {
+    display: none;
+  }
+
+  .auth-panel__info {
+    margin-block-start: 1.5rem;
+  }
+
+  .auth-panel__title {
+    font-size: var(--font-2xl, 1.953rem);
+  }
+
+  .auth-panel__text {
+    font-size: 1rem;
+  }
+
+  .auth-main {
+    padding: 2rem 1rem;
+  }
+
+  .auth-footer {
+    margin-block-start: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-field__input,
+  .auth-field__label,
+  .auth-submit {
+    transition: none;
+  }
+}
