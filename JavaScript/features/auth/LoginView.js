@@ -8,6 +8,18 @@
 import { login, consumePostLoginRedirect } from './authSession.js';
 import { ApiClient } from '../../core/api/ApiClient.js';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_MIN_LENGTH = 8;
+
+/** Mensajes específicos para cada tipo de error del formulario. */
+const MENSAJES_VALIDACION = {
+  camposVacios: 'Ingrese su correo electrónico y su contraseña.',
+  emailVacio: 'El correo electrónico es obligatorio.',
+  emailInvalido: 'El correo electrónico no es válido. Ejemplo: nombre@dominio.com',
+  passwordVacia: 'La contraseña es obligatoria.',
+  passwordCorta: `La contraseña debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres.`,
+};
+
 const MENSAJES_MOTIVO = {
   expired: 'Su sesión expiró. Inicie sesión de nuevo; los datos que estaba llenando se conservaron.',
   required: 'Debe iniciar sesión para acceder al sistema.',
@@ -73,6 +85,9 @@ export class LoginView {
       password: this.#passwordInput.value,
     };
 
+    // Validación local: cada caso (vacíos, correo, contraseña) tiene su propio mensaje.
+    if (!this.#validateCredentials(credentials)) return;
+
     this.#setLoading(true);
 
     try {
@@ -86,13 +101,47 @@ export class LoginView {
     }
   }
 
+  /**
+   * Valida los campos antes de enviarlos y muestra un mensaje distinto para cada caso.
+   * @returns {boolean} true si los datos se pueden enviar.
+   */
+  #validateCredentials({ email, password }) {
+    if (!email && !password) {
+      this.#setFieldError('email', MENSAJES_VALIDACION.emailVacio);
+      this.#setFieldError('password', MENSAJES_VALIDACION.passwordVacia);
+      this.#showAlert(MENSAJES_VALIDACION.camposVacios, 'error');
+      this.#emailInput.focus();
+      return false;
+    }
+
+    const errores = {};
+    if (!email) errores.email = MENSAJES_VALIDACION.emailVacio;
+    else if (!EMAIL_REGEX.test(email)) errores.email = MENSAJES_VALIDACION.emailInvalido;
+
+    if (!password) errores.password = MENSAJES_VALIDACION.passwordVacia;
+    else if (password.length < PASSWORD_MIN_LENGTH) errores.password = MENSAJES_VALIDACION.passwordCorta;
+
+    const campos = Object.keys(errores);
+    if (campos.length === 0) return true;
+
+    campos.forEach((campo) => this.#setFieldError(campo, errores[campo]));
+    this.#showAlert(Object.values(errores).join(' '), 'error');
+    (errores.email ? this.#emailInput : this.#passwordInput).focus();
+    return false;
+  }
+
   #renderError(error) {
     if (error?.isValidationError?.()) {
-      const fieldErrors = error.getFieldErrors();
+      // El backend responde 422 con un mensaje genérico ("Los datos enviados no son válidos.");
+      // se muestran en su lugar los mensajes específicos de cada campo.
+      const fieldErrors = error.getFieldErrors?.() ?? {};
+      const mensajes = [];
       Object.entries(fieldErrors).forEach(([field, messages]) => {
-        this.#setFieldError(field, messages[0]);
+        const mensaje = Array.isArray(messages) ? messages[0] : messages;
+        this.#setFieldError(field, mensaje);
+        if (mensaje) mensajes.push(mensaje);
       });
-      this.#showAlert(error.mensaje || 'Revise los datos ingresados.', 'error');
+      this.#showAlert(mensajes.join(' ') || error.mensaje || 'Revise los datos ingresados.', 'error');
       return;
     }
 
