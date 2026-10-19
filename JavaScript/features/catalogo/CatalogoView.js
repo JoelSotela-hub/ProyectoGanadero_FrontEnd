@@ -10,6 +10,7 @@ import { animalService } from './animalService.js';
 import { AnimalCard } from './components/AnimalCard.js';
 import { renderLoadingSkeleton, renderEmptyState, renderErrorState } from '../../core/utils/viewStates.js';
 import { renderPagination } from './components/Pagination.js';
+import { initSearchHandler } from './searchHandler.js';
 
 export class CatalogoView {
   #gridContainer;
@@ -30,25 +31,26 @@ export class CatalogoView {
   /**
    * Inicializa la vista en el DOM y dispara la carga inicial
    */
-  async init() {
-    if (!this.#gridContainer) {
-      console.warn('[CatalogoView] Contenedor .animal-grid no encontrado en el DOM.');
-      return;
-    }
-
-    // Asegura el contenedor de paginacion debajo de la rejilla
-    if (!this.#paginationContainer) {
-      this.#paginationContainer = document.createElement('div');
-      this.#paginationContainer.id = 'pagination-container';
-      this.#gridContainer.parentElement.appendChild(this.#paginationContainer);
-    }
-
-    // Delegacion de eventos para acciones dentro de las tarjetas (ej. Localizar GPS)
-    this.#setupCardActions();
-
-    // Carga inicial
-    await this.cargarAnimales();
+async init() {
+  if (!this.#gridContainer) {
+    console.warn('[CatalogoView] Contenedor .animal-grid no encontrado en el DOM.');
+    return;
   }
+
+  if (!this.#paginationContainer) {
+    this.#paginationContainer = document.createElement('div');
+    this.#paginationContainer.id = 'pagination-container';
+    this.#gridContainer.parentElement.appendChild(this.#paginationContainer);
+  }
+
+  this.#setupCardActions();
+
+  // Inicializar el buscador optimizado con Debounce y AbortController (Rol 4)
+  initSearchHandler(this);
+
+  // Carga inicial
+  await this.cargarAnimales();
+}
 
   /**
    * Conecta el Store reactivo Singleton (Rol 2) cuando este disponible
