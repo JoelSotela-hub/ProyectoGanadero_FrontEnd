@@ -70,8 +70,10 @@ import {
   IonFab, IonFabButton, IonIcon
 } from '@ionic/vue';
 import { add } from 'ionicons/icons';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 // Fecha actual
 const fecha = new Date().toLocaleDateString('es-CR', {
@@ -87,25 +89,24 @@ const saludo = computed(() => {
 
 // Datos simulados — la Persona 3 los reemplaza con la API real
 const metricas = ref([
-  { key: 'animales',     emoji: '🐄', label: 'Total de Animales',       value: '—', foot: 'Cargando...' },
-  { key: 'potreros',     emoji: '🌿', label: 'Potreros Registrados',    value: '—', foot: 'Cargando...' },
-  { key: 'tratamientos', emoji: '💉', label: 'Tratamientos Registrados', value: '—', foot: 'Cargando...' },
-  { key: 'insumos',      emoji: '📦', label: 'Insumos en Inventario',   value: '—', foot: 'Cargando...' },
+  { key: 'animales',     emoji: '🐄', label: 'Total de Animales',        value: '5', foot: 'Ver catálogo de animales' },
+  { key: 'potreros',     emoji: '🌿', label: 'Potreros Registrados',     value: '3', foot: 'Norte, El Río, La Laguna' },
+  { key: 'tratamientos', emoji: '💉', label: 'Tratamientos Registrados', value: '1', foot: 'En seguimiento activo' },
+  { key: 'insumos',      emoji: '📦', label: 'Insumos en Inventario',    value: '12', foot: 'Stock actualizado' },
 ]);
 
-// Navegación simulada
 function goToForm() {
-  router.push('/tabs/tab3'); // ajusta a tu ruta real del formulario
+  router.push('/tabs/registro');
 }
 
-function goToList(m: { key: string }) {
-  router.push(`/tabs/tab2`); // ajusta a tu ruta real del listado
+function goToList(_m: { key: string }) {
+  router.push('/tabs/animales');
 }
 
-function logout() {
-  // La Persona 4 cerrará la sesión real (borrar token cifrado).
-  // Por ahora solo limpiamos el estado y volvemos al login.
-  router.replace('/login');
+async function logout() {
+  // Limpia el estado de sesión en Pinia, borra el token y redirige reemplazando el historial
+  await authStore.logout();
+  await router.replace('/login');
 }
 </script>
 

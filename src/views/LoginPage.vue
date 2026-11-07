@@ -91,8 +91,10 @@ import {
   IonCard, IonCardContent, IonList, IonItem, IonInput,
   IonButton, IonCheckbox, IonLoading, toastController
 } from '@ionic/vue';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 const email = ref('');
 const password = ref('');
@@ -100,21 +102,27 @@ const remember = ref(false);
 const showPassword = ref(false);
 const loading = ref(false);
 
-// Mock temporal — la Persona 3 reemplazará esto con el servicio real de API
+// Conectado al estado compartido de Pinia — la Persona 3 reemplazará la llamada por el servicio real de API
 async function login() {
   loading.value = true;
   try {
-    await new Promise(r => setTimeout(r, 800)); // simula llamada
+    await new Promise(r => setTimeout(r, 600)); // simula llamada
 
-    // Validación básica simulada
-    if (email.value === 'usuario@guateganado.cr' && password.value === '123456') {
+    const success = await authStore.login({
+      email: email.value,
+      password: password.value,
+      remember: remember.value,
+    });
+
+    if (success) {
       const t = await toastController.create({
         message: 'Bienvenido',
         duration: 1500,
         color: 'success'
       });
       await t.present();
-      router.replace('/tabs/tab1'); // ajusta a tu ruta privada real
+      // Reemplaza el historial al entrar para que el botón físico de retroceso no vuelva al login
+      await router.replace('/tabs/dashboard');
     } else {
       const t = await toastController.create({
         message: 'Credenciales inválidas',
