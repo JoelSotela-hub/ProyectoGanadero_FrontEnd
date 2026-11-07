@@ -7,6 +7,7 @@
           <ion-button @click="goToForm">
             <ion-icon slot="icon-only" :icon="add" />
           </ion-button>
+          <ion-button @click="logout">Salir</ion-button>
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
@@ -128,8 +129,11 @@ import {
   IonInfiniteScroll, IonInfiniteScrollContent, IonFab, IonFabButton
 } from '@ionic/vue';
 import { add, pawOutline } from 'ionicons/icons';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
+const authStore = useAuthStore();
+
 const search = ref('');
 const filters = ref({ potrero: '', raza: '', sexo: '', estado: '' });
 const loading = ref(true);
@@ -174,8 +178,18 @@ async function onInfinite(e: any) {
   setTimeout(() => e.target.complete(), 600);
 }
 
-function goToForm() { router.push('/tabs/tab3'); }
-function goToDetail(id: number) { router.push(`/detalle/${id}`); }
+function goToForm() {
+  router.push('/tabs/registro');
+}
+
+function goToDetail(id: number) {
+  router.push(`/detalle/${id}`);
+}
+
+async function logout() {
+  await authStore.logout();
+  await router.replace('/login');
+}
 </script>
 
 <style scoped>
