@@ -1,0 +1,7 @@
+{
+  "name": "FrontEnd_Vue",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
