@@ -7,7 +7,7 @@
         </ion-buttons>
         <ion-title>Detalle del Animal</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="goToEdit">
+          <ion-button v-if="esAdmin" @click="goToEdit">
             <ion-icon slot="icon-only" :icon="createOutline" />
           </ion-button>
         </ion-buttons>
@@ -65,6 +65,7 @@
       <!-- Ficha completa del animal -->
       <div v-else class="detail-container">
         <ion-card>
+          <img v-if="animal.fotoUrl" :src="animal.fotoUrl" :alt="`Foto del animal ${animal.arete}`" class="animal-foto" />
           <ion-card-header>
             <div class="header-row">
               <div>
@@ -107,6 +108,13 @@
                 </ion-label>
               </ion-item>
 
+              <ion-item v-if="animal.codigoQr">
+                <ion-label>
+                  <h3>Código QR</h3>
+                  <p>{{ animal.codigoQr }}</p>
+                </ion-label>
+              </ion-item>
+
               <ion-item v-if="animal.fechaNacimiento">
                 <ion-label>
                   <h3>Fecha de Nacimiento</h3>
@@ -122,8 +130,33 @@
               </ion-item>
             </ion-list>
 
+            <!-- Historial de pesajes -->
+            <h4 v-if="animal.pesajes?.length" class="section-title">Pesajes</h4>
+            <ion-list v-if="animal.pesajes?.length" lines="full">
+              <ion-item v-for="p in animal.pesajes" :key="p.id">
+                <ion-label>
+                  <h3>{{ p.pesoKg }} kg</h3>
+                  <p>{{ p.fecha ?? 'Sin fecha' }}<span v-if="p.observaciones"> · {{ p.observaciones }}</span></p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+
+            <!-- Tratamientos aplicados -->
+            <h4 v-if="animal.tratamientos?.length" class="section-title">Tratamientos</h4>
+            <ion-list v-if="animal.tratamientos?.length" lines="full">
+              <ion-item v-for="t in animal.tratamientos" :key="t.id">
+                <ion-label class="ion-text-wrap">
+                  <h3>{{ t.nombre }}<span v-if="t.tipo"> · {{ t.tipo }}</span></h3>
+                  <p>
+                    {{ t.fechaAplicacion ?? 'Sin fecha' }}<span v-if="t.dosisMl"> · {{ t.dosisMl }} ml</span
+                    ><span v-if="t.observaciones"> · {{ t.observaciones }}</span>
+                  </p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+
             <div class="actions-block ion-margin-top">
-              <ion-button expand="block" @click="goToEdit">
+              <ion-button v-if="esAdmin" expand="block" @click="goToEdit">
                 <ion-icon slot="start" :icon="createOutline" />
                 Editar Registro
               </ion-button>
@@ -132,6 +165,20 @@
                 Volver al Listado
               </ion-button>
             </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Tarjeta de Código QR generada dinámicamente en cliente (sin guardar imágenes en BD) -->
+        <ion-card v-if="codigoQrValor" class="qr-card ion-text-center">
+          <ion-card-header>
+            <ion-card-subtitle>Identificación por Escáner</ion-card-subtitle>
+            <ion-card-title>Código QR del Animal</ion-card-title>
+          </ion-card-header>
+          <ion-card-content class="qr-card-content">
+            <div class="qr-box">
+              <qrcode-vue :value="codigoQrValor" :size="180" level="H" render-as="svg" />
+            </div>
+            <p class="qr-code-text">{{ codigoQrValor }}</p>
           </ion-card-content>
         </ion-card>
       </div>
@@ -165,14 +212,18 @@ import {
   onIonViewWillEnter,
 } from '@ionic/vue';
 import { arrowBackOutline, cloudOfflineOutline, createOutline } from 'ionicons/icons';
+import QrcodeVue from 'qrcode.vue';
 
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
+import { useRol } from '@/composables/useRol';
 import type { AnimalItem } from '@/models/auth.model';
 import { animalService, ApiError, formatearMarcaDeTiempo, networkService } from '@/services';
 
 const route = useRoute();
 const router = useRouter();
+// Solo el admin edita animales (el backend responde 403 al resto de roles).
+const { esAdmin } = useRol();
 
 // Lectura reactiva del parámetro de ruta (:id)
 const animalId = computed<string>(() => String(route.params.id ?? ''));
@@ -181,6 +232,11 @@ const loading = ref<boolean>(true);
 const error = ref<boolean>(false);
 const errorMessage = ref<string>('');
 const animal = ref<AnimalItem | null>(null);
+
+const codigoQrValor = computed<string>(() => {
+  if (!animal.value) return '';
+  return animal.value.codigo_qr || animal.value.codigoQr || `VACA-${animal.value.arete}`;
+});
 
 /** Estado de cache y marca de tiempo (Persona 4). */
 const desdeCache = ref<boolean>(false);
@@ -288,5 +344,39 @@ function goBackToList() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.animal-foto {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+}
+
+.section-title {
+  margin: 1rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.qr-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.qr-box {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 12px;
+  display: inline-flex;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.qr-code-text {
+  margin: 0;
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 </style>

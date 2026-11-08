@@ -18,6 +18,8 @@ export interface AuthSession {
 
 export interface AnimalItem {
   id: number;
+  /** Alias directo al identificador primario del backend (`id_animal`). */
+  id_animal?: number;
   arete: string;
   nombre: string;
   raza: string;
@@ -34,4 +36,26 @@ export interface AnimalItem {
   ubicacionLat?: number;
   ubicacionLng?: number;
   fotoUrl?: string;
+  /** Codigo del QR del animal (ej. VACA-001). */
+  codigoQr?: string;
+  codigo_qr?: string;
+  /** Historial de pesajes y tratamientos; solo viene en el detalle y en la consulta por QR. */
+  pesajes?: PesajeItem[];
+  tratamientos?: TratamientoItem[];
+}
+
+export interface PesajeItem {
+  id: number;
+  pesoKg: number;
+  fecha: string | null;
+  observaciones?: string | null;
+}
+
+export interface TratamientoItem {
+  id: number;
+  nombre: string;
+  tipo?: string | null;
+  fechaAplicacion?: string | null;
+  dosisMl?: number | string | null;
+  observaciones?: string | null;
 }

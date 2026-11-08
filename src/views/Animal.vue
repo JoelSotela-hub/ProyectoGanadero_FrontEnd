@@ -4,7 +4,10 @@
       <ion-toolbar>
         <ion-title>Animales</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="goToForm">
+          <ion-button aria-label="Escanear QR de Vaca" :disabled="escaneando" @click="escanearVaca">
+            <ion-icon slot="icon-only" :icon="qrCodeOutline" />
+          </ion-button>
+          <ion-button v-if="esAdmin" @click="goToForm">
             <ion-icon slot="icon-only" :icon="add" />
           </ion-button>
           <ion-button @click="logout">Salir</ion-button>
@@ -96,8 +99,8 @@
       <!-- Listado -->
       <ion-grid v-else class="ion-padding-horizontal">
         <ion-row>
-          <ion-col v-for="a in animalFiltrado" :key="a.id" size="12" size-sm="6" size-md="4">
-            <ion-card button @click="goToDetail(a.id)">
+          <ion-col v-for="a in animalFiltrado" :key="a.id_animal ?? a.id" size="12" size-sm="6" size-md="4">
+            <ion-card button @click="goToDetail(a.id_animal ?? a.id)">
               <ion-card-header>
                 <ion-card-subtitle>Arete: {{ a.arete }}</ion-card-subtitle>
                 <ion-card-title>{{ a.nombre }}</ion-card-title>
@@ -113,17 +116,18 @@
           </ion-col>
         </ion-row>
 
-        <div v-if="!animalFiltrado.length" class="empty-state ion-text-center ion-padding">
-          <ion-icon :icon="pawOutline" size="large" color="medium" />
-          <p>No hay animales que coincidan con los filtros.</p>
-        </div>
+        <EmptyState
+          v-if="!animalFiltrado.length"
+          title="Sin animales"
+          message="No hay animales que coincidan con los filtros."
+        />
       </ion-grid>
 
       <ion-infinite-scroll :disabled="!hayMas" @ionInfinite="onInfinite($event)">
         <ion-infinite-scroll-content loading-spinner="crescent" />
       </ion-infinite-scroll>
 
-      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+      <ion-fab v-if="esAdmin" vertical="bottom" horizontal="end" slot="fixed">
         <ion-fab-button @click="goToForm">
           <ion-icon :icon="add" />
         </ion-fab-button>
@@ -167,21 +171,27 @@ import {
   IonFab,
   IonFabButton,
 } from '@ionic/vue';
-import { add, cloudOfflineOutline, pawOutline } from 'ionicons/icons';
+import { add, cloudOfflineOutline, qrCodeOutline } from 'ionicons/icons';
 
 import ErrorState from '@/components/ErrorState.vue';
+import EmptyState from '@/components/EmptyState.vue';
+import { useEscanearVaca } from '@/composables/useEscanearVaca';
+import { useRol } from '@/composables/useRol';
 import type { AnimalItem } from '@/models/auth.model';
 import { useAuthStore } from '@/stores/auth';
 import {
   animalService,
   catalogoService,
   formatearMarcaDeTiempo,
+  mostrarError,
   networkService,
   type OpcionCatalogo,
 } from '@/services';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { escaneando, escanearVaca } = useEscanearVaca();
+const { esAdmin } = useRol();
 
 const search = ref('');
 const filters = ref({ potrero: '', raza: '', sexo: '', estado: '' });
@@ -249,6 +259,9 @@ async function cargar(pagina = 1, anexar = false): Promise<void> {
       errorMessage.value = err instanceof Error ? err.message : 'No se pudo obtener el listado de animales.';
       animales.value = [];
       hayMas.value = false;
+    } else {
+      // Fallo al cargar una pagina adicional: aviso con toast, el listado actual se conserva.
+      await mostrarError(err, 'No se pudo cargar más animales.');
     }
   } finally {
     loading.value = false;

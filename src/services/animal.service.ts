@@ -37,7 +37,21 @@ export interface AnimalApi {
   potrero_id: number;
   raza?: { raza_id: number; nombre: string } | null;
   potrero?: { potrero_id: number; nombre: string } | null;
-  pesajes?: { pesaje_id: number; peso_kg: number | string; fecha_pesaje: string | null }[];
+  pesajes?: {
+    pesaje_id: number;
+    peso_kg: number | string;
+    fecha_pesaje: string | null;
+    observaciones?: string | null;
+  }[];
+  /** Persona 5: QR, foto y tratamientos del detalle / consulta por QR. */
+  codigo_qr?: string | null;
+  foto?: string | null;
+  tratamientos?: {
+    tratamiento_id: number;
+    nombre: string;
+    tipo?: string | null;
+    pivot?: { fecha_aplicacion?: string | null; dosis_ml?: number | string | null; observaciones?: string | null };
+  }[];
   created_at?: string;
   updated_at?: string;
 }
@@ -88,6 +102,7 @@ export interface FiltrosAnimales {
 /** Datos que acepta POST /animales (StoreAnimalRequest). */
 export interface NuevoAnimal {
   numero_arete: string;
+  codigo_qr?: string | null;
   raza_id: number;
   potrero_id: number;
   sexo: 'Macho' | 'Hembra';
@@ -107,8 +122,10 @@ function ultimoPeso(animal: AnimalApi): number | null {
 
 /** Traduce la respuesta de la API al modelo que consumen las vistas. */
 export function mapearAnimal(animal: AnimalApi): AnimalItem {
+  const codigoQrNormalizado = animal.codigo_qr ?? `VACA-${animal.numero_arete}`;
   return {
     id: animal.id_animal,
+    id_animal: animal.id_animal,
     arete: animal.numero_arete,
     // La API no tiene un campo "nombre"; se muestra el arete como identificador.
     nombre: animal.numero_arete,
@@ -120,6 +137,23 @@ export function mapearAnimal(animal: AnimalApi): AnimalItem {
     fechaNacimiento: animal.fecha_nacimiento ?? undefined,
     razaId: animal.raza_id,
     potreroId: animal.potrero_id,
+    codigoQr: codigoQrNormalizado,
+    codigo_qr: codigoQrNormalizado,
+    fotoUrl: animal.foto ?? undefined,
+    pesajes: animal.pesajes?.map((p) => ({
+      id: p.pesaje_id,
+      pesoKg: Number(p.peso_kg),
+      fecha: p.fecha_pesaje,
+      observaciones: p.observaciones ?? null,
+    })),
+    tratamientos: animal.tratamientos?.map((t) => ({
+      id: t.tratamiento_id,
+      nombre: t.nombre,
+      tipo: t.tipo ?? null,
+      fechaAplicacion: t.pivot?.fecha_aplicacion ?? null,
+      dosisMl: t.pivot?.dosis_ml ?? null,
+      observaciones: t.pivot?.observaciones ?? null,
+    })),
   };
 }
 
@@ -286,6 +320,15 @@ export const animalService = {
       }
       throw error;
     }
+  },
+
+  /**
+   * Busca una vaca por el texto de su QR (Persona 5): GET /api/v1/animales/qr/{codigo_qr}.
+   * Un 404 llega como ApiError(404): significa que no hay animal con ese codigo.
+   */
+  async obtenerPorQr(codigoQr: string): Promise<AnimalItem> {
+    const respuesta = await http.get<{ data: AnimalApi }>(`/animales/qr/${encodeURIComponent(codigoQr.trim())}`);
+    return mapearAnimal(respuesta.data);
   },
 
   /** Registra un animal nuevo. */
