@@ -22,6 +22,11 @@ export * from './catalogo.service';
 export * from './secureStorage.service';
 export * from './cache.service';
 export * from './network.service';
+export * from './ronda.service';
+export * from './permisos.service';
+export * from './escaner.service';
+export * from './ubicacion.service';
+export * from './feedback.service';
 
 export function inicializarServicios(router: Router): void {
   // 1. Conectar almacenamiento seguro cifrado para el token (Persona 4 -> Puente de Abraham)

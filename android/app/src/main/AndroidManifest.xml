@@ -37,9 +37,25 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Persona 5: descarga automatica del modulo de escaneo de codigos de Google
+             (ML Kit) al instalar la app, para que el escaner QR funcione sin esperas. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode_ui" />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Persona 5: camara para escanear el QR de vacas y potreros. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Persona 5: GPS para registrar las coordenadas de cada potrero en la ronda. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- El hardware es opcional: la app sigue siendo instalable en equipos sin camara o GPS. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 </manifest>

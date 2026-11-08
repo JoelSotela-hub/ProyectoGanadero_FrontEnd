@@ -7,7 +7,7 @@
         </ion-buttons>
         <ion-title>Detalle del Animal</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="goToEdit">
+          <ion-button v-if="esAdmin" @click="goToEdit">
             <ion-icon slot="icon-only" :icon="createOutline" />
           </ion-button>
         </ion-buttons>
@@ -65,6 +65,7 @@
       <!-- Ficha completa del animal -->
       <div v-else class="detail-container">
         <ion-card>
+          <img v-if="animal.fotoUrl" :src="animal.fotoUrl" :alt="`Foto del animal ${animal.arete}`" class="animal-foto" />
           <ion-card-header>
             <div class="header-row">
               <div>
@@ -107,6 +108,13 @@
                 </ion-label>
               </ion-item>
 
+              <ion-item v-if="animal.codigoQr">
+                <ion-label>
+                  <h3>Código QR</h3>
+                  <p>{{ animal.codigoQr }}</p>
+                </ion-label>
+              </ion-item>
+
               <ion-item v-if="animal.fechaNacimiento">
                 <ion-label>
                   <h3>Fecha de Nacimiento</h3>
@@ -122,8 +130,33 @@
               </ion-item>
             </ion-list>
 
+            <!-- Historial de pesajes -->
+            <h4 v-if="animal.pesajes?.length" class="section-title">Pesajes</h4>
+            <ion-list v-if="animal.pesajes?.length" lines="full">
+              <ion-item v-for="p in animal.pesajes" :key="p.id">
+                <ion-label>
+                  <h3>{{ p.pesoKg }} kg</h3>
+                  <p>{{ p.fecha ?? 'Sin fecha' }}<span v-if="p.observaciones"> · {{ p.observaciones }}</span></p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+
+            <!-- Tratamientos aplicados -->
+            <h4 v-if="animal.tratamientos?.length" class="section-title">Tratamientos</h4>
+            <ion-list v-if="animal.tratamientos?.length" lines="full">
+              <ion-item v-for="t in animal.tratamientos" :key="t.id">
+                <ion-label class="ion-text-wrap">
+                  <h3>{{ t.nombre }}<span v-if="t.tipo"> · {{ t.tipo }}</span></h3>
+                  <p>
+                    {{ t.fechaAplicacion ?? 'Sin fecha' }}<span v-if="t.dosisMl"> · {{ t.dosisMl }} ml</span
+                    ><span v-if="t.observaciones"> · {{ t.observaciones }}</span>
+                  </p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+
             <div class="actions-block ion-margin-top">
-              <ion-button expand="block" @click="goToEdit">
+              <ion-button v-if="esAdmin" expand="block" @click="goToEdit">
                 <ion-icon slot="start" :icon="createOutline" />
                 Editar Registro
               </ion-button>
@@ -168,11 +201,14 @@ import { arrowBackOutline, cloudOfflineOutline, createOutline } from 'ionicons/i
 
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
+import { useRol } from '@/composables/useRol';
 import type { AnimalItem } from '@/models/auth.model';
 import { animalService, ApiError, formatearMarcaDeTiempo, networkService } from '@/services';
 
 const route = useRoute();
 const router = useRouter();
+// Solo el admin edita animales (el backend responde 403 al resto de roles).
+const { esAdmin } = useRol();
 
 // Lectura reactiva del parámetro de ruta (:id)
 const animalId = computed<string>(() => String(route.params.id ?? ''));
@@ -288,5 +324,16 @@ function goBackToList() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.animal-foto {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+}
+
+.section-title {
+  margin: 1rem 0 0.25rem;
+  font-size: 1rem;
 }
 </style>

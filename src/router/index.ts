@@ -57,7 +57,24 @@ const routes: RouteRecordRaw[] = [
           requiresAuth: true,
         },
       },
+      {
+        path: 'rondas',
+        name: 'RondaList',
+        component: () => import('@/views/Rondas.vue'),
+        meta: {
+          requiresAuth: true,
+          isRootScreen: true,
+        },
+      },
     ],
+  },
+  {
+    path: '/rondas/:id',
+    name: 'RondaDetalle',
+    component: () => import('@/views/RondaDetalle.vue'),
+    meta: {
+      requiresAuth: true,
+    },
   },
   {
     path: '/detalle/:id',

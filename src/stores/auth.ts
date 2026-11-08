@@ -1,12 +1,46 @@
+import { Preferences } from '@capacitor/preferences';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
 import type { AuthSession, AuthUser, LoginCredentials } from '@/models/auth.model';
+import { authService } from '@/services/auth.service';
 
 export interface SecureTokenStorageAdapter {
   getToken: () => Promise<string | null>;
   setToken: (token: string) => Promise<void>;
   removeToken: () => Promise<void>;
+}
+
+/**
+ * Perfil del usuario (nombre, correo y rol) guardado en preferencias. NO es el token:
+ * el token vive solo en el almacenamiento cifrado. El rol se necesita para segmentar
+ * la interfaz entre Admin y Operario aunque la app arranque sin conexion (Persona 5).
+ */
+const CLAVE_USUARIO_LOCAL = 'guateganado_usuario';
+
+async function guardarUsuarioLocal(usuario: AuthUser): Promise<void> {
+  try {
+    await Preferences.set({ key: CLAVE_USUARIO_LOCAL, value: JSON.stringify(usuario) });
+  } catch {
+    // Si falla el guardado, la sesion sigue funcionando en memoria.
+  }
+}
+
+async function leerUsuarioLocal(): Promise<AuthUser | null> {
+  try {
+    const { value } = await Preferences.get({ key: CLAVE_USUARIO_LOCAL });
+    return value ? (JSON.parse(value) as AuthUser) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function borrarUsuarioLocal(): Promise<void> {
+  try {
+    await Preferences.remove({ key: CLAVE_USUARIO_LOCAL });
+  } catch {
+    // Nada que limpiar.
+  }
 }
 
 /**
@@ -44,6 +78,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = payload.token;
       user.value = payload.user;
       await tokenStorageAdapter.setToken(payload.token);
+      await guardarUsuarioLocal(payload.user);
       return true;
     }
 
@@ -75,6 +110,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null;
     user.value = null;
     await tokenStorageAdapter.removeToken();
+    await borrarUsuarioLocal();
   }
 
   /**
@@ -87,15 +123,32 @@ export const useAuthStore = defineStore('auth', () => {
       if (savedToken) {
         token.value = savedToken;
         if (!user.value) {
-          user.value = {
-            id: 1,
+          // Persona 5: se recupera el usuario real (con su `role`) guardado en el login
+          // para que la segmentacion Admin/Operario funcione tambien sin conexion.
+          user.value = (await leerUsuarioLocal()) ?? {
+            id: 0,
             name: 'Usuario GuateGanado',
-            email: 'usuario@guateganado.cr',
+            email: '',
           };
         }
+        // Refresco en segundo plano: no bloquea la primera ruta si la red es lenta.
+        void refrescarPerfil(savedToken);
       }
     } finally {
       initialized.value = true;
+    }
+  }
+
+  /** Consulta GET /api/user y actualiza nombre y rol; si falla se conserva el usuario local. */
+  async function refrescarPerfil(tokenActual: string): Promise<void> {
+    try {
+      const perfil = await authService.perfil(tokenActual);
+      if (token.value === tokenActual) {
+        user.value = perfil;
+        await guardarUsuarioLocal(perfil);
+      }
+    } catch {
+      // Sin red o servidor caido: se mantiene el usuario guardado localmente.
     }
   }
 
@@ -107,5 +160,6 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     restoreSession,
+    refrescarPerfil,
   };
 });

@@ -34,4 +34,25 @@ export interface AnimalItem {
   ubicacionLat?: number;
   ubicacionLng?: number;
   fotoUrl?: string;
+  /** Codigo del QR del animal (ej. VACA-001). */
+  codigoQr?: string;
+  /** Historial de pesajes y tratamientos; solo viene en el detalle y en la consulta por QR. */
+  pesajes?: PesajeItem[];
+  tratamientos?: TratamientoItem[];
+}
+
+export interface PesajeItem {
+  id: number;
+  pesoKg: number;
+  fecha: string | null;
+  observaciones?: string | null;
+}
+
+export interface TratamientoItem {
+  id: number;
+  nombre: string;
+  tipo?: string | null;
+  fechaAplicacion?: string | null;
+  dosisMl?: number | string | null;
+  observaciones?: string | null;
 }
