@@ -1,4 +1,4 @@
-package io.ionic.starter;
+package cr.guateganado.app;
 
 import com.getcapacitor.BridgeActivity;
 

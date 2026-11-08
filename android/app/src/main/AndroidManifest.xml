@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- usesCleartextTraffic: la API de Laravel se consume por http en la red
+         local durante el desarrollo. Sin esto Android 9+ bloquea las
+         peticiones en el dispositivo y todas las llamadas fallan. -->
     <application
+        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"

@@ -14,9 +14,7 @@
       <section class="header-block">
         <p class="eyebrow">{{ fecha }}</p>
         <h1>{{ saludo }}</h1>
-        <p class="subtitle">
-          Bienvenido, este es el estado actual de tu operación ganadera.
-        </p>
+        <p class="subtitle">Bienvenido, este es el estado actual de tu operación ganadera.</p>
       </section>
 
       <!-- Botón principal -->
@@ -28,13 +26,8 @@
       <!-- Tarjetas de métricas -->
       <ion-grid class="ion-margin-top">
         <ion-row>
-          <ion-col
-            v-for="m in metricas"
-            :key="m.key"
-            size="12"
-            size-sm="6"
-          >
-            <ion-card button @click="goToList(m)">
+          <ion-col v-for="m in metricas" :key="m.key" size="12" size-sm="6">
+            <ion-card button @click="goToList()">
               <ion-card-header>
                 <ion-card-title>
                   <span class="emoji">{{ m.emoji }}</span>
@@ -61,23 +54,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButton, IonButtons, IonGrid, IonRow, IonCol,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonFab, IonFabButton, IonIcon
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButton,
+  IonButtons,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonFab,
+  IonFabButton,
+  IonIcon,
 } from '@ionic/vue';
 import { add } from 'ionicons/icons';
 import { useAuthStore } from '@/stores/auth';
+import { panelService } from '@/services';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
 // Fecha actual
 const fecha = new Date().toLocaleDateString('es-CR', {
-  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
 });
 
 const saludo = computed(() => {
@@ -87,19 +97,46 @@ const saludo = computed(() => {
   return 'Buenas noches';
 });
 
-// Datos simulados — la Persona 3 los reemplaza con la API real
+/**
+ * Totales reales del panel (Persona 3): cada tarjeta lee `meta.total` del
+ * listado correspondiente. Si un recurso falla, solo esa tarjeta queda sin dato.
+ */
+const cargando = ref(true);
+
 const metricas = ref([
-  { key: 'animales',     emoji: '🐄', label: 'Total de Animales',        value: '5', foot: 'Ver catálogo de animales' },
-  { key: 'potreros',     emoji: '🌿', label: 'Potreros Registrados',     value: '3', foot: 'Norte, El Río, La Laguna' },
-  { key: 'tratamientos', emoji: '💉', label: 'Tratamientos Registrados', value: '1', foot: 'En seguimiento activo' },
-  { key: 'insumos',      emoji: '📦', label: 'Insumos en Inventario',    value: '12', foot: 'Stock actualizado' },
+  { key: 'animales', emoji: '\u{1F404}', label: 'Total de Animales', value: '—', foot: 'Ver catálogo de animales' },
+  { key: 'potreros', emoji: '\u{1F33F}', label: 'Potreros Registrados', value: '—', foot: 'Distribución del hato' },
+  {
+    key: 'tratamientos',
+    emoji: '\u{1F489}',
+    label: 'Tratamientos Registrados',
+    value: '—',
+    foot: 'En seguimiento activo',
+  },
+  { key: 'insumos', emoji: '\u{1F4E6}', label: 'Insumos en Inventario', value: '—', foot: 'Stock actualizado' },
 ]);
+
+function texto(valor: number | null): string {
+  return valor === null ? '—' : String(valor);
+}
+
+onMounted(async () => {
+  try {
+    const conteos = await panelService.conteos();
+    metricas.value = metricas.value.map((m) => ({
+      ...m,
+      value: texto(conteos[m.key as keyof typeof conteos]),
+    }));
+  } finally {
+    cargando.value = false;
+  }
+});
 
 function goToForm() {
   router.push('/tabs/registro');
 }
 
-function goToList(_m: { key: string }) {
+function goToList() {
   router.push('/tabs/animales');
 }
 

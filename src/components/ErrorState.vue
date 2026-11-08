@@ -1,6 +1,6 @@
 <template>
   <div class="error-container ion-text-center ion-padding">
-    <ion-icon name="alert-circle-outline" class="error-icon"></ion-icon>
+    <ion-icon :icon="alertCircleOutline" class="error-icon"></ion-icon>
     <h3>{{ title || 'Ocurrió un error' }}</h3>
     <p>{{ message || 'No se pudo conectar con el servidor o cargar la información.' }}</p>
     <ion-button color="primary" @click="$emit('retry')">Reintentar</ion-button>

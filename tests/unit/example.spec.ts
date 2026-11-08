@@ -3,16 +3,16 @@ import { createPinia, setActivePinia } from 'pinia';
 import { describe, expect, test, beforeEach } from 'vitest';
 
 import { useAuthStore } from '@/stores/auth';
-import Tab1Page from '@/views/Tab1Page.vue';
+import LoginPage from '@/views/LoginPage.vue';
 
-describe('Tab1Page.vue & AuthStore (Persona 2)', () => {
+describe('LoginPage.vue & AuthStore (Persona 2)', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  test('renders tab 1 Tab1Page', () => {
-    const wrapper = mount(Tab1Page);
-    expect(wrapper.text()).toMatch('Tab 1 page');
+  test('renderiza la pantalla de inicio de sesion', () => {
+    const wrapper = mount(LoginPage);
+    expect(wrapper.text()).toMatch('GuateGanado');
   });
 
   test('authStore exposes isAuthenticated, login() and logout()', async () => {

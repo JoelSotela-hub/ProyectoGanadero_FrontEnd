@@ -33,6 +33,14 @@ export default [
     },
   },
   {
+    // Las vistas asociadas a una ruta se nombran con una sola palabra por
+    // convencion (Animal, Dashboard); la regla apunta a componentes reutilizables.
+    files: ['src/views/**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+  {
     files: ['tests/unit/**/*.spec.{js,ts}'],
     languageOptions: {
       globals: globals.vitest,

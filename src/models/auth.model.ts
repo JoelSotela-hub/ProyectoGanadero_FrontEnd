@@ -23,10 +23,14 @@ export interface AnimalItem {
   raza: string;
   sexo: 'Macho' | 'Hembra' | string;
   potrero: string;
-  peso: number;
+  /** La API no expone un peso directo: sale del ultimo pesaje, y puede faltar. */
+  peso: number | null;
   estado: 'Activo' | 'Tratamiento' | 'Vendido' | string;
   fechaNacimiento?: string;
   observaciones?: string;
+  /** Identificadores reales que exige la API al crear o editar. */
+  razaId?: number;
+  potreroId?: number;
   ubicacionLat?: number;
   ubicacionLng?: number;
   fotoUrl?: string;

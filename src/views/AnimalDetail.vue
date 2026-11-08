@@ -86,7 +86,7 @@
               <ion-item>
                 <ion-label>
                   <h3>Peso Actual</h3>
-                  <p>{{ animal.peso }} kg</p>
+                  <p>{{ animal.peso === null || animal.peso === undefined ? 'Sin registro' : `${animal.peso} kg` }}</p>
                 </ion-label>
               </ion-item>
 
@@ -152,6 +152,7 @@ import { arrowBackOutline, createOutline } from 'ionicons/icons';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import type { AnimalItem } from '@/models/auth.model';
+import { animalService, ApiError } from '@/services';
 
 const route = useRoute();
 const router = useRouter();
@@ -164,70 +165,6 @@ const error = ref<boolean>(false);
 const errorMessage = ref<string>('');
 const animal = ref<AnimalItem | null>(null);
 
-// Catálogo base simulado (Persona 3 reemplazará por getById(id) contra la API real)
-const mockCatalog: AnimalItem[] = [
-  {
-    id: 1,
-    arete: 'GT-0001',
-    nombre: 'Lucero',
-    raza: 'Brahman',
-    sexo: 'Hembra',
-    potrero: 'Norte',
-    peso: 420,
-    estado: 'Activo',
-    fechaNacimiento: '2023-04-12',
-    observaciones: 'Excelente condición corporal. Vacunación al día.',
-  },
-  {
-    id: 2,
-    arete: 'GT-0002',
-    nombre: 'Trueno',
-    raza: 'Angus',
-    sexo: 'Macho',
-    potrero: 'El Río',
-    peso: 510,
-    estado: 'Activo',
-    fechaNacimiento: '2022-11-05',
-    observaciones: 'Semental principal del potrero El Río.',
-  },
-  {
-    id: 3,
-    arete: 'GT-0003',
-    nombre: 'Estrella',
-    raza: 'Simmental',
-    sexo: 'Hembra',
-    potrero: 'La Laguna',
-    peso: 380,
-    estado: 'Tratamiento',
-    fechaNacimiento: '2024-01-20',
-    observaciones: 'En seguimiento veterinario por suplementación vitamínica.',
-  },
-  {
-    id: 4,
-    arete: 'GT-0004',
-    nombre: 'Capitán',
-    raza: 'Gyr Lechero',
-    sexo: 'Macho',
-    potrero: 'Norte',
-    peso: 460,
-    estado: 'Activo',
-    fechaNacimiento: '2023-07-18',
-    observaciones: 'Ganancia de peso constante en los últimos 3 controles.',
-  },
-  {
-    id: 5,
-    arete: 'GT-0005',
-    nombre: 'Mariposa',
-    raza: 'Brahman',
-    sexo: 'Hembra',
-    potrero: 'El Río',
-    peso: 395,
-    estado: 'Vendido',
-    fechaNacimiento: '2023-02-09',
-    observaciones: 'Registro histórico de animal comercializado.',
-  },
-];
-
 function estadoColor(estado: string) {
   if (estado === 'Activo') return 'success';
   if (estado === 'Tratamiento') return 'warning';
@@ -235,17 +172,24 @@ function estadoColor(estado: string) {
   return 'primary';
 }
 
+/**
+ * Detalle real contra GET /api/v1/animales/{id} (Persona 3).
+ * Un 404 se trata como "no encontrado" (estado vacio), no como error.
+ */
 async function loadAnimalDetail() {
   loading.value = true;
   error.value = false;
+  errorMessage.value = '';
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 350));
-    const numericId = Number(animalId.value);
-    animal.value = mockCatalog.find((item) => item.id === numericId) ?? null;
+    animal.value = await animalService.obtener(animalId.value);
   } catch (err) {
-    error.value = true;
-    errorMessage.value = err instanceof Error ? err.message : 'Error al consultar el detalle.';
+    if (err instanceof ApiError && err.status === 404) {
+      animal.value = null;
+    } else {
+      error.value = true;
+      errorMessage.value = err instanceof Error ? err.message : 'Error al consultar el detalle.';
+    }
   } finally {
     loading.value = false;
   }

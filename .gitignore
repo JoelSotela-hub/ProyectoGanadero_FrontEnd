@@ -36,3 +36,9 @@ npm-debug.log*
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Variables de entorno: cada persona apunta a una URL distinta
+# (localhost, 10.0.2.2 o la IP de su red). No debe subirse.
+.env
+.env.local
+.env.*.local

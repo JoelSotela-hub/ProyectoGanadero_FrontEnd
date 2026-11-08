@@ -1,6 +1,6 @@
 <template>
   <div class="empty-container ion-text-center ion-padding">
-    <ion-icon name="folder-open-outline" class="empty-icon"></ion-icon>
+    <ion-icon :icon="folderOpenOutline" class="empty-icon"></ion-icon>
     <h3>{{ title || 'No hay datos disponibles' }}</h3>
     <p>{{ message || 'No se encontraron registros en este momento.' }}</p>
   </div>

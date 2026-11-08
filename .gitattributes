@@ -1,0 +1,15 @@
+# Normaliza los finales de linea para todo el equipo.
+# Evita que un archivo guardado en Windows (CRLF) aparezca como modificado
+# frente al mismo archivo guardado en macOS o Linux (LF).
+* text=auto eol=lf
+
+# Archivos binarios: git no debe tocarlos.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary
+*.keystore binary
+*.jar  binary

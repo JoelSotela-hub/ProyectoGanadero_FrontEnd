@@ -49,10 +49,9 @@
                   interface="popover"
                   :disabled="submitting"
                 >
-                  <ion-select-option value="Brahman">Brahman</ion-select-option>
-                  <ion-select-option value="Simmental">Simmental</ion-select-option>
-                  <ion-select-option value="Angus">Angus</ion-select-option>
-                  <ion-select-option value="Gyr Lechero">Gyr Lechero</ion-select-option>
+                  <ion-select-option v-for="r in razas" :key="r.id" :value="String(r.id)">
+                    {{ r.nombre }}
+                  </ion-select-option>
                 </ion-select>
               </ion-item>
 
@@ -77,9 +76,9 @@
                   interface="popover"
                   :disabled="submitting"
                 >
-                  <ion-select-option value="Norte">Norte</ion-select-option>
-                  <ion-select-option value="El Río">El Río</ion-select-option>
-                  <ion-select-option value="La Laguna">La Laguna</ion-select-option>
+                  <ion-select-option v-for="p in potreros" :key="p.id" :value="String(p.id)">
+                    {{ p.nombre }}
+                  </ion-select-option>
                 </ion-select>
               </ion-item>
 
@@ -121,22 +120,12 @@
             </ion-list>
 
             <div class="form-actions ion-margin-top">
-              <ion-button
-                expand="block"
-                :disabled="submitting || !isFormValid"
-                @click="onSubmit"
-              >
+              <ion-button expand="block" :disabled="submitting || !isFormValid" @click="onSubmit">
                 <ion-icon slot="start" :icon="saveOutline" />
                 {{ submitting ? 'Guardando...' : isEditMode ? 'Guardar Cambios' : 'Registrar Animal' }}
               </ion-button>
 
-              <ion-button
-                expand="block"
-                fill="outline"
-                color="medium"
-                :disabled="submitting"
-                @click="onCancel"
-              >
+              <ion-button expand="block" fill="outline" color="medium" :disabled="submitting" @click="onCancel">
                 Cancelar
               </ion-button>
             </div>
@@ -179,6 +168,8 @@ import {
 } from '@ionic/vue';
 import { saveOutline } from 'ionicons/icons';
 
+import { ApiError, animalService, catalogoService, type OpcionCatalogo } from '@/services';
+
 const route = useRoute();
 const router = useRouter();
 
@@ -192,63 +183,135 @@ const editingId = computed(() => {
 
 const isEditMode = computed(() => Boolean(editingId.value));
 
+/** Catalogos reales: la API exige raza_id y potrero_id, no texto libre. */
+const razas = ref<OpcionCatalogo[]>([]);
+const potreros = ref<OpcionCatalogo[]>([]);
+
 const form = reactive({
   arete: '',
   nombre: '',
-  raza: 'Brahman',
+  raza: '',
   sexo: 'Hembra',
-  potrero: 'Norte',
-  peso: '420',
+  potrero: '',
+  peso: '',
   estado: 'Activo',
   observaciones: '',
 });
 
+/**
+ * Campos obligatorios segun StoreAnimalRequest del backend:
+ * numero_arete, raza_id, potrero_id y sexo. El nombre y el peso no existen
+ * como columnas del animal: el peso se guarda aparte como primer pesaje.
+ */
 const isFormValid = computed(() => {
   return (
     form.arete.trim().length > 0 &&
-    form.nombre.trim().length > 0 &&
     form.raza.trim().length > 0 &&
     form.sexo.trim().length > 0 &&
-    form.potrero.trim().length > 0 &&
-    Number(form.peso) > 0
+    form.potrero.trim().length > 0
   );
 });
 
-onIonViewWillEnter(() => {
+async function cargarCatalogos() {
+  try {
+    const [listaRazas, listaPotreros] = await Promise.all([catalogoService.razas(), catalogoService.potreros()]);
+    razas.value = listaRazas;
+    potreros.value = listaPotreros;
+  } catch {
+    const toast = await toastController.create({
+      message: 'No se pudieron cargar las razas y potreros',
+      duration: 2500,
+      color: 'warning',
+    });
+    await toast.present();
+  }
+}
+
+onIonViewWillEnter(async () => {
+  await cargarCatalogos();
+
   if (isEditMode.value) {
-    form.arete = `GT-000${editingId.value}`;
-    form.nombre = editingId.value === '1' ? 'Lucero' : 'Animal Registrado';
-    form.observaciones = 'Registro cargado para edición.';
+    // Edicion: se trae el registro real desde GET /api/v1/animales/{id}
+    try {
+      const animal = await animalService.obtener(String(editingId.value));
+      form.arete = animal.arete;
+      form.nombre = animal.nombre ?? '';
+      form.raza = animal.razaId ? String(animal.razaId) : '';
+      form.sexo = animal.sexo;
+      form.potrero = animal.potreroId ? String(animal.potreroId) : '';
+      form.peso = animal.peso !== null && animal.peso !== undefined ? String(animal.peso) : '';
+      form.estado = animal.estado;
+      form.observaciones = '';
+    } catch {
+      const toast = await toastController.create({
+        message: 'No se pudo cargar el animal a editar',
+        duration: 2500,
+        color: 'danger',
+      });
+      await toast.present();
+    }
   } else {
     form.arete = '';
     form.nombre = '';
-    form.raza = 'Brahman';
+    form.raza = '';
     form.sexo = 'Hembra';
-    form.potrero = 'Norte';
+    form.potrero = '';
     form.peso = '';
     form.estado = 'Activo';
     form.observaciones = '';
   }
 });
 
+/**
+ * Operacion de escritura real (Persona 3):
+ *   POST /api/v1/animales          al registrar
+ *   PUT  /api/v1/animales/{id}     al editar
+ * Si el usuario escribio un peso, se guarda como primer pesaje del animal.
+ */
 async function onSubmit() {
   if (!isFormValid.value) return;
   submitting.value = true;
 
+  const datos = {
+    numero_arete: form.arete.trim(),
+    raza_id: Number(form.raza),
+    potrero_id: Number(form.potrero),
+    sexo: form.sexo as 'Macho' | 'Hembra',
+    estado: form.estado || null,
+  };
+
   try {
-    // Persona 3 conectará aquí la operación de escritura (POST / PUT) contra la API
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    const animal = isEditMode.value
+      ? await animalService.actualizar(String(editingId.value), datos)
+      : await animalService.crear(datos);
+
+    const peso = Number(form.peso);
+    if (!isEditMode.value && Number.isFinite(peso) && peso > 0) {
+      try {
+        await animalService.registrarPesaje(animal.id, peso, form.observaciones);
+      } catch {
+        // El animal ya quedo registrado; el pesaje se puede agregar despues.
+      }
+    }
 
     const toast = await toastController.create({
-      message: isEditMode.value
-        ? 'Animal actualizado correctamente'
-        : 'Animal registrado correctamente',
+      message: isEditMode.value ? 'Animal actualizado correctamente' : 'Animal registrado correctamente',
       duration: 1800,
       color: 'success',
     });
     await toast.present();
 
     router.replace('/tabs/animales');
+  } catch (err) {
+    const mensaje =
+      err instanceof ApiError ? (err.primerErrorDeValidacion ?? err.message) : 'No se pudo guardar el animal';
+
+    const toast = await toastController.create({
+      message: mensaje,
+      duration: 3000,
+      color: 'danger',
+    });
+    await toast.present();
   } finally {
     submitting.value = false;
   }
