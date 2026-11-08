@@ -99,8 +99,8 @@
       <!-- Listado -->
       <ion-grid v-else class="ion-padding-horizontal">
         <ion-row>
-          <ion-col v-for="a in animalFiltrado" :key="a.id" size="12" size-sm="6" size-md="4">
-            <ion-card button @click="goToDetail(a.id)">
+          <ion-col v-for="a in animalFiltrado" :key="a.id_animal ?? a.id" size="12" size-sm="6" size-md="4">
+            <ion-card button @click="goToDetail(a.id_animal ?? a.id)">
               <ion-card-header>
                 <ion-card-subtitle>Arete: {{ a.arete }}</ion-card-subtitle>
                 <ion-card-title>{{ a.nombre }}</ion-card-title>

@@ -10,9 +10,9 @@
  * En navegador web los plugins nativos no aplican: el navegador gestiona sus
  * propios permisos y cada servicio ofrece un modo de respaldo manual.
  */
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { alertController } from '@ionic/vue';
 import { AndroidSettings, IOSSettings, NativeSettings } from 'capacitor-native-settings';
 

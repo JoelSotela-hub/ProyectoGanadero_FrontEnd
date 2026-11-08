@@ -33,6 +33,16 @@
 
               <ion-item>
                 <ion-input
+                  v-model="form.codigo_qr"
+                  label="Código QR (opcional)"
+                  label-placement="floating"
+                  :placeholder="form.arete.trim() ? `Se autogenera: VACA-${form.arete.trim()}` : 'Ej: VACA-001'"
+                  :disabled="submitting"
+                />
+              </ion-item>
+
+              <ion-item>
+                <ion-input
                   v-model="form.nombre"
                   label="Nombre del Animal *"
                   label-placement="floating"
@@ -189,6 +199,7 @@ const potreros = ref<OpcionCatalogo[]>([]);
 
 const form = reactive({
   arete: '',
+  codigo_qr: '',
   nombre: '',
   raza: '',
   sexo: 'Hembra',
@@ -235,6 +246,7 @@ onIonViewWillEnter(async () => {
     try {
       const animal = await animalService.obtener(String(editingId.value));
       form.arete = animal.arete;
+      form.codigo_qr = animal.codigo_qr ?? animal.codigoQr ?? '';
       form.nombre = animal.nombre ?? '';
       form.raza = animal.razaId ? String(animal.razaId) : '';
       form.sexo = animal.sexo;
@@ -252,6 +264,7 @@ onIonViewWillEnter(async () => {
     }
   } else {
     form.arete = '';
+    form.codigo_qr = '';
     form.nombre = '';
     form.raza = '';
     form.sexo = 'Hembra';
@@ -272,8 +285,11 @@ async function onSubmit() {
   if (!isFormValid.value) return;
   submitting.value = true;
 
+  const areteLimpio = form.arete.trim();
+  const qrLimpio = form.codigo_qr.trim();
   const datos = {
-    numero_arete: form.arete.trim(),
+    numero_arete: areteLimpio,
+    codigo_qr: qrLimpio || `VACA-${areteLimpio}`,
     raza_id: Number(form.raza),
     potrero_id: Number(form.potrero),
     sexo: form.sexo as 'Macho' | 'Hembra',

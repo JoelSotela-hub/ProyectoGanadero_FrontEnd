@@ -106,6 +106,15 @@
               <strong>Coordenadas:</strong> {{ Number(p.latitud).toFixed(6) }}, {{ Number(p.longitud).toFixed(6) }}
             </p>
             <p v-if="p.observacion"><strong>Observación:</strong> {{ p.observacion }}</p>
+
+            <!-- Renderizado visual del QR del potrero (sin imágenes en BD) -->
+            <div v-if="p.potrero?.codigo_qr" class="potrero-qr-block ion-margin-top ion-margin-bottom">
+              <div class="qr-box">
+                <qrcode-vue :value="p.potrero.codigo_qr" :size="120" level="H" render-as="svg" />
+              </div>
+              <p class="qr-code-text">{{ p.potrero.codigo_qr }}</p>
+            </div>
+
             <!-- Sin Leaflet instalado: enlace al mapa para auditar el recorrido -->
             <ion-button size="small" fill="outline" :href="enlaceMapa(p)" target="_blank" rel="noopener">
               <ion-icon slot="start" :icon="locationOutline" />
@@ -201,6 +210,7 @@ import {
   onIonViewWillEnter,
 } from '@ionic/vue';
 import { checkmarkDoneOutline, locationOutline, qrCodeOutline } from 'ionicons/icons';
+import QrcodeVue from 'qrcode.vue';
 
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -415,6 +425,25 @@ onIonViewWillEnter(() => {
 .muted {
   color: var(--ion-color-medium);
   font-size: 0.85rem;
+}
+.potrero-qr-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+.qr-box {
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 10px;
+  display: inline-flex;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.qr-code-text {
+  margin: 0;
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 </style>
 

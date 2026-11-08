@@ -102,6 +102,7 @@ export interface FiltrosAnimales {
 /** Datos que acepta POST /animales (StoreAnimalRequest). */
 export interface NuevoAnimal {
   numero_arete: string;
+  codigo_qr?: string | null;
   raza_id: number;
   potrero_id: number;
   sexo: 'Macho' | 'Hembra';
@@ -121,8 +122,10 @@ function ultimoPeso(animal: AnimalApi): number | null {
 
 /** Traduce la respuesta de la API al modelo que consumen las vistas. */
 export function mapearAnimal(animal: AnimalApi): AnimalItem {
+  const codigoQrNormalizado = animal.codigo_qr ?? `VACA-${animal.numero_arete}`;
   return {
     id: animal.id_animal,
+    id_animal: animal.id_animal,
     arete: animal.numero_arete,
     // La API no tiene un campo "nombre"; se muestra el arete como identificador.
     nombre: animal.numero_arete,
@@ -134,7 +137,8 @@ export function mapearAnimal(animal: AnimalApi): AnimalItem {
     fechaNacimiento: animal.fecha_nacimiento ?? undefined,
     razaId: animal.raza_id,
     potreroId: animal.potrero_id,
-    codigoQr: animal.codigo_qr ?? undefined,
+    codigoQr: codigoQrNormalizado,
+    codigo_qr: codigoQrNormalizado,
     fotoUrl: animal.foto ?? undefined,
     pesajes: animal.pesajes?.map((p) => ({
       id: p.pesaje_id,

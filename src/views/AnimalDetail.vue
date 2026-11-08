@@ -167,6 +167,20 @@
             </div>
           </ion-card-content>
         </ion-card>
+
+        <!-- Tarjeta de Código QR generada dinámicamente en cliente (sin guardar imágenes en BD) -->
+        <ion-card v-if="codigoQrValor" class="qr-card ion-text-center">
+          <ion-card-header>
+            <ion-card-subtitle>Identificación por Escáner</ion-card-subtitle>
+            <ion-card-title>Código QR del Animal</ion-card-title>
+          </ion-card-header>
+          <ion-card-content class="qr-card-content">
+            <div class="qr-box">
+              <qrcode-vue :value="codigoQrValor" :size="180" level="H" render-as="svg" />
+            </div>
+            <p class="qr-code-text">{{ codigoQrValor }}</p>
+          </ion-card-content>
+        </ion-card>
       </div>
     </ion-content>
   </ion-page>
@@ -198,6 +212,7 @@ import {
   onIonViewWillEnter,
 } from '@ionic/vue';
 import { arrowBackOutline, cloudOfflineOutline, createOutline } from 'ionicons/icons';
+import QrcodeVue from 'qrcode.vue';
 
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -217,6 +232,11 @@ const loading = ref<boolean>(true);
 const error = ref<boolean>(false);
 const errorMessage = ref<string>('');
 const animal = ref<AnimalItem | null>(null);
+
+const codigoQrValor = computed<string>(() => {
+  if (!animal.value) return '';
+  return animal.value.codigo_qr || animal.value.codigoQr || `VACA-${animal.value.arete}`;
+});
 
 /** Estado de cache y marca de tiempo (Persona 4). */
 const desdeCache = ref<boolean>(false);
@@ -335,5 +355,28 @@ function goBackToList() {
 .section-title {
   margin: 1rem 0 0.25rem;
   font-size: 1rem;
+}
+
+.qr-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.qr-box {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 12px;
+  display: inline-flex;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.qr-code-text {
+  margin: 0;
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 </style>
