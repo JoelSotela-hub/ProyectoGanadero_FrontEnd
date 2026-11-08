@@ -40,41 +40,25 @@
                   autocomplete="current-password"
                   :disabled="loading"
                 />
-                <ion-button
-                  slot="end"
-                  fill="clear"
-                  size="small"
-                  @click="showPassword = !showPassword"
-                >
+                <ion-button slot="end" fill="clear" size="small" @click="showPassword = !showPassword">
                   {{ showPassword ? 'Ocultar' : 'Ver' }}
                 </ion-button>
               </ion-item>
 
               <ion-item lines="none">
-                <ion-checkbox v-model="remember" label-placement="end">
-                  Recordarme
-                </ion-checkbox>
+                <ion-checkbox v-model="remember" label-placement="end"> Recordarme </ion-checkbox>
               </ion-item>
             </ion-list>
 
-            <ion-button
-              expand="block"
-              class="ion-margin-top"
-              :disabled="loading || !email || !password"
-              @click="login"
-            >
+            <ion-button expand="block" class="ion-margin-top" :disabled="loading || !email || !password" @click="login">
               {{ loading ? 'Ingresando...' : 'Ingresar al Sistema' }}
             </ion-button>
 
-            <ion-button expand="block" fill="clear" size="small">
-              ¿Olvidó su contraseña?
-            </ion-button>
+            <ion-button expand="block" fill="clear" size="small"> ¿Olvidó su contraseña? </ion-button>
           </ion-card-content>
         </ion-card>
 
-        <p class="footer-text">
-          ¿Necesita asistencia técnica? <strong>Contacte al administrador.</strong>
-        </p>
+        <p class="footer-text">¿Necesita asistencia técnica? <strong>Contacte al administrador.</strong></p>
       </div>
 
       <!-- Loader -->
@@ -87,11 +71,23 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonCard, IonCardContent, IonList, IonItem, IonInput,
-  IonButton, IonCheckbox, IonLoading, toastController
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonCard,
+  IonCardContent,
+  IonList,
+  IonItem,
+  IonInput,
+  IonButton,
+  IonCheckbox,
+  IonLoading,
+  toastController,
 } from '@ionic/vue';
 import { useAuthStore } from '@/stores/auth';
+import { ApiError, authService } from '@/services';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -102,35 +98,57 @@ const remember = ref(false);
 const showPassword = ref(false);
 const loading = ref(false);
 
-// Conectado al estado compartido de Pinia — la Persona 3 reemplazará la llamada por el servicio real de API
+/**
+ * Inicio de sesion real contra POST /api/v1/auth/login (Persona 3).
+ * El servicio devuelve { token, user } y el store de Pinia lo guarda;
+ * el almacenamiento seguro del token lo resuelve el adaptador de Persona 4.
+ */
 async function login() {
+  if (!email.value.trim() || !password.value) {
+    const t = await toastController.create({
+      message: 'Ingresa tu correo y contraseña',
+      duration: 2000,
+      color: 'warning',
+    });
+    await t.present();
+    return;
+  }
+
   loading.value = true;
   try {
-    await new Promise(r => setTimeout(r, 600)); // simula llamada
-
-    const success = await authStore.login({
+    const sesion = await authService.login({
       email: email.value,
       password: password.value,
       remember: remember.value,
     });
 
-    if (success) {
-      const t = await toastController.create({
-        message: 'Bienvenido',
-        duration: 1500,
-        color: 'success'
-      });
-      await t.present();
-      // Reemplaza el historial al entrar para que el botón físico de retroceso no vuelva al login
-      await router.replace('/tabs/dashboard');
-    } else {
-      const t = await toastController.create({
-        message: 'Credenciales inválidas',
-        duration: 2000,
-        color: 'danger'
-      });
-      await t.present();
-    }
+    await authStore.login(sesion);
+
+    const t = await toastController.create({
+      message: `Bienvenido, ${sesion.user.name}`,
+      duration: 1500,
+      color: 'success',
+    });
+    await t.present();
+
+    // Reemplaza el historial al entrar para que el botón físico de retroceso no vuelva al login
+    await router.replace('/tabs/dashboard');
+  } catch (err) {
+    const mensaje =
+      err instanceof ApiError
+        ? err.status === 401
+          ? 'Credenciales inválidas'
+          : err.status === 429
+            ? 'Demasiados intentos. Espera un momento.'
+            : err.message
+        : 'No se pudo iniciar sesión';
+
+    const t = await toastController.create({
+      message: mensaje,
+      duration: 2500,
+      color: 'danger',
+    });
+    await t.present();
   } finally {
     loading.value = false;
   }

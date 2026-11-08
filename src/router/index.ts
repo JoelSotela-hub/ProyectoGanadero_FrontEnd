@@ -52,7 +52,7 @@ const routes: RouteRecordRaw[] = [
         path: 'registro',
         name: 'AnimalRegistration',
         alias: ['tab3', '/items/new'],
-        component: () => import('@/views/AnimalResgistration.vue'),
+        component: () => import('@/views/AnimalRegistration.vue'),
         meta: {
           requiresAuth: true,
         },

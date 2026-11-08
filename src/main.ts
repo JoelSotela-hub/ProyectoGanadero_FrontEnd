@@ -4,6 +4,7 @@ import { createApp } from 'vue';
 
 import App from './App.vue';
 import router from './router';
+import { inicializarServicios } from './services';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/vue/css/core.css';
@@ -37,6 +38,13 @@ import './theme/variables.css';
 
 const pinia = createPinia();
 const app = createApp(App).use(pinia).use(IonicVue).use(router);
+
+/**
+ * Conecta la capa de servicios con la sesion y el router (Persona 3):
+ * de aqui sale el token que se adjunta a cada peticion y aqui se define
+ * que ocurre cuando la API responde 401. Debe ir despues de `use(pinia)`.
+ */
+inicializarServicios(router);
 
 router.isReady().then(() => {
   app.mount('#app');

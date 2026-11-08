@@ -1,9 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'FrontEnd_Vue',
-  webDir: 'dist'
+  appId: 'cr.guateganado.app',
+  appName: 'GuateGanado',
+  webDir: 'dist',
 };
 
 export default config;

@@ -1,3 +1,137 @@
-/* For information on how to create your own theme, please refer to:
-http://ionicframework.com/docs/theming/ */
+/**
+ * Paleta de GuateGanado.
+ *
+ * Los valores vienen de docs/checklist-accesibilidad.md, donde ya estaban
+ * calculadas las razones de contraste WCAG 2.1 AA:
+ *   - Verde finca  #15803D sobre blanco ......... 5.0:1  (boton primario)
+ *   - Texto        #1E293B sobre blanco ........ 16.1:1  (cuerpo)
+ *   - Encabezados  #0F172A sobre #F8FAFC ....... 17.0:1
+ *   - Estado activo #166534 sobre #DCFCE7 ....... 5.6:1
+ *   - Alerta       #991B1B sobre #FEE2E2 ........ 7.5:1
+ *
+ * Los tonos -shade y -tint son los que Ionic usa para los estados
+ * presionado y resaltado de cada componente.
+ */
 
+:root {
+  /** primary — verde finca, acciones principales **/
+  --ion-color-primary: #15803d;
+  --ion-color-primary-rgb: 21, 128, 61;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #127136;
+  --ion-color-primary-tint: #2c8d50;
+
+  /** secondary — verde azulado para acciones de apoyo **/
+  --ion-color-secondary: #0f766e;
+  --ion-color-secondary-rgb: 15, 118, 110;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #0d6861;
+  --ion-color-secondary-tint: #27847c;
+
+  /** tertiary — pizarra para navegacion **/
+  --ion-color-tertiary: #334155;
+  --ion-color-tertiary-rgb: 51, 65, 85;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #2d394b;
+  --ion-color-tertiary-tint: #475466;
+
+  /** success — estado "Activo" **/
+  --ion-color-success: #166534;
+  --ion-color-success-rgb: 22, 101, 52;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #13592e;
+  --ion-color-success-tint: #2d7448;
+
+  /** warning — estado "Tratamiento" **/
+  --ion-color-warning: #b45309;
+  --ion-color-warning-rgb: 180, 83, 9;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
+  --ion-color-warning-shade: #9e4908;
+  --ion-color-warning-tint: #bc6422;
+
+  /** danger — errores y alertas sanitarias **/
+  --ion-color-danger: #991b1b;
+  --ion-color-danger-rgb: 153, 27, 27;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #871818;
+  --ion-color-danger-tint: #a33232;
+
+  /** dark **/
+  --ion-color-dark: #0f172a;
+  --ion-color-dark-rgb: 15, 23, 42;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #0d1425;
+  --ion-color-dark-tint: #272e3f;
+
+  /** medium — estado "Vendido" y texto secundario **/
+  --ion-color-medium: #64748b;
+  --ion-color-medium-rgb: 100, 116, 139;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #58667a;
+  --ion-color-medium-tint: #748297;
+
+  /** light **/
+  --ion-color-light: #f1f5f9;
+  --ion-color-light-rgb: 241, 245, 249;
+  --ion-color-light-contrast: #0f172a;
+  --ion-color-light-contrast-rgb: 15, 23, 42;
+  --ion-color-light-shade: #d4d8db;
+  --ion-color-light-tint: #f2f6fa;
+
+  /** Fondo y texto **/
+  --ion-background-color: #f8fafc;
+  --ion-background-color-rgb: 248, 250, 252;
+  --ion-text-color: #1e293b;
+  --ion-text-color-rgb: 30, 41, 59;
+
+  --ion-toolbar-background: #15803d;
+  --ion-toolbar-color: #ffffff;
+
+  --ion-item-background: #ffffff;
+  --ion-card-background: #ffffff;
+}
+
+/** Modo oscuro: mismo verde de marca, con mas luminosidad para el contraste. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-color-primary: #4ade80;
+    --ion-color-primary-rgb: 74, 222, 128;
+    --ion-color-primary-contrast: #052e16;
+    --ion-color-primary-contrast-rgb: 5, 46, 22;
+    --ion-color-primary-shade: #41c370;
+    --ion-color-primary-tint: #5ce18d;
+
+    --ion-color-success: #4ade80;
+    --ion-color-success-rgb: 74, 222, 128;
+    --ion-color-success-contrast: #052e16;
+    --ion-color-success-contrast-rgb: 5, 46, 22;
+    --ion-color-success-shade: #41c370;
+    --ion-color-success-tint: #5ce18d;
+
+    --ion-color-danger: #f87171;
+    --ion-color-danger-rgb: 248, 113, 113;
+    --ion-color-danger-contrast: #450a0a;
+    --ion-color-danger-contrast-rgb: 69, 10, 10;
+    --ion-color-danger-shade: #da6363;
+    --ion-color-danger-tint: #f97f7f;
+
+    --ion-background-color: #0f172a;
+    --ion-background-color-rgb: 15, 23, 42;
+    --ion-text-color: #f1f5f9;
+    --ion-text-color-rgb: 241, 245, 249;
+
+    --ion-toolbar-background: #14532d;
+    --ion-toolbar-color: #f1f5f9;
+
+    --ion-item-background: #1e293b;
+    --ion-card-background: #1e293b;
+  }
+}

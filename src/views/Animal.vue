@@ -11,11 +11,7 @@
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-searchbar
-          v-model="search"
-          placeholder="N° de arete, nombre..."
-          :debounce="300"
-        />
+        <ion-searchbar v-model="search" placeholder="N° de arete, nombre..." :debounce="300" />
       </ion-toolbar>
     </ion-header>
 
@@ -29,18 +25,17 @@
         <ion-item>
           <ion-select v-model="filters.potrero" label="Potrero" interface="popover" @ionChange="onFilterChange">
             <ion-select-option value="">Todos</ion-select-option>
-            <ion-select-option value="1">Norte</ion-select-option>
-            <ion-select-option value="2">El Río</ion-select-option>
-            <ion-select-option value="3">La Laguna</ion-select-option>
+            <ion-select-option v-for="p in potreros" :key="p.id" :value="String(p.id)">
+              {{ p.nombre }}
+            </ion-select-option>
           </ion-select>
         </ion-item>
         <ion-item>
           <ion-select v-model="filters.raza" label="Raza" interface="popover" @ionChange="onFilterChange">
             <ion-select-option value="">Todas</ion-select-option>
-            <ion-select-option value="1">Brahman</ion-select-option>
-            <ion-select-option value="2">Simmental</ion-select-option>
-            <ion-select-option value="3">Angus</ion-select-option>
-            <ion-select-option value="4">Gyr Lechero</ion-select-option>
+            <ion-select-option v-for="r in razas" :key="r.id" :value="String(r.id)">
+              {{ r.nombre }}
+            </ion-select-option>
           </ion-select>
         </ion-item>
         <ion-item>
@@ -60,8 +55,11 @@
         </ion-item>
       </ion-list>
 
+      <!-- Estado de error con reintento -->
+      <ErrorState v-if="error" title="No se pudo cargar el listado" :message="errorMessage" @retry="recargar" />
+
       <!-- Skeleton (carga) -->
-      <ion-grid v-if="loading" class="ion-padding-horizontal">
+      <ion-grid v-else-if="loading" class="ion-padding-horizontal">
         <ion-row>
           <ion-col v-for="i in 4" :key="i" size="12" size-sm="6" size-md="4">
             <ion-card>
@@ -91,7 +89,7 @@
                 <p><strong>Raza:</strong> {{ a.raza }}</p>
                 <p><strong>Sexo:</strong> {{ a.sexo }}</p>
                 <p><strong>Potrero:</strong> {{ a.potrero }}</p>
-                <p><strong>Peso:</strong> {{ a.peso }} kg</p>
+                <p><strong>Peso:</strong> {{ pesoTexto(a.peso) }}</p>
                 <ion-chip :color="estadoColor(a.estado)" outline>{{ a.estado }}</ion-chip>
               </ion-card-content>
             </ion-card>
@@ -104,7 +102,7 @@
         </div>
       </ion-grid>
 
-      <ion-infinite-scroll @ionInfinite="onInfinite($event)">
+      <ion-infinite-scroll :disabled="!hayMas" @ionInfinite="onInfinite($event)">
         <ion-infinite-scroll-content loading-spinner="crescent" />
       </ion-infinite-scroll>
 
@@ -118,48 +116,139 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonSearchbar, IonList, IonItem, IonSelect, IonSelectOption,
-  IonButtons, IonButton, IonIcon, IonGrid, IonRow, IonCol,
-  IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
-  IonChip, IonRefresher, IonRefresherContent, IonSkeletonText,
-  IonInfiniteScroll, IonInfiniteScrollContent, IonFab, IonFabButton
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonSearchbar,
+  IonList,
+  IonItem,
+  IonSelect,
+  IonSelectOption,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonCardContent,
+  IonChip,
+  IonRefresher,
+  IonRefresherContent,
+  IonSkeletonText,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonFab,
+  IonFabButton,
 } from '@ionic/vue';
 import { add, pawOutline } from 'ionicons/icons';
+
+import ErrorState from '@/components/ErrorState.vue';
+import type { AnimalItem } from '@/models/auth.model';
 import { useAuthStore } from '@/stores/auth';
+import { animalService, catalogoService, type OpcionCatalogo } from '@/services';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
 const search = ref('');
 const filters = ref({ potrero: '', raza: '', sexo: '', estado: '' });
-const loading = ref(true);
 
-// Datos simulados — Persona 3 los reemplaza por getList(page, limit)
-const animales = ref([
-  { id: 1, arete: 'GT-0001', nombre: 'Lucero',   raza: 'Brahman',     sexo: 'Hembra', potrero: 'Norte',     peso: 420, estado: 'Activo' },
-  { id: 2, arete: 'GT-0002', nombre: 'Trueno',   raza: 'Angus',       sexo: 'Macho',  potrero: 'El Río',    peso: 510, estado: 'Activo' },
-  { id: 3, arete: 'GT-0003', nombre: 'Estrella', raza: 'Simmental',   sexo: 'Hembra', potrero: 'La Laguna', peso: 380, estado: 'Tratamiento' },
-  { id: 4, arete: 'GT-0004', nombre: 'Capitán',  raza: 'Gyr Lechero', sexo: 'Macho',  potrero: 'Norte',     peso: 460, estado: 'Activo' },
-  { id: 5, arete: 'GT-0005', nombre: 'Mariposa', raza: 'Brahman',     sexo: 'Hembra', potrero: 'El Río',    peso: 395, estado: 'Vendido' },
-]);
+const loading = ref(true);
+const error = ref(false);
+const errorMessage = ref('');
+
+const animales = ref<AnimalItem[]>([]);
+const razas = ref<OpcionCatalogo[]>([]);
+const potreros = ref<OpcionCatalogo[]>([]);
+
+const paginaActual = ref(1);
+const hayMas = ref(false);
+
+/** Tamano de pagina; el backend lo topa en 100. */
+const POR_PAGINA = 15;
+
+/**
+ * El filtrado y la busqueda los resuelve la API, no el cliente: solo asi la
+ * paginacion es coherente (filtrar en memoria dejaria fuera los registros
+ * de las paginas que todavia no se descargaron).
+ */
+function filtrosDeConsulta(pagina: number) {
+  return {
+    page: pagina,
+    per_page: POR_PAGINA,
+    search: search.value.trim() || undefined,
+    sexo: filters.value.sexo || undefined,
+    estado: filters.value.estado || undefined,
+    raza_id: filters.value.raza || undefined,
+    potrero_id: filters.value.potrero || undefined,
+    sort_by: 'numero_arete',
+    order: 'asc' as const,
+  };
+}
+
+async function cargar(pagina = 1, anexar = false): Promise<void> {
+  if (!anexar) {
+    loading.value = true;
+    error.value = false;
+    errorMessage.value = '';
+  }
+
+  try {
+    const resultado = await animalService.listar(filtrosDeConsulta(pagina));
+    animales.value = anexar ? [...animales.value, ...resultado.items] : resultado.items;
+    paginaActual.value = resultado.paginacion.paginaActual;
+    hayMas.value = resultado.hayMas;
+  } catch (err) {
+    if (!anexar) {
+      error.value = true;
+      errorMessage.value = err instanceof Error ? err.message : 'No se pudo obtener el listado de animales.';
+      animales.value = [];
+      hayMas.value = false;
+    }
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function recargar(): Promise<void> {
+  await cargar(1, false);
+}
+
+async function cargarCatalogos(): Promise<void> {
+  try {
+    const [listaRazas, listaPotreros] = await Promise.all([catalogoService.razas(), catalogoService.potreros()]);
+    razas.value = listaRazas;
+    potreros.value = listaPotreros;
+  } catch {
+    // Los catalogos son auxiliares: si fallan, los filtros quedan en "Todos".
+  }
+}
 
 onMounted(() => {
-  setTimeout(() => (loading.value = false), 600);
+  cargarCatalogos();
+  cargar(1);
 });
 
-const animalFiltrado = computed(() =>
-  animales.value.filter(a => {
-    const q = search.value.toLowerCase();
-    const matchSearch = !q || a.arete.toLowerCase().includes(q) || a.nombre.toLowerCase().includes(q);
-    const matchSexo = !filters.value.sexo || a.sexo === filters.value.sexo;
-    const matchEstado = !filters.value.estado || a.estado === filters.value.estado;
-    return matchSearch && matchSexo && matchEstado;
-  })
-);
+// El ion-searchbar ya trae debounce de 300 ms en la plantilla.
+watch(search, () => {
+  recargar();
+});
+
+/** El listado ya viene filtrado por la API. */
+const animalFiltrado = computed<AnimalItem[]>(() => animales.value);
+
+function pesoTexto(peso: number | null | undefined): string {
+  return peso === null || peso === undefined ? 'sin registro' : `${peso} kg`;
+}
 
 function estadoColor(estado: string) {
   if (estado === 'Activo') return 'success';
@@ -168,14 +257,20 @@ function estadoColor(estado: string) {
   return 'primary';
 }
 
-function onFilterChange() { /* Persona 3: consultar API con filtros */ }
-
-async function onRefresh(e: any) {
-  setTimeout(() => e.target.complete(), 600);
+function onFilterChange() {
+  recargar();
 }
 
-async function onInfinite(e: any) {
-  setTimeout(() => e.target.complete(), 600);
+async function onRefresh(e: CustomEvent) {
+  await cargar(1, false);
+  (e.target as HTMLIonRefresherElement).complete();
+}
+
+async function onInfinite(e: CustomEvent) {
+  if (hayMas.value) {
+    await cargar(paginaActual.value + 1, true);
+  }
+  (e.target as HTMLIonInfiniteScrollElement).complete();
 }
 
 function goToForm() {
