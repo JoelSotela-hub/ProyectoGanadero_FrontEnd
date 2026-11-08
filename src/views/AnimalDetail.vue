@@ -15,6 +15,23 @@
     </ion-header>
 
     <ion-content class="ion-padding">
+      <!-- Aviso obligatorio de datos no actualizados cuando el detalle se sirve desde la cache (Persona 4) -->
+      <div
+        v-if="mostrandoAvisoOffline"
+        class="offline-banner ion-margin-bottom"
+        role="status"
+        aria-live="polite"
+        data-testid="offline-detail-banner"
+      >
+        <ion-chip color="warning" class="offline-chip">
+          <ion-icon :icon="cloudOfflineOutline" />
+          <ion-label>
+            <strong>Datos no actualizados</strong> · Modo sin conexión (Última actualización:
+            {{ ultimaActualizacionTexto }})
+          </ion-label>
+        </ion-chip>
+      </div>
+
       <!-- Estado de carga -->
       <div v-if="loading">
         <ion-card>
@@ -123,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   IonPage,
@@ -147,12 +164,12 @@ import {
   IonSkeletonText,
   onIonViewWillEnter,
 } from '@ionic/vue';
-import { arrowBackOutline, createOutline } from 'ionicons/icons';
+import { arrowBackOutline, cloudOfflineOutline, createOutline } from 'ionicons/icons';
 
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import type { AnimalItem } from '@/models/auth.model';
-import { animalService, ApiError } from '@/services';
+import { animalService, ApiError, formatearMarcaDeTiempo, networkService } from '@/services';
 
 const route = useRoute();
 const router = useRouter();
@@ -165,6 +182,16 @@ const error = ref<boolean>(false);
 const errorMessage = ref<string>('');
 const animal = ref<AnimalItem | null>(null);
 
+/** Estado de cache y marca de tiempo (Persona 4). */
+const desdeCache = ref<boolean>(false);
+const ultimaActualizacion = ref<string | null>(null);
+
+const mostrandoAvisoOffline = computed<boolean>(
+  () => Boolean(animal.value) && (desdeCache.value || !networkService.isOnline.value),
+);
+
+const ultimaActualizacionTexto = computed<string>(() => formatearMarcaDeTiempo(ultimaActualizacion.value));
+
 function estadoColor(estado: string) {
   if (estado === 'Activo') return 'success';
   if (estado === 'Tratamiento') return 'warning';
@@ -173,7 +200,7 @@ function estadoColor(estado: string) {
 }
 
 /**
- * Detalle real contra GET /api/v1/animales/{id} (Persona 3).
+ * Detalle contra GET /api/v1/animales/{id} con soporte de cache local sin conexion (Persona 4).
  * Un 404 se trata como "no encontrado" (estado vacio), no como error.
  */
 async function loadAnimalDetail() {
@@ -182,7 +209,10 @@ async function loadAnimalDetail() {
   errorMessage.value = '';
 
   try {
-    animal.value = await animalService.obtener(animalId.value);
+    const resultado = await animalService.obtenerConCache(animalId.value);
+    animal.value = resultado.item;
+    desdeCache.value = resultado.desdeCache;
+    ultimaActualizacion.value = resultado.ultimaActualizacion;
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       animal.value = null;
@@ -197,6 +227,23 @@ async function loadAnimalDetail() {
 
 onIonViewWillEnter(() => {
   loadAnimalDetail();
+});
+
+let cancelarSuscripcionRed: (() => void) | null = null;
+
+onMounted(() => {
+  // Refresca el detalle automaticamente cuando se recupera la red (Persona 4)
+  cancelarSuscripcionRed = networkService.suscribirCambioDeRed((conectado) => {
+    if (conectado) {
+      loadAnimalDetail();
+    } else if (animal.value) {
+      desdeCache.value = true;
+    }
+  });
+});
+
+onUnmounted(() => {
+  cancelarSuscripcionRed?.();
 });
 
 function goToEdit() {
@@ -215,6 +262,19 @@ function goBackToList() {
 .detail-container {
   max-width: 640px;
   margin: 0 auto;
+}
+
+.offline-banner {
+  max-width: 640px;
+  margin: 0 auto 0.75rem;
+  display: flex;
+  justify-content: center;
+}
+
+.offline-chip {
+  height: auto;
+  padding: 0.4rem 0.75rem;
+  white-space: normal;
 }
 
 .header-row {

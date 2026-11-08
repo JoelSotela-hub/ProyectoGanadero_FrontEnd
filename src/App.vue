@@ -16,14 +16,7 @@ const router = useRouter();
 
 let backButtonListener: PluginListenerHandle | null = null;
 
-const ROOT_PATHS = new Set([
-  '/login',
-  '/tabs/dashboard',
-  '/tabs/tab1',
-  '/tabs/animales',
-  '/tabs/tab2',
-  '/items',
-]);
+const ROOT_PATHS = new Set(['/login', '/tabs/dashboard', '/tabs/tab1', '/tabs/animales', '/tabs/tab2', '/items']);
 
 onMounted(async () => {
   /**

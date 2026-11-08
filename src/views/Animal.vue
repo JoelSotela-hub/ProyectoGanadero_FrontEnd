@@ -20,6 +20,23 @@
         <ion-refresher-content />
       </ion-refresher>
 
+      <!-- Aviso obligatorio de datos no actualizados cuando se sirve desde cache o no hay red (Persona 4) -->
+      <div
+        v-if="mostrandoAvisoOffline"
+        class="offline-banner ion-padding-horizontal ion-padding-top"
+        role="status"
+        aria-live="polite"
+        data-testid="offline-cache-banner"
+      >
+        <ion-chip color="warning" class="offline-chip">
+          <ion-icon :icon="cloudOfflineOutline" />
+          <ion-label>
+            <strong>Datos no actualizados</strong> · Modo sin conexión (Última actualización:
+            {{ ultimaActualizacionTexto }})
+          </ion-label>
+        </ion-chip>
+      </div>
+
       <!-- Filtros -->
       <ion-list lines="full" class="filters-list">
         <ion-item>
@@ -116,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   IonPage,
@@ -127,6 +144,7 @@ import {
   IonSearchbar,
   IonList,
   IonItem,
+  IonLabel,
   IonSelect,
   IonSelectOption,
   IonButtons,
@@ -149,12 +167,18 @@ import {
   IonFab,
   IonFabButton,
 } from '@ionic/vue';
-import { add, pawOutline } from 'ionicons/icons';
+import { add, cloudOfflineOutline, pawOutline } from 'ionicons/icons';
 
 import ErrorState from '@/components/ErrorState.vue';
 import type { AnimalItem } from '@/models/auth.model';
 import { useAuthStore } from '@/stores/auth';
-import { animalService, catalogoService, type OpcionCatalogo } from '@/services';
+import {
+  animalService,
+  catalogoService,
+  formatearMarcaDeTiempo,
+  networkService,
+  type OpcionCatalogo,
+} from '@/services';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -172,6 +196,16 @@ const potreros = ref<OpcionCatalogo[]>([]);
 
 const paginaActual = ref(1);
 const hayMas = ref(false);
+
+/** Estado de cache y marca de tiempo (Persona 4). */
+const desdeCache = ref(false);
+const ultimaActualizacion = ref<string | null>(null);
+
+const mostrandoAvisoOffline = computed<boolean>(
+  () => desdeCache.value || (!networkService.isOnline.value && animales.value.length > 0),
+);
+
+const ultimaActualizacionTexto = computed<string>(() => formatearMarcaDeTiempo(ultimaActualizacion.value));
 
 /** Tamano de pagina; el backend lo topa en 100. */
 const POR_PAGINA = 15;
@@ -207,6 +241,8 @@ async function cargar(pagina = 1, anexar = false): Promise<void> {
     animales.value = anexar ? [...animales.value, ...resultado.items] : resultado.items;
     paginaActual.value = resultado.paginacion.paginaActual;
     hayMas.value = resultado.hayMas;
+    desdeCache.value = Boolean(resultado.desdeCache);
+    ultimaActualizacion.value = resultado.ultimaActualizacion ?? ultimaActualizacion.value;
   } catch (err) {
     if (!anexar) {
       error.value = true;
@@ -233,9 +269,25 @@ async function cargarCatalogos(): Promise<void> {
   }
 }
 
+let cancelarSuscripcionRed: (() => void) | null = null;
+
 onMounted(() => {
   cargarCatalogos();
   cargar(1);
+
+  // Al recuperar la red, refresca automaticamente el listado y los catalogos (Persona 4)
+  cancelarSuscripcionRed = networkService.suscribirCambioDeRed((conectado) => {
+    if (conectado) {
+      cargarCatalogos();
+      recargar();
+    } else if (animales.value.length > 0) {
+      desdeCache.value = true;
+    }
+  });
+});
+
+onUnmounted(() => {
+  cancelarSuscripcionRed?.();
 });
 
 // El ion-searchbar ya trae debounce de 300 ms en la plantilla.
@@ -243,7 +295,7 @@ watch(search, () => {
   recargar();
 });
 
-/** El listado ya viene filtrado por la API. */
+/** El listado ya viene filtrado por la API (o por cache offline). */
 const animalFiltrado = computed<AnimalItem[]>(() => animales.value);
 
 function pesoTexto(peso: number | null | undefined): string {
@@ -290,6 +342,15 @@ async function logout() {
 <style scoped>
 .filters-list {
   padding-top: 0;
+}
+.offline-banner {
+  display: flex;
+  justify-content: center;
+}
+.offline-chip {
+  height: auto;
+  padding: 0.4rem 0.75rem;
+  white-space: normal;
 }
 .empty-state ion-icon {
   font-size: 3rem;
