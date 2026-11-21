@@ -2,7 +2,7 @@ import { Preferences } from '@capacitor/preferences';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-import type { AuthSession, AuthUser, LoginCredentials } from '@/models/auth.model';
+import type { AuthSession, AuthUser } from '@/models/auth.model';
 import { authService } from '@/services/auth.service';
 
 export interface SecureTokenStorageAdapter {
@@ -70,37 +70,19 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed<boolean>(() => Boolean(token.value));
 
   /**
-   * Inicia sesión y actualiza el estado compartido de Pinia y el almacenamiento seguro.
-   * Soporta recibir una sesión completa (de la API de Persona 3) o credenciales (modo simulado).
+   * Inicia sesión y actualiza el estado compartido de Pinia y el almacenamiento seguro
+   * a partir de la sesión autenticada devuelta por la API.
    */
-  async function login(payload: AuthSession | LoginCredentials): Promise<boolean> {
-    if ('token' in payload) {
-      token.value = payload.token;
-      user.value = payload.user;
-      await tokenStorageAdapter.setToken(payload.token);
-      await guardarUsuarioLocal(payload.user);
-      return true;
+  async function login(payload: AuthSession): Promise<boolean> {
+    if (!payload?.token) {
+      return false;
     }
 
-    // Validación simulada mientras Persona 3 conecta el endpoint real de Laravel Sanctum
-    const emailNormalized = payload.email.trim().toLowerCase();
-    if (
-      (emailNormalized === 'usuario@guateganado.cr' && payload.password === '123456') ||
-      (emailNormalized === 'admin@guateganado.cr' && payload.password === '123456')
-    ) {
-      const mockToken = `sanctum_token_${Date.now()}`;
-      token.value = mockToken;
-      user.value = {
-        id: 1,
-        name: 'Administrador GuateGanado',
-        email: emailNormalized,
-        role: 'admin',
-      };
-      await tokenStorageAdapter.setToken(mockToken);
-      return true;
-    }
-
-    return false;
+    token.value = payload.token;
+    user.value = payload.user;
+    await tokenStorageAdapter.setToken(payload.token);
+    await guardarUsuarioLocal(payload.user);
+    return true;
   }
 
   /**

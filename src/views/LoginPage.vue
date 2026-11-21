@@ -24,7 +24,7 @@
                   type="email"
                   label="Correo electrónico"
                   label-placement="floating"
-                  placeholder="usuario@guateganado.cr"
+                  placeholder="correo@ejemplo.com"
                   autocomplete="username"
                   :disabled="loading"
                 />

@@ -35,7 +35,6 @@ export interface AnimalItem {
   potreroId?: number;
   ubicacionLat?: number;
   ubicacionLng?: number;
-  fotoUrl?: string;
   /** Codigo del QR del animal (ej. VACA-001). */
   codigoQr?: string;
   codigo_qr?: string;

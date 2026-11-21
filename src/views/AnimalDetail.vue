@@ -65,7 +65,6 @@
       <!-- Ficha completa del animal -->
       <div v-else class="detail-container">
         <ion-card>
-          <img v-if="animal.fotoUrl" :src="animal.fotoUrl" :alt="`Foto del animal ${animal.arete}`" class="animal-foto" />
           <ion-card-header>
             <div class="header-row">
               <div>
@@ -344,12 +343,6 @@ function goBackToList() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.animal-foto {
-  width: 100%;
-  max-height: 260px;
-  object-fit: cover;
 }
 
 .section-title {

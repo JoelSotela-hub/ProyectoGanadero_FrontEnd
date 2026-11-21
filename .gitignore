@@ -41,4 +41,11 @@ npm-debug.log*
 # (localhost, 10.0.2.2 o la IP de su red). No debe subirse.
 .env
 .env.local
+.env.production
 .env.*.local
+
+# Llaves de firma y artefactos compilados de Android
+*.jks
+*.keystore
+*.apk
+android/app/release/

@@ -74,8 +74,13 @@ describe('LoginPage.vue, AuthStore y Capacidades Offline (Persona 2 + Persona 4)
     expect(authStore.isAuthenticated).toBe(false);
 
     const ok = await authStore.login({
-      email: 'usuario@guateganado.cr',
-      password: '123456',
+      token: 'sanctum_test_bearer_token',
+      user: {
+        id: 1,
+        name: 'Usuario Pruebas',
+        email: 'pruebas@ejemplo.test',
+        role: 'admin',
+      },
     });
     expect(ok).toBe(true);
     expect(authStore.isAuthenticated).toBe(true);
@@ -129,7 +134,7 @@ describe('LoginPage.vue, AuthStore y Capacidades Offline (Persona 2 + Persona 4)
     const eventos: boolean[] = [];
     networkService.establecerEstadoParaPruebas(false, 'none');
 
-    const desuscribir = networkService.suscribirCambioDeRed((conectado) => {
+    const desuscribir = networkService.suscribirCambioDeRed((conectado: boolean) => {
       eventos.push(conectado);
     });
 

@@ -72,8 +72,25 @@ export function registrarManejadorNoAutorizado(fn: ManejadorNoAutorizado): void 
   manejadorNoAutorizado = fn;
 }
 
+/**
+ * Resuelve la URL base del backend de Laravel desde `import.meta.env.VITE_API_URL`.
+ * En produccion (`import.meta.env.PROD`), exige que `VITE_API_URL` este definida y no vacia.
+ * Normaliza barras finales y cualquier sufijo `/api` o `/api/v1` para evitar duplicarlo,
+ * ya que `http.ts` agrega `/api/v1` (o `/api/user` cuando `rutaCompleta` es true).
+ */
+function resolverBaseUrl(): string {
+  const raw = (import.meta.env.VITE_API_URL ?? '').trim();
+
+  if (import.meta.env.PROD && !raw) {
+    throw new Error('Configuración ausente: VITE_API_URL no está definida para producción.');
+  }
+
+  const efectiva = raw || 'http://localhost:8000';
+  return efectiva.replace(/\/+$/, '').replace(/\/api(\/v1)?$/i, '');
+}
+
 /** URL base del backend de Laravel, configurable por entorno. */
-const BASE_URL: string = (import.meta.env.VITE_API_URL ?? 'http://10.0.2.2:8000').replace(/\/+$/, '');
+const BASE_URL: string = resolverBaseUrl();
 
 /** Prefijo de version de la API: todas las rutas viven bajo /api/v1. */
 const PREFIJO = '/api/v1';

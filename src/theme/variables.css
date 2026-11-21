@@ -97,6 +97,10 @@
 
   --ion-item-background: #ffffff;
   --ion-card-background: #ffffff;
+
+  /** Áreas seguras del dispositivo (muescas / barras de navegación) **/
+  --ion-safe-area-top: env(safe-area-inset-top, 0px);
+  --ion-safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /** Modo oscuro: mismo verde de marca, con mas luminosidad para el contraste. */

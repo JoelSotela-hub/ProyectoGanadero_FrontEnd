@@ -139,7 +139,6 @@ export function mapearAnimal(animal: AnimalApi): AnimalItem {
     potreroId: animal.potrero_id,
     codigoQr: codigoQrNormalizado,
     codigo_qr: codigoQrNormalizado,
-    fotoUrl: animal.foto ?? undefined,
     pesajes: animal.pesajes?.map((p) => ({
       id: p.pesaje_id,
       pesoKg: Number(p.peso_kg),

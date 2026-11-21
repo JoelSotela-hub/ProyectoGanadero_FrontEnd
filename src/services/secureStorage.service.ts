@@ -10,26 +10,70 @@
  * y se conecta al puente `registerTokenStorageAdapter` definido en `src/stores/auth.ts`.
  */
 import { SecureStorage } from '@aparajita/capacitor-secure-storage';
+import { Capacitor } from '@capacitor/core';
 
 import { registerTokenStorageAdapter, type SecureTokenStorageAdapter } from '@/stores/auth';
 
 /** Clave cifrada donde se persiste exclusivamente el Bearer Token de Sanctum. */
 export const SECURE_TOKEN_KEY = 'guateganado_auth_token';
 
-/**
- * Obtiene el token de autenticacion desde el almacenamiento cifrado del dispositivo.
- */
-export async function getToken(): Promise<string | null> {
+/** Respaldo en memoria para navegadores web con almacenamiento restringido. */
+let webMemoryToken: string | null = null;
+
+function leerTokenWebFallback(): string | null {
   try {
-    const valor = await SecureStorage.get(SECURE_TOKEN_KEY);
-    return typeof valor === 'string' && valor.trim().length > 0 ? valor : null;
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const valor = window.sessionStorage.getItem(SECURE_TOKEN_KEY);
+      if (valor && valor.trim().length > 0) return valor;
+    }
   } catch {
-    return null;
+    // sessionStorage no disponible: usar respaldo en memoria.
+  }
+  return webMemoryToken;
+}
+
+function guardarTokenWebFallback(token: string): void {
+  webMemoryToken = token;
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.setItem(SECURE_TOKEN_KEY, token);
+    }
+  } catch {
+    // Respaldo en memoria ya actualizado.
+  }
+}
+
+function borrarTokenWebFallback(): void {
+  webMemoryToken = null;
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.removeItem(SECURE_TOKEN_KEY);
+    }
+  } catch {
+    // Nada que limpiar.
   }
 }
 
 /**
+ * Obtiene el token de autenticacion desde el almacenamiento cifrado del dispositivo.
+ * En navegador web, si el plugin no devuelve valor o falla, utiliza respaldo seguro en sesion/memoria.
+ */
+export async function getToken(): Promise<string | null> {
+  try {
+    const valor = await SecureStorage.get(SECURE_TOKEN_KEY);
+    if (typeof valor === 'string' && valor.trim().length > 0) {
+      return valor;
+    }
+  } catch {
+    // Fallback controlado abajo en plataforma web.
+  }
+
+  return !Capacitor.isNativePlatform() ? leerTokenWebFallback() : null;
+}
+
+/**
  * Guarda el token de autenticacion en el almacenamiento cifrado del dispositivo.
+ * En navegador web, si el plugin falla, utiliza respaldo en sesion/memoria sin lanzar excepcion fatal.
  */
 export async function setToken(token: string): Promise<void> {
   const limpio = token.trim();
@@ -37,7 +81,14 @@ export async function setToken(token: string): Promise<void> {
     await removeToken();
     return;
   }
-  await SecureStorage.set(SECURE_TOKEN_KEY, limpio);
+
+  try {
+    await SecureStorage.set(SECURE_TOKEN_KEY, limpio);
+  } catch {
+    if (!Capacitor.isNativePlatform()) {
+      guardarTokenWebFallback(limpio);
+    }
+  }
 }
 
 /**
@@ -48,6 +99,10 @@ export async function removeToken(): Promise<void> {
     await SecureStorage.remove(SECURE_TOKEN_KEY);
   } catch {
     // Si la clave no existia previamente en el Keystore, no se propaga error.
+  } finally {
+    if (!Capacitor.isNativePlatform()) {
+      borrarTokenWebFallback();
+    }
   }
 }
 

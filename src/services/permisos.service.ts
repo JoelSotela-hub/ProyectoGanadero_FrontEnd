@@ -60,12 +60,17 @@ async function solicitar(capacidad: CapacidadNativa): Promise<EstadoPermiso> {
   return location === 'granted' || coarseLocation === 'granted' ? 'granted' : location;
 }
 
-/** Abre la pantalla de ajustes de la aplicacion en Android (o iOS). */
+/** Abre la pantalla de ajustes de la aplicacion en Android (o iOS), con fallback seguro en web. */
 export async function abrirAjustesDeLaApp(): Promise<void> {
-  await NativeSettings.open({
-    optionAndroid: AndroidSettings.ApplicationDetails,
-    optionIOS: IOSSettings.App,
-  });
+  if (!esPlataformaNativa()) return;
+  try {
+    await NativeSettings.open({
+      optionAndroid: AndroidSettings.ApplicationDetails,
+      optionIOS: IOSSettings.App,
+    });
+  } catch {
+    // En entornos donde el intent nativo no esté disponible, no se rompe el flujo.
+  }
 }
 
 /** Alerta del caso "denegado de forma permanente" con boton "Abrir Ajustes". */
