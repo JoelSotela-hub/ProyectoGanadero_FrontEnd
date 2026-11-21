@@ -112,14 +112,18 @@ export const cacheService = {
       total: nuevosItems.length,
     };
 
-    await Preferences.set({
-      key: CACHE_LISTADO_KEY,
-      value: JSON.stringify({
-        items: nuevosItems,
-        paginacion,
-        updatedAt: actual?.updatedAt ?? updatedAt,
-      } satisfies CacheListadoAnimales),
-    });
+    try {
+      await Preferences.set({
+        key: CACHE_LISTADO_KEY,
+        value: JSON.stringify({
+          items: nuevosItems,
+          paginacion,
+          updatedAt: actual?.updatedAt ?? updatedAt,
+        } satisfies CacheListadoAnimales),
+      });
+    } catch {
+      // Si el almacenamiento falla por cuota o restricciones del navegador, no interrumpe la navegacion.
+    }
 
     return actual?.updatedAt ?? updatedAt;
   },

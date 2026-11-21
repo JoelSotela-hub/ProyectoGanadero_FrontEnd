@@ -19,6 +19,11 @@
           <ion-label>Registrar</ion-label>
         </ion-tab-button>
 
+        <ion-tab-button tab="potrero" href="/tabs/potrero">
+          <ion-icon aria-hidden="true" :icon="walkOutline" />
+          <ion-label>Potreros</ion-label>
+        </ion-tab-button>
+
         <!-- Las rondas existen solo para operario (las hace) y admin (las audita) -->
         <ion-tab-button v-if="esAdmin || esOperario" tab="rondas" href="/tabs/rondas">
           <ion-icon aria-hidden="true" :icon="walkOutline" />
