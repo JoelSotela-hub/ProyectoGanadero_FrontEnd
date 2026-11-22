@@ -1,20 +1,26 @@
 /**
- * Servicio de Rondas de Inspeccion (Persona 5).
+ * Servicio de Rondas de Inspección (Contrato API Sección 8).
  *
- *   GET   /api/v1/rondas?page=&per_page=        Operario: propias | Admin: todas
- *   POST  /api/v1/rondas                        Inicia ronda (409 si ya hay una activa)
- *   GET   /api/v1/rondas/{id}                   Detalle con operador y puntos
- *   POST  /api/v1/rondas/{id}/puntos            Registra un potrero visitado
- *   PATCH /api/v1/rondas/{id}/finalizar         Cierra la ronda
+ *   GET   /api/v1/rondas?page=&per_page=&estado=  Operario: propias | Admin: todas
+ *   POST  /api/v1/rondas                          Inicia ronda (409 si ya hay una activa; payload: `observaciones` plural)
+ *   GET   /api/v1/rondas/{id}                     Detalle con operador y puntos
+ *   POST  /api/v1/rondas/{id}/puntos              Registra un potrero visitado (payload: `observacion` singular)
+ *   PATCH /api/v1/rondas/{id}/finalizar           Cierra la ronda (payload: `observaciones` plural)
  *
- * Reutiliza el cliente HTTP unico (`http.ts`): el token Bearer y el 401 se
- * gestionan alli. Los errores 409 llegan como `ApiError` cuyo `message` ya es
- * el campo `mensaje` del backend.
+ * No existen rutas PUT ni DELETE en routes/api.php.
+ * Los errores 409 llegan como `ApiError` cuyo `message` ya es el campo `mensaje` del backend.
  */
-import type { ApiMeta } from './http';
+import { crearCacheListado, listarConRespaldo } from './cacheListado';
 import { http } from './http';
 
-import type { NuevoPuntoRonda, PuntoRonda, Ronda } from '@/models/ronda.model';
+import type { EstadoRonda, NuevoPuntoRonda, PuntoRonda, Ronda } from '@/models/ronda.model';
+
+export const CACHE_RONDAS_KEY = 'guateganado_rondas_cache_v1';
+
+export interface FiltrosRondas {
+  estado?: EstadoRonda | '';
+  signal?: AbortSignal;
+}
 
 export interface ListadoRondas {
   items: Ronda[];
@@ -22,27 +28,39 @@ export interface ListadoRondas {
   ultimaPagina: number;
   total: number;
   hayMas: boolean;
+  desdeCache: boolean;
+  ultimaActualizacion: string | null;
 }
 
-interface RespuestaRondas {
-  data: Ronda[];
-  meta?: ApiMeta;
-}
+const cacheRondas = crearCacheListado<Ronda>(CACHE_RONDAS_KEY);
 
 export const rondaService = {
-  async listar(pagina = 1, porPagina = 15): Promise<ListadoRondas> {
-    const respuesta = await http.get<RespuestaRondas>('/rondas', {
-      query: { page: pagina, per_page: porPagina },
+  async listar(pagina = 1, porPagina = 15, filtros: FiltrosRondas = {}): Promise<ListadoRondas> {
+    const estado = filtros.estado || undefined;
+    const resultado = await listarConRespaldo<Ronda, Ronda>({
+      ruta: '/rondas',
+      query: {
+        page: pagina,
+        per_page: porPagina,
+        estado,
+      },
+      signal: filtros.signal,
+      pagina,
+      porPagina,
+      sinFiltros: !estado,
+      mapear: (r) => r,
+      clave: (r) => r.id,
+      cache: cacheRondas,
     });
-    const meta = respuesta.meta;
-    const paginaActual = meta?.current_page ?? pagina;
-    const ultimaPagina = meta?.last_page ?? 1;
+
     return {
-      items: respuesta.data ?? [],
-      paginaActual,
-      ultimaPagina,
-      total: meta?.total ?? respuesta.data?.length ?? 0,
-      hayMas: paginaActual < ultimaPagina,
+      items: resultado.data,
+      paginaActual: resultado.meta.current_page,
+      ultimaPagina: resultado.meta.last_page,
+      total: resultado.meta.total,
+      hayMas: resultado.hayMas,
+      desdeCache: resultado.desdeCache,
+      ultimaActualizacion: resultado.ultimaActualizacion,
     };
   },
 
@@ -51,21 +69,32 @@ export const rondaService = {
     return respuesta.data;
   },
 
-  /** Inicia una ronda. Lanza ApiError 409 si el operario ya tiene una en progreso. */
+  /** Inicia una ronda (`observaciones` plural). Lanza ApiError 409 si ya tiene una en progreso. */
   async iniciar(observaciones?: string): Promise<Ronda> {
-    const respuesta = await http.post<{ data: Ronda }>('/rondas', observaciones ? { observaciones } : {});
+    const limpio = observaciones?.trim();
+    const respuesta = await http.post<{ data: Ronda }>('/rondas', limpio ? { observaciones: limpio } : {});
     return respuesta.data;
   },
 
+  /** Registra un punto de inspección (`observacion` singular, `estado_potrero` enum estricto). */
   async registrarPunto(idRonda: number | string, punto: NuevoPuntoRonda): Promise<PuntoRonda> {
-    const respuesta = await http.post<{ data: PuntoRonda }>(`/rondas/${idRonda}/puntos`, punto);
+    const payload: NuevoPuntoRonda = {
+      codigo_qr: punto.codigo_qr.trim(),
+      latitud: Number(punto.latitud),
+      longitud: Number(punto.longitud),
+      estado_potrero: punto.estado_potrero,
+      ...(punto.observacion?.trim() ? { observacion: punto.observacion.trim() } : {}),
+    };
+    const respuesta = await http.post<{ data: PuntoRonda }>(`/rondas/${idRonda}/puntos`, payload);
     return respuesta.data;
   },
 
+  /** Finaliza una ronda (`observaciones` plural). Lanza ApiError 409 si ya fue completada. */
   async finalizar(idRonda: number | string, observaciones?: string): Promise<Ronda> {
+    const limpio = observaciones?.trim();
     const respuesta = await http.patch<{ data: Ronda }>(
       `/rondas/${idRonda}/finalizar`,
-      observaciones ? { observaciones } : {},
+      limpio ? { observaciones: limpio } : {},
     );
     return respuesta.data;
   },
@@ -75,7 +104,12 @@ export const rondaService = {
    * del listado), para llevarlo a ella en lugar de crear otra.
    */
   async buscarActiva(): Promise<Ronda | null> {
-    const listado = await this.listar(1, 50);
+    const listado = await this.listar(1, 50, { estado: 'en_progreso' });
     return listado.items.find((ronda) => ronda.estado === 'en_progreso') ?? null;
+  },
+
+  /** Limpia la caché offline de rondas (al cerrar sesión). */
+  async limpiarCache(): Promise<void> {
+    await cacheRondas.limpiar();
   },
 };

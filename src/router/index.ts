@@ -67,25 +67,21 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'pesajes',
         name: 'PesajeList',
-        component: proximamente,
+        component: () => import('@/views/Pesajes.vue'),
         meta: {
           requiresAuth: true,
           isRootScreen: true,
           roles: rolesDeModulo('pesajes'),
-          titulo: 'Pesajes',
-          descripcion: 'Historial y registro de pesajes del hato.',
         },
       },
       {
         path: 'tratamientos',
         name: 'TratamientoList',
-        component: proximamente,
+        component: () => import('@/views/Tratamientos.vue'),
         meta: {
           requiresAuth: true,
           isRootScreen: true,
           roles: rolesDeModulo('tratamientos'),
-          titulo: 'Tratamientos',
-          descripcion: 'Catálogo sanitario y aplicaciones a los animales.',
         },
       },
       {

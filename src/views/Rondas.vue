@@ -1,92 +1,171 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>{{ esAdmin ? 'Auditoría de Rondas' : 'Mis Rondas' }}</ion-title>
-        <ion-buttons slot="end">
-          <ion-button @click="logout">Salir</ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+    <app-header :titulo="tituloVista" />
 
-    <ion-content>
+    <ion-content class="gg-content">
       <ion-refresher slot="fixed" @ionRefresh="onRefresh($event)">
         <ion-refresher-content />
       </ion-refresher>
 
-      <!-- Estado de carga -->
-      <ion-grid v-if="loading" class="ion-padding-horizontal">
-        <ion-row>
-          <ion-col v-for="i in 3" :key="i" size="12" size-md="6">
-            <ion-card>
-              <ion-card-header>
-                <ion-skeleton-text :animated="true" style="width: 40%" />
-                <ion-skeleton-text :animated="true" style="width: 70%" />
-              </ion-card-header>
-              <ion-card-content>
-                <ion-skeleton-text :animated="true" />
-                <ion-skeleton-text :animated="true" style="width: 60%" />
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+      <div class="gg-page">
+        <header class="gg-page-header">
+          <div>
+            <p class="gg-eyebrow">Inspección en campo</p>
+            <h1 class="gg-title">{{ tituloVista }}</h1>
+            <p class="gg-subtitle">
+              {{
+                esAdmin
+                  ? 'Audita el recorrido de los operarios, horarios, estado de potreros y coordenadas registradas.'
+                  : 'Inicia rondas de inspección, escanea el código QR de cada potrero y registra su estado.'
+              }}
+            </p>
+          </div>
+          <!-- Solo el operario inicia rondas; el admin audita. Sin PUT ni DELETE (no existen en la API). -->
+          <div v-if="esOperario" class="gg-actions">
+            <button
+              type="button"
+              class="gg-btn"
+              :disabled="iniciando"
+              data-testid="btn-iniciar-ronda"
+              @click="iniciarRonda"
+            >
+              <ion-icon :icon="walkOutline" aria-hidden="true" />
+              {{ iniciando ? 'Iniciando...' : 'Iniciar ronda' }}
+            </button>
+          </div>
+        </header>
 
-      <!-- Estado de error con reintento -->
-      <ErrorState
-        v-else-if="error"
-        title="No se pudieron cargar las rondas"
-        :message="errorMessage"
-        @retry="recargar"
-      />
+        <!-- Aviso de caché offline con marca de tiempo -->
+        <div
+          v-if="mostrandoAvisoOffline"
+          class="gg-alert gg-alert--warning"
+          role="status"
+          aria-live="polite"
+          data-testid="offline-cache-banner"
+        >
+          <ion-icon :icon="cloudOfflineOutline" aria-hidden="true" />
+          <span>
+            <strong>Datos no actualizados</strong> · Modo sin conexión (Última actualización:
+            {{ ultimaActualizacionTexto }})
+          </span>
+        </div>
 
-      <!-- Estado vacío -->
-      <EmptyState
-        v-else-if="!rondas.length"
-        title="Sin rondas registradas"
-        :message="
-          esAdmin
-            ? 'Todavía ningún operario ha iniciado una ronda de inspección.'
-            : 'Aún no has iniciado ninguna ronda. Pulsa «Iniciar Ronda» para comenzar.'
-        "
-      />
+        <!-- Filtro por estado (GET /api/v1/rondas?estado=en_progreso|completada) -->
+        <form class="gg-card gg-filters" role="search" aria-label="Filtros de rondas" @submit.prevent>
+          <div class="gg-field">
+            <label class="gg-field__label" for="rondas-filtro-estado">Estado de la ronda</label>
+            <select
+              id="rondas-filtro-estado"
+              class="gg-select"
+              :value="filtroEstado"
+              @change="cambiarFiltroEstado(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">Todas</option>
+              <option value="en_progreso">En progreso</option>
+              <option value="completada">Completada</option>
+            </select>
+          </div>
 
-      <!-- Listado -->
-      <ion-grid v-else class="ion-padding-horizontal">
-        <ion-row>
-          <ion-col v-for="r in rondas" :key="r.id" size="12" size-md="6">
-            <ion-card button @click="abrirRonda(r.id)">
-              <ion-card-header>
-                <ion-card-subtitle>Ronda #{{ r.id }}</ion-card-subtitle>
-                <ion-card-title>{{ formatearFecha(r.fecha_inicio) }}</ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <!-- Solo el admin ve quién hizo cada ronda -->
-                <p v-if="esAdmin && r.operador">
-                  <strong>Operario:</strong> {{ r.operador.name }}<br />
-                  <span class="muted">{{ r.operador.email }}</span>
-                </p>
-                <p><strong>Potreros visitados:</strong> {{ r.total_puntos }}</p>
-                <p v-if="r.fecha_fin"><strong>Finalizada:</strong> {{ formatearFecha(r.fecha_fin) }}</p>
-                <ion-chip :color="r.estado === 'en_progreso' ? 'warning' : 'success'" outline>
-                  {{ r.estado === 'en_progreso' ? 'En progreso' : 'Completada' }}
-                </ion-chip>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+          <div v-if="filtroEstado" class="gg-filters__clear">
+            <button type="button" class="gg-btn gg-btn--ghost" @click="cambiarFiltroEstado('')">Limpiar filtro</button>
+          </div>
+        </form>
+
+        <!-- Estado 1: Carga -->
+        <section v-if="loading" class="gg-card gg-card--flush" aria-busy="true" aria-label="Cargando rondas">
+          <div v-for="i in 4" :key="i" class="gg-skeleton-row">
+            <span class="gg-skeleton" style="width: 18%" />
+            <span class="gg-skeleton" style="width: 26%" />
+            <span class="gg-skeleton" style="width: 18%" />
+            <span class="gg-skeleton" style="width: 20%" />
+          </div>
+        </section>
+
+        <!-- Estado 2: Error con reintento -->
+        <error-state
+          v-else-if="error"
+          title="No se pudieron cargar las rondas"
+          :message="errorMessage"
+          @retry="recargar"
+        />
+
+        <!-- Estado 3: Vacío -->
+        <section v-else-if="!rondas.length" class="gg-card">
+          <empty-state
+            :title="filtroEstado ? 'Sin rondas con ese estado' : 'Sin rondas registradas'"
+            :message="
+              filtroEstado
+                ? 'No se encontraron rondas para el filtro seleccionado.'
+                : esAdmin
+                  ? 'Todavía ningún operario ha iniciado una ronda de inspección.'
+                  : 'Aún no has iniciado ninguna ronda. Pulsa «Iniciar ronda» para comenzar.'
+            "
+          >
+            <button v-if="filtroEstado" type="button" class="gg-btn gg-btn--outline" @click="cambiarFiltroEstado('')">
+              Ver todas
+            </button>
+            <button v-else-if="esOperario" type="button" class="gg-btn" :disabled="iniciando" @click="iniciarRonda">
+              <ion-icon :icon="walkOutline" aria-hidden="true" />
+              Iniciar primera ronda
+            </button>
+          </empty-state>
+        </section>
+
+        <!-- Estado 4: Datos -->
+        <section v-else class="gg-card gg-card--flush" aria-label="Listado de rondas">
+          <p class="gg-count" role="status">{{ total }} {{ total === 1 ? 'ronda' : 'rondas' }}</p>
+          <div class="gg-table-wrapper">
+            <table class="gg-table" data-testid="tabla-rondas">
+              <caption class="gg-sr-only">
+                Listado de rondas de inspección
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Ronda</th>
+                  <th v-if="esAdmin" scope="col">Operario</th>
+                  <th scope="col">Inicio</th>
+                  <th scope="col">Finalizada</th>
+                  <th scope="col">Potreros</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in rondas" :key="r.id">
+                  <td data-label="Ronda">
+                    <a :href="`/rondas/${r.id}`" @click.prevent="abrirRonda(r.id)">Ronda #{{ r.id }}</a>
+                  </td>
+                  <td v-if="esAdmin" data-label="Operario">
+                    <template v-if="r.operador">
+                      <strong>{{ r.operador.name }}</strong>
+                      <div class="gg-muted">{{ r.operador.email }}</div>
+                    </template>
+                    <span v-else>—</span>
+                  </td>
+                  <td data-label="Inicio">{{ formatearFecha(r.fecha_inicio) }}</td>
+                  <td data-label="Finalizada">{{ r.fecha_fin ? formatearFecha(r.fecha_fin) : '—' }}</td>
+                  <td data-label="Potreros">{{ r.total_puntos }}</td>
+                  <td data-label="Estado">
+                    <span
+                      class="gg-badge"
+                      :class="r.estado === 'en_progreso' ? 'gg-badge--warning' : 'gg-badge--success'"
+                    >
+                      {{ r.estado === 'en_progreso' ? 'En progreso' : 'Completada' }}
+                    </span>
+                  </td>
+                  <td data-label="Detalle">
+                    <a :href="`/rondas/${r.id}`" class="gg-link" @click.prevent="abrirRonda(r.id)">Ver recorrido</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
 
       <ion-infinite-scroll :disabled="!hayMas" @ionInfinite="onInfinite($event)">
         <ion-infinite-scroll-content loading-spinner="crescent" />
       </ion-infinite-scroll>
-
-      <!-- Solo el operario inicia rondas; el admin audita -->
-      <ion-fab v-if="esOperario" vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button :disabled="iniciando" aria-label="Iniciar Ronda" @click="iniciarRonda">
-          <ion-icon :icon="walkOutline" />
-        </ion-fab-button>
-      </ion-fab>
     </ion-content>
 
     <ion-loading :is-open="iniciando" message="Iniciando ronda..." />
@@ -94,42 +173,28 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
+  alertController,
   IonContent,
-  IonButtons,
-  IonButton,
   IonIcon,
-  IonGrid,
-  IonRow,
-  IonCol,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonCardContent,
-  IonChip,
-  IonRefresher,
-  IonRefresherContent,
-  IonSkeletonText,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
-  IonFab,
-  IonFabButton,
   IonLoading,
+  IonPage,
+  IonRefresher,
+  IonRefresherContent,
   onIonViewWillEnter,
+  onIonViewWillLeave,
 } from '@ionic/vue';
-import { walkOutline } from 'ionicons/icons';
+import { cloudOfflineOutline, walkOutline } from 'ionicons/icons';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
+import AppHeader from '@/components/AppHeader.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import { useRol } from '@/composables/useRol';
-import type { Ronda } from '@/models/ronda.model';
+import type { EstadoRonda, Ronda } from '@/models/ronda.model';
 import {
   ApiError,
   formatearMarcaDeTiempo,
@@ -139,24 +204,46 @@ import {
   networkService,
   rondaService,
 } from '@/services';
-import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
-const authStore = useAuthStore();
 const { esAdmin, esOperario } = useRol();
 
-const loading = ref(true);
-const error = ref(false);
-const errorMessage = ref('');
-const iniciando = ref(false);
+const tituloVista = computed<string>(() => (esAdmin.value ? 'Auditoría de Rondas' : 'Mis Rondas'));
+
+const loading = ref<boolean>(true);
+const error = ref<boolean>(false);
+const errorMessage = ref<string>('');
+const iniciando = ref<boolean>(false);
 
 const rondas = ref<Ronda[]>([]);
-const paginaActual = ref(1);
-const hayMas = ref(false);
+const filtroEstado = ref<EstadoRonda | ''>('');
+const paginaActual = ref<number>(1);
+const total = ref<number>(0);
+const hayMas = ref<boolean>(false);
+
+const desdeCache = ref<boolean>(false);
+const ultimaActualizacion = ref<string | null>(null);
+
+const mostrandoAvisoOffline = computed<boolean>(
+  () => desdeCache.value || (!networkService.isOnline.value && rondas.value.length > 0),
+);
+const ultimaActualizacionTexto = computed<string>(() => formatearMarcaDeTiempo(ultimaActualizacion.value));
 
 const formatearFecha = formatearMarcaDeTiempo;
 
+let controlador: AbortController | null = null;
+let cancelarSuscripcionRed: (() => void) | null = null;
+
+function cancelarPendiente(): void {
+  controlador?.abort();
+  controlador = null;
+}
+
 async function cargar(pagina = 1, anexar = false): Promise<void> {
+  controlador?.abort();
+  const actual = new AbortController();
+  controlador = actual;
+
   if (!anexar) {
     loading.value = true;
     error.value = false;
@@ -164,11 +251,20 @@ async function cargar(pagina = 1, anexar = false): Promise<void> {
   }
 
   try {
-    const resultado = await rondaService.listar(pagina);
+    const resultado = await rondaService.listar(pagina, 15, {
+      estado: filtroEstado.value,
+      signal: actual.signal,
+    });
+    if (actual.signal.aborted) return;
+
     rondas.value = anexar ? [...rondas.value, ...resultado.items] : resultado.items;
     paginaActual.value = resultado.paginaActual;
+    total.value = resultado.total;
     hayMas.value = resultado.hayMas;
+    desdeCache.value = resultado.desdeCache;
+    ultimaActualizacion.value = resultado.ultimaActualizacion ?? ultimaActualizacion.value;
   } catch (err) {
+    if (actual.signal.aborted || (err instanceof ApiError && err.cancelada)) return;
     if (anexar) {
       await mostrarError(err);
     } else {
@@ -178,12 +274,19 @@ async function cargar(pagina = 1, anexar = false): Promise<void> {
       hayMas.value = false;
     }
   } finally {
-    loading.value = false;
+    if (controlador === actual) {
+      loading.value = false;
+    }
   }
 }
 
 async function recargar(): Promise<void> {
   await cargar(1, false);
+}
+
+function cambiarFiltroEstado(valor: string): void {
+  filtroEstado.value = valor === 'en_progreso' || valor === 'completada' ? valor : '';
+  void recargar();
 }
 
 async function onRefresh(e: CustomEvent): Promise<void> {
@@ -199,15 +302,16 @@ async function onInfinite(e: CustomEvent): Promise<void> {
 }
 
 function abrirRonda(id: number): void {
-  router.push(`/rondas/${id}`);
+  void router.push(`/rondas/${id}`);
 }
 
 /**
- * Inicia una ronda. Si el operario ya tiene una `en_progreso` (en el listado o
- * porque el backend responde 409), lo lleva a esa ronda en lugar de crear otra.
+ * Inicia una ronda (`POST /api/v1/rondas` con `observaciones` plural opcional).
+ * Si el backend responde 409 (ya existe una ronda `en_progreso`), muestra alerta/toast
+ * con el mensaje exacto del backend y lleva al operario a la ronda activa.
  */
 async function iniciarRonda(): Promise<void> {
-  if (iniciando.value) return;
+  if (iniciando.value || !esOperario.value) return;
 
   const activa = rondas.value.find((r) => r.estado === 'en_progreso');
   if (activa) {
@@ -216,20 +320,40 @@ async function iniciarRonda(): Promise<void> {
     return;
   }
 
+  const alertaObs = await alertController.create({
+    header: 'Iniciar ronda',
+    message: 'Puedes agregar observaciones iniciales opcionales antes de comenzar el recorrido.',
+    inputs: [{ name: 'observaciones', type: 'textarea', placeholder: 'Observaciones (opcional)' }],
+    buttons: [
+      { text: 'Cancelar', role: 'cancel' },
+      { text: 'Iniciar', role: 'confirm' },
+    ],
+  });
+  await alertaObs.present();
+  const { data, role } = await alertaObs.onDidDismiss<{ values?: { observaciones?: string } }>();
+  if (role !== 'confirm') return;
+
   iniciando.value = true;
   try {
-    const nueva = await rondaService.iniciar();
+    const nueva = await rondaService.iniciar(data?.values?.observaciones?.trim() || undefined);
     await mostrarToast('Ronda iniciada.', 'success');
     abrirRonda(nueva.id);
   } catch (err) {
     if (err instanceof ApiError && err.status === 409) {
-      // Regla de negocio: ya existe una ronda activa. Mensaje = campo `mensaje` del backend.
-      await mostrarToast(err.message, 'warning');
+      const alertaConflicto = await alertController.create({
+        header: 'Ronda en progreso',
+        subHeader: 'Regla de negocio',
+        message: err.message,
+        buttons: ['Ir a la ronda activa'],
+      });
+      await alertaConflicto.present();
+      await alertaConflicto.onDidDismiss();
+      await mostrarToast(err.message, 'warning', 5000);
       try {
         const existente = await rondaService.buscarActiva();
         if (existente) abrirRonda(existente.id);
       } catch {
-        // Si no se puede localizar, el aviso del 409 ya informó al usuario.
+        // El aviso 409 ya informó al usuario.
       }
     } else {
       await mostrarError(err, 'No se pudo iniciar la ronda.');
@@ -239,32 +363,75 @@ async function iniciarRonda(): Promise<void> {
   }
 }
 
-async function logout(): Promise<void> {
-  await authStore.logout();
-  await router.replace('/login');
-}
-
-let cancelarSuscripcionRed: (() => void) | null = null;
-
 onMounted(() => {
+  void cargar(1, false);
   cancelarSuscripcionRed = networkService.suscribirCambioDeRed((conectado) => {
-    if (conectado) void recargar();
+    if (conectado) {
+      void recargar();
+    } else if (rondas.value.length > 0) {
+      desdeCache.value = true;
+    }
   });
 });
 
 onUnmounted(() => {
   cancelarSuscripcionRed?.();
+  cancelarPendiente();
 });
 
-// Recarga al volver desde el detalle (la ronda pudo cambiar de estado).
 onIonViewWillEnter(() => {
   void cargar(1, false);
+});
+
+onIonViewWillLeave(() => {
+  cancelarPendiente();
 });
 </script>
 
 <style scoped>
-.muted {
-  color: var(--ion-color-medium);
+.gg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.gg-filters {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: 1fr;
+  align-items: end;
+}
+@media (min-width: 40rem) {
+  .gg-filters {
+    grid-template-columns: minmax(14rem, 20rem) auto;
+  }
+}
+
+.gg-filters__clear {
+  display: flex;
+  align-items: center;
+}
+
+.gg-count {
+  margin: 0;
+  padding: 0.9rem 1.25rem 0.5rem;
   font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gg-ink-muted);
+}
+
+.gg-muted {
+  color: var(--gg-ink-muted);
+  font-size: 0.8rem;
+}
+
+.gg-skeleton-row {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--gg-border);
+}
+.gg-skeleton-row:first-child {
+  border-top: 0;
 }
 </style>
