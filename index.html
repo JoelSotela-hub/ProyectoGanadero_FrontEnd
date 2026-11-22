@@ -9,7 +9,7 @@
 
   <base href="/" />
 
-  <meta name="color-scheme" content="light" />
+  <meta name="color-scheme" content="light dark" />
   <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0" />
   <meta name="format-detection" content="telephone=no" />
   <meta name="msapplication-tap-highlight" content="no" />
@@ -20,10 +20,132 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="GuateGanado" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+  <!--
+    Tema antes del primer pintado (evita destello blanco en modo oscuro).
+    Misma lógica que src/composables/useTheme.ts: localStorage `gg_theme` > prefers-color-scheme > claro.
+  -->
+  <script>
+    (function () {
+      try {
+        var tema = localStorage.getItem('gg_theme');
+        if (tema !== 'light' && tema !== 'dark') {
+          tema = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        var raiz = document.documentElement;
+        if (tema === 'dark') {
+          raiz.classList.add('ion-palette-dark', 'gg-dark');
+        }
+        raiz.setAttribute('data-theme', tema);
+        raiz.style.colorScheme = tema;
+      } catch (e) {
+        /* Sin almacenamiento: tema claro por defecto. */
+      }
+    })();
+  </script>
+
+  <!-- Estilos críticos de la pantalla de arranque (antes de que cargue el CSS de la app) -->
+  <style>
+    html,
+    body {
+      margin: 0;
+      background: #fefae0;
+    }
+
+    html.gg-dark,
+    html.gg-dark body {
+      background: #13180e;
+    }
+
+    .gg-boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: grid;
+      place-items: center;
+      background: var(--gg-forest, #283618);
+      color: var(--gg-on-forest, #f7f5e8);
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+      text-align: center;
+    }
+
+    html.gg-dark .gg-boot-splash {
+      background: var(--gg-forest, #0e1409);
+    }
+
+    .gg-boot-splash__inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .gg-boot-splash__logo {
+      display: grid;
+      place-items: center;
+      width: 4.25rem;
+      height: 4.25rem;
+      border-radius: 1.2rem;
+      background: #f7f5e8;
+      color: #283618;
+    }
+
+    .gg-boot-splash__logo svg {
+      width: 2.3rem;
+      height: 2.3rem;
+    }
+
+    .gg-boot-splash__name {
+      margin: 0.35rem 0 0;
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+
+    .gg-boot-splash__tagline {
+      margin: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: #c9cfb4;
+    }
+
+    .gg-boot-splash__bar {
+      width: 9rem;
+      height: 0.25rem;
+      margin-top: 0.9rem;
+      border-radius: 999px;
+      background: rgba(247, 245, 232, 0.16);
+    }
+
+    .gg-boot-splash__status {
+      margin: 0.2rem 0 0;
+      font-size: 0.8rem;
+      color: #c9cfb4;
+    }
+  </style>
 </head>
 
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <!-- Reemplazado por App.vue al montar (misma pantalla de arranque, que luego se desvanece) -->
+    <div class="gg-boot-splash" role="status" aria-live="polite">
+      <div class="gg-boot-splash__inner">
+        <span class="gg-boot-splash__logo" aria-hidden="true">
+          <svg viewBox="0 0 512 512" fill="currentColor" focusable="false">
+            <ellipse cx="146" cy="214" rx="44" ry="58" />
+            <ellipse cx="216" cy="128" rx="44" ry="60" />
+            <ellipse cx="296" cy="128" rx="44" ry="60" />
+            <ellipse cx="366" cy="214" rx="44" ry="58" />
+            <path d="M256 258c-54 0-116 76-136 124-16 40 8 80 50 80 32 0 54-18 86-18s54 18 86 18c42 0 66-40 50-80-20-48-82-124-136-124z" />
+          </svg>
+        </span>
+        <p class="gg-boot-splash__name">GuateGanado</p>
+        <p class="gg-boot-splash__tagline">GESTIÓN GANADERA</p>
+        <span class="gg-boot-splash__bar" aria-hidden="true"></span>
+        <p class="gg-boot-splash__status">Preparando tu finca…</p>
+      </div>
+    </div>
+  </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
 

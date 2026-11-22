@@ -396,7 +396,7 @@ a.gg-kpi-card:hover {
   text-decoration: none;
   cursor: pointer;
   background: var(--gg-olive);
-  color: #ffffff;
+  color: var(--gg-on-action, #ffffff);
   box-shadow: 0 1px 2px rgb(40 54 24 / 20%);
   transition: background 0.15s ease;
 }
@@ -571,7 +571,7 @@ span.gg-field__icon {
   display: block;
   height: 1rem;
   border-radius: 0.5rem;
-  background: linear-gradient(90deg, var(--gg-neutral-bg), #f7f5e8, var(--gg-neutral-bg));
+  background: linear-gradient(90deg, var(--gg-neutral-bg), var(--gg-skeleton-highlight, #f7f5e8), var(--gg-neutral-bg));
   background-size: 200% 100%;
   animation: gg-shimmer 1.3s linear infinite;
 }
