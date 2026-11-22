@@ -580,3 +580,10 @@ span.gg-field__icon {
     background-position: -200% 0;
   }
 }
+
+/* ---------- Segmentos (ion-segment / ion-segment-button) ---------- */
+ion-segment-button {
+  --color-checked: #283618;
+  --indicator-color: #283618;
+  --background-checked: rgba(96, 108, 56, 0.12);
+}

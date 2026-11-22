@@ -21,11 +21,7 @@ export const CACHE_CATALOGO_TRATAMIENTOS_KEY = 'guateganado_tratamientos_catalog
 export const TIPOS_TRATAMIENTO_REFERENCIA = ['Vacuna', 'Desparasitante', 'Vitamina'] as const;
 
 export type CampoOrdenAplicacion =
-  | 'fecha_aplicacion'
-  | 'dosis_ml'
-  | 'tratamiento_animal_id'
-  | 'id_animal'
-  | 'tratamiento_id';
+  'fecha_aplicacion' | 'dosis_ml' | 'tratamiento_animal_id' | 'id_animal' | 'tratamiento_id';
 
 export type CampoOrdenCatalogoTratamiento = 'nombre' | 'tipo' | 'tratamiento_id' | 'created_at';
 

@@ -82,8 +82,20 @@ import { useRoute, useRouter } from 'vue-router';
 import { useEscritorio } from '@/composables/useEscritorio';
 import { useRol } from '@/composables/useRol';
 import { ETIQUETA_ROL, type Rol } from '@/config/roles';
-import { authService, cacheService, pesajeService, potreroService, rondaService, tratamientoService } from '@/services';
+import {
+  authService,
+  cacheService,
+  catalogoService,
+  insumoService,
+  pesajeService,
+  potreroService,
+  rondaService,
+  tratamientoService,
+} from '@/services';
 import { useAuthStore } from '@/stores/auth';
+import { useCatalogoAdminStore } from '@/stores/catalogoAdmin';
+import { useCatalogosStore } from '@/stores/catalogos';
+import { useInsumoStore } from '@/stores/insumo';
 import { usePesajeStore } from '@/stores/pesaje';
 import { useTratamientoStore } from '@/stores/tratamiento';
 import { useUiStore } from '@/stores/ui';
@@ -135,9 +147,14 @@ async function cerrarSesion(): Promise<void> {
     pesajeService.limpiarCache(),
     tratamientoService.limpiarCache(),
     rondaService.limpiarCache(),
+    insumoService.limpiarCache(),
+    catalogoService.limpiarCache(),
   ]);
   usePesajeStore().limpiarEstado();
   useTratamientoStore().limpiarEstado();
+  useInsumoStore().limpiarEstado();
+  useCatalogoAdminStore().limpiarEstado();
+  useCatalogosStore().limpiar();
   await authStore.logout();
   await router.replace('/login');
 }

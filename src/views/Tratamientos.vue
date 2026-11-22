@@ -1052,8 +1052,9 @@ async function onInfiniteCatalogo(evento: CustomEvent): Promise<void> {
 
 .gg-segment-wrap ion-segment-button {
   --color: var(--gg-ink-muted);
-  --color-checked: #ffffff;
-  --indicator-color: var(--gg-olive);
+  --color-checked: #283618;
+  --indicator-color: #283618;
+  --background-checked: rgba(96, 108, 56, 0.12);
   --border-radius: 0.55rem;
   font-weight: 600;
 }

@@ -4,9 +4,6 @@ import type { RouteRecordRaw } from 'vue-router';
 import { rolesDeModulo, rolPermitido } from '@/config/roles';
 import { useAuthStore } from '@/stores/auth';
 
-/** Módulos de fases 1–4 que aún no tienen vista propia: comparten un marcador de posición. */
-const proximamente = () => import('@/views/ModuloProximamente.vue');
-
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -93,25 +90,21 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'insumos',
         name: 'InsumoList',
-        component: proximamente,
+        component: () => import('@/views/Insumos.vue'),
         meta: {
           requiresAuth: true,
           isRootScreen: true,
           roles: rolesDeModulo('insumos'),
-          titulo: 'Insumos',
-          descripcion: 'Inventario de insumos de la finca.',
         },
       },
       {
         path: 'catalogos',
         name: 'CatalogoList',
-        component: proximamente,
+        component: () => import('@/views/Catalogos.vue'),
         meta: {
           requiresAuth: true,
           isRootScreen: true,
           roles: rolesDeModulo('catalogos'),
-          titulo: 'Catálogos',
-          descripcion: 'Razas, categorías y unidades de medida.',
         },
       },
       {
@@ -154,6 +147,8 @@ const RUTAS_LISTADO_PREFIJOS = [
   '/tabs/potreros',
   '/tabs/pesajes',
   '/tabs/tratamientos',
+  '/tabs/insumos',
+  '/tabs/catalogos',
 ];
 
 let ultimaRutaListado = '/tabs/animales';
