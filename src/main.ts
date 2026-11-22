@@ -31,10 +31,11 @@ import '@ionic/vue/css/display.css';
 
 /* @import '@ionic/vue/css/palettes/dark.always.css'; */
 /* @import '@ionic/vue/css/palettes/dark.class.css'; */
-import '@ionic/vue/css/palettes/dark.system.css';
+/* GuateGanado usa un tema claro cálido (WCAG AA); no se activa la paleta oscura del sistema. */
 
-/* Theme variables */
+/* Theme variables + clases utilitarias gg-* */
 import './theme/variables.css';
+import './theme/components.css';
 
 const pinia = createPinia();
 const app = createApp(App).use(pinia).use(IonicVue).use(router);

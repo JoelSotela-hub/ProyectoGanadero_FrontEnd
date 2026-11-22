@@ -19,6 +19,7 @@ export * from './http';
 export * from './auth.service';
 export * from './animal.service';
 export * from './catalogo.service';
+export * from './dashboard.service';
 export * from './secureStorage.service';
 export * from './cache.service';
 export * from './network.service';

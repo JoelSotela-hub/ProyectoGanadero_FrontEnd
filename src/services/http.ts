@@ -40,13 +40,36 @@ export class ApiError extends Error {
   readonly status: number;
   readonly errors: Record<string, string[]>;
   readonly esDeRed: boolean;
+  /** True si la peticion se cancelo a proposito (AbortController); no es un fallo real. */
+  readonly cancelada: boolean;
 
-  constructor(status: number, message: string, errors: Record<string, string[]> = {}, esDeRed = false) {
+  constructor(
+    status: number,
+    message: string,
+    errors: Record<string, string[]> = {},
+    esDeRed = false,
+    cancelada = false,
+  ) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.errors = errors;
     this.esDeRed = esDeRed;
+    this.cancelada = cancelada;
+  }
+
+  /** 409 Conflict: toda ReglaNegocioException del backend (RN-01, RN-02, RN-03...). */
+  get esReglaDeNegocio(): boolean {
+    return this.status === 409;
+  }
+
+  /** Primer mensaje de cada campo con error 422: { campo: 'mensaje' }. */
+  get erroresPorCampo(): Record<string, string> {
+    const resultado: Record<string, string> = {};
+    for (const [campo, mensajes] of Object.entries(this.errors)) {
+      if (mensajes?.[0]) resultado[campo] = mensajes[0];
+    }
+    return resultado;
   }
 
   /** Primer mensaje de validacion, util para mostrar en un toast. */
@@ -73,20 +96,42 @@ export function registrarManejadorNoAutorizado(fn: ManejadorNoAutorizado): void 
 }
 
 /**
- * Resuelve la URL base del backend de Laravel desde `import.meta.env.VITE_API_URL`.
- * En produccion (`import.meta.env.PROD`), exige que `VITE_API_URL` este definida y no vacia.
+ * Resuelve la URL base del backend de Laravel EXCLUSIVAMENTE desde
+ * `import.meta.env.VITE_API_URL` (sin fallback a localhost, en ningun entorno).
  * Normaliza barras finales y cualquier sufijo `/api` o `/api/v1` para evitar duplicarlo,
  * ya que `http.ts` agrega `/api/v1` (o `/api/user` cuando `rutaCompleta` es true).
  */
 function resolverBaseUrl(): string {
   const raw = (import.meta.env.VITE_API_URL ?? '').trim();
 
-  if (import.meta.env.PROD && !raw) {
-    throw new Error('Configuración ausente: VITE_API_URL no está definida para producción.');
+  if (!raw) {
+    throw new Error('Configuración ausente: define VITE_API_URL en tu archivo .env (ver .env.example).');
   }
 
-  const efectiva = raw || 'http://localhost:8000';
-  return efectiva.replace(/\/+$/, '').replace(/\/api(\/v1)?$/i, '');
+  return raw.replace(/\/+$/, '').replace(/\/api(\/v1)?$/i, '');
+}
+
+/** Mensajes de respaldo por codigo HTTP cuando el cuerpo no trae `mensaje`. */
+const MENSAJES_POR_ESTADO: Record<number, string> = {
+  400: 'Solicitud inválida.',
+  401: 'No autenticado.',
+  403: 'No tienes permiso para realizar esta acción.',
+  404: 'El recurso solicitado no existe.',
+  409: 'La operación incumple una regla de negocio.',
+  422: 'Hay datos inválidos en el formulario.',
+  429: 'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.',
+  500: 'Error interno del servidor. Inténtalo más tarde.',
+};
+
+/**
+ * Parser uniforme de errores del backend (contrato seccion 0): todos los
+ * codigos (400/401/403/404/409/422/429/500) traen `{ error, mensaje }`;
+ * el texto para el usuario esta en `mensaje`, NO en `message`.
+ */
+function extraerMensaje(estado: number, datos: Record<string, unknown>): string {
+  const mensaje = typeof datos.mensaje === 'string' ? datos.mensaje.trim() : '';
+  if (mensaje) return mensaje;
+  return MENSAJES_POR_ESTADO[estado] ?? `Error ${estado} al comunicarse con el servidor.`;
 }
 
 /** URL base del backend de Laravel, configurable por entorno. */
@@ -113,6 +158,8 @@ export interface OpcionesPeticion {
    * perfil del usuario con el token recien emitido.
    */
   tokenManual?: string;
+  /** Senal para cancelar la peticion (debounce de busquedas, salir de la vista). */
+  signal?: AbortSignal;
 }
 
 function construirUrl(ruta: string, opciones: OpcionesPeticion): string {
@@ -144,6 +191,9 @@ async function peticion<T>(metodo: string, ruta: string, opciones: OpcionesPetic
 
   const controlador = new AbortController();
   const temporizador = setTimeout(() => controlador.abort(), TIEMPO_LIMITE);
+  const alCancelar = (): void => controlador.abort();
+  if (opciones.signal?.aborted) controlador.abort();
+  opciones.signal?.addEventListener('abort', alCancelar, { once: true });
 
   let respuesta: Response;
   try {
@@ -155,6 +205,10 @@ async function peticion<T>(metodo: string, ruta: string, opciones: OpcionesPetic
     });
   } catch (error) {
     clearTimeout(temporizador);
+    opciones.signal?.removeEventListener('abort', alCancelar);
+    if (opciones.signal?.aborted) {
+      throw new ApiError(0, 'Solicitud cancelada.', {}, false, true);
+    }
     const abortada = error instanceof DOMException && error.name === 'AbortError';
     throw new ApiError(
       0,
@@ -166,6 +220,7 @@ async function peticion<T>(metodo: string, ruta: string, opciones: OpcionesPetic
     );
   }
   clearTimeout(temporizador);
+  opciones.signal?.removeEventListener('abort', alCancelar);
 
   // --- Interceptor de entrada: 401 cierra la sesion en un solo lugar ---
   if (respuesta.status === 401 && !opciones.sinAutenticacion) {
@@ -191,13 +246,8 @@ async function peticion<T>(metodo: string, ruta: string, opciones: OpcionesPetic
 
   if (!respuesta.ok) {
     const datos = (cuerpo ?? {}) as Record<string, unknown>;
-    const mensaje =
-      (datos.mensaje as string) ??
-      (datos.message as string) ??
-      (datos.error as string) ??
-      `Error ${respuesta.status} al comunicarse con el servidor.`;
-    const errores = (datos.errors as Record<string, string[]>) ?? {};
-    throw new ApiError(respuesta.status, mensaje, errores);
+    const errores = respuesta.status === 422 ? ((datos.errors as Record<string, string[]>) ?? {}) : {};
+    throw new ApiError(respuesta.status, extraerMensaje(respuesta.status, datos), errores);
   }
 
   return cuerpo as T;

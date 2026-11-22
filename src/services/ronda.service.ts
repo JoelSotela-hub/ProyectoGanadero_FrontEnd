@@ -79,4 +79,3 @@ export const rondaService = {
     return listado.items.find((ronda) => ronda.estado === 'en_progreso') ?? null;
   },
 };
-

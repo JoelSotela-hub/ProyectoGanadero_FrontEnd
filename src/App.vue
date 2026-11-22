@@ -22,6 +22,12 @@ const ROOT_PATHS = new Set([
   '/tabs/animales',
   '/tabs/tab2',
   '/tabs/rondas',
+  '/tabs/potreros',
+  '/tabs/pesajes',
+  '/tabs/tratamientos',
+  '/tabs/insumos',
+  '/tabs/catalogos',
+  '/register',
   '/items',
 ]);
 

@@ -1,0 +1,582 @@
+/**
+ * Clases utilitarias reutilizables del sistema de diseño GuateGanado (prefijo gg-).
+ * Las fases 1–4 deben construir sus vistas con estas clases.
+ *
+ * Puntos de quiebre (mobile-first, en rem para escalar al 200 %):
+ *   móvil  < 48rem (768px)    tablet >= 48rem    escritorio >= 62rem (992px)
+ */
+
+body {
+  background: var(--gg-canvas);
+  color: var(--gg-ink);
+  font-family: var(--gg-font);
+}
+
+/* Contenido de las vistas autenticadas sobre el canvas crema */
+ion-content.gg-content {
+  --background: var(--gg-canvas);
+  --color: var(--gg-ink);
+}
+
+/* ---------- Foco visible (teclado) ---------- */
+:focus-visible {
+  outline: 0.1875rem solid var(--gg-focus);
+  outline-offset: 0.125rem;
+  border-radius: 0.25rem;
+}
+
+.gg-on-dark :focus-visible,
+ion-menu.gg-menu :focus-visible {
+  outline-color: var(--gg-focus-on-dark);
+}
+
+ion-button:focus-visible,
+ion-tab-button:focus-visible {
+  outline: 0.1875rem solid var(--gg-focus);
+  outline-offset: -0.1875rem;
+}
+
+/* Texto solo para lectores de pantalla */
+.gg-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gg-skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -4rem;
+  z-index: 1000;
+  padding: 0.6rem 1rem;
+  background: var(--gg-forest);
+  color: var(--gg-on-forest);
+  border-radius: var(--gg-radius);
+  text-decoration: none;
+}
+.gg-skip-link:focus {
+  top: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Contenedor de página ---------- */
+.gg-page {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1rem;
+  padding-left: max(1rem, var(--ion-safe-area-left));
+  padding-right: max(1rem, var(--ion-safe-area-right));
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+@media (min-width: 48rem) {
+  .gg-page {
+    padding: 1.5rem 2rem;
+    gap: 1.75rem;
+  }
+}
+
+.gg-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+@media (min-width: 48rem) {
+  .gg-page-header {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+.gg-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gg-ink-muted);
+}
+.gg-title {
+  margin: 0.15rem 0 0.25rem;
+  font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--gg-ink);
+}
+.gg-subtitle {
+  margin: 0;
+  color: var(--gg-ink-muted);
+  font-size: 0.95rem;
+}
+.gg-section-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gg-ink);
+}
+.gg-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+.gg-link {
+  color: var(--gg-olive);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.gg-link:hover {
+  color: var(--gg-olive-hover);
+}
+
+/* ---------- .gg-card ---------- */
+.gg-card {
+  background: var(--gg-surface);
+  border: 1px solid var(--gg-border);
+  border-radius: var(--gg-radius-lg);
+  box-shadow: var(--gg-shadow);
+  padding: 1.1rem 1.25rem;
+  min-width: 0;
+}
+.gg-card--flush {
+  padding: 0;
+  overflow: hidden;
+}
+a.gg-card,
+button.gg-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+}
+a.gg-card:hover,
+button.gg-card:hover {
+  border-color: var(--gg-border-strong);
+}
+
+/* ---------- .gg-kpi-card ---------- */
+.gg-kpi-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 40rem) {
+  .gg-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 62rem) {
+  .gg-kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  }
+}
+.gg-kpi-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: var(--gg-surface);
+  border: 1px solid var(--gg-border);
+  border-radius: var(--gg-radius-lg);
+  box-shadow: var(--gg-shadow);
+  padding: 1.1rem 1.25rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+a.gg-kpi-card:hover {
+  border-color: var(--gg-border-strong);
+}
+.gg-kpi-card__icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  font-size: 1.4rem;
+  background: var(--gg-success-bg);
+  color: var(--gg-forest);
+}
+.gg-kpi-card__icon--earth {
+  background: var(--gg-warning-bg);
+}
+.gg-kpi-card__icon--rose {
+  background: var(--gg-danger-bg);
+  color: var(--gg-danger-fg);
+}
+.gg-kpi-card__icon--neutral {
+  background: var(--gg-neutral-bg);
+}
+.gg-kpi-card__label {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gg-ink-muted);
+}
+.gg-kpi-card__value {
+  margin: 0.15rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--gg-ink);
+}
+.gg-kpi-card__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--gg-ink-muted);
+}
+
+/* ---------- .gg-badge ---------- */
+.gg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  background: var(--gg-neutral-bg);
+  color: var(--gg-neutral-fg);
+}
+.gg-badge--success {
+  background: var(--gg-success-bg);
+  color: var(--gg-success-fg);
+}
+.gg-badge--warning {
+  background: var(--gg-warning-bg);
+  color: var(--gg-warning-fg);
+}
+.gg-badge--danger {
+  background: var(--gg-danger-bg);
+  color: var(--gg-danger-fg);
+}
+.gg-badge--neutral {
+  background: var(--gg-neutral-bg);
+  color: var(--gg-neutral-fg);
+}
+
+/* ---------- .gg-progress-bar (siempre contenida) ---------- */
+.gg-progress-bar {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--gg-neutral-bg);
+}
+.gg-progress-bar__fill {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+  border-radius: inherit;
+  background: var(--gg-olive);
+  transition: width 0.3s ease;
+}
+.gg-progress-bar--warning .gg-progress-bar__fill {
+  background: var(--gg-earth-dark);
+}
+.gg-progress-bar--danger .gg-progress-bar__fill {
+  background: var(--gg-danger-fg);
+}
+
+/* ---------- .gg-table-wrapper: tabla en escritorio, tarjetas en móvil ---------- */
+.gg-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.gg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.gg-table th {
+  padding: 0.7rem 1rem;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gg-ink-muted);
+  background: var(--gg-canvas-alt);
+}
+.gg-table td {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--gg-border);
+  color: var(--gg-ink);
+}
+.gg-table a {
+  color: var(--gg-olive);
+  font-weight: 700;
+}
+@media (max-width: 47.99rem) {
+  .gg-table,
+  .gg-table tbody,
+  .gg-table tr,
+  .gg-table td {
+    display: block;
+    width: 100%;
+  }
+  .gg-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .gg-table tr {
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--gg-border);
+  }
+  .gg-table tr:first-child {
+    border-top: 0;
+  }
+  .gg-table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.3rem 1rem;
+    border: 0;
+    text-align: right;
+  }
+  .gg-table td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gg-ink-muted);
+    text-align: left;
+  }
+}
+
+/* ---------- Botones ---------- */
+.gg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--gg-olive);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgb(40 54 24 / 20%);
+  transition: background 0.15s ease;
+}
+.gg-btn:hover {
+  background: var(--gg-olive-hover);
+}
+.gg-btn--outline {
+  background: var(--gg-surface);
+  color: var(--gg-forest);
+  border-color: var(--gg-border-strong);
+  box-shadow: none;
+}
+.gg-btn--outline:hover {
+  background: var(--gg-canvas-alt);
+}
+.gg-btn--ghost {
+  background: transparent;
+  color: var(--gg-olive);
+  box-shadow: none;
+}
+.gg-btn--ghost:hover {
+  background: var(--gg-neutral-bg);
+}
+.gg-btn--block {
+  width: 100%;
+}
+.gg-btn:disabled,
+.gg-btn[aria-disabled='true'] {
+  background: var(--gg-disabled-bg);
+  color: var(--gg-disabled-fg);
+  border-color: var(--gg-disabled-border);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ---------- Campos de formulario ---------- */
+.gg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.gg-field__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gg-ink);
+}
+.gg-field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.gg-input,
+.gg-select,
+.gg-textarea {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--gg-border-strong);
+  border-radius: 0.75rem;
+  background: var(--gg-surface);
+  color: var(--gg-ink);
+  font: inherit;
+  font-size: 1rem;
+}
+.gg-input::placeholder,
+.gg-textarea::placeholder {
+  color: var(--gg-ink-muted);
+  opacity: 1;
+}
+.gg-input--icon {
+  padding-right: 3rem;
+}
+.gg-field__icon {
+  position: absolute;
+  right: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 1.2rem;
+  color: var(--gg-ink-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+span.gg-field__icon {
+  pointer-events: none;
+}
+.gg-input:disabled,
+.gg-select:disabled,
+.gg-textarea:disabled {
+  background: var(--gg-disabled-bg);
+  color: var(--gg-disabled-fg);
+  border-color: var(--gg-disabled-border);
+  cursor: not-allowed;
+}
+.gg-field--error .gg-input,
+.gg-field--error .gg-select,
+.gg-field--error .gg-textarea {
+  border-color: var(--gg-danger-fg);
+  background: var(--gg-danger-bg);
+}
+.gg-field__error {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gg-danger-fg);
+}
+.gg-field__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--gg-ink-muted);
+}
+.gg-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.gg-checkbox input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--gg-olive);
+}
+
+/* ---------- Alertas y estados ---------- */
+.gg-alert {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.75rem 1rem;
+  border-radius: var(--gg-radius);
+  border: 1px solid transparent;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.gg-alert--warning {
+  background: var(--gg-warning-bg);
+  color: var(--gg-warning-fg);
+  border-color: var(--gg-earth);
+}
+.gg-alert--danger {
+  background: var(--gg-danger-bg);
+  color: var(--gg-danger-fg);
+  border-color: var(--gg-danger-fg);
+}
+.gg-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--gg-ink-muted);
+}
+.gg-state h2,
+.gg-state h3 {
+  margin: 0;
+  color: var(--gg-ink);
+  font-size: 1.1rem;
+}
+.gg-state p {
+  margin: 0 0 0.5rem;
+}
+.gg-state ion-icon {
+  font-size: 3rem;
+}
+.gg-skeleton {
+  display: block;
+  height: 1rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(90deg, var(--gg-neutral-bg), #f7f5e8, var(--gg-neutral-bg));
+  background-size: 200% 100%;
+  animation: gg-shimmer 1.3s linear infinite;
+}
+@keyframes gg-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}

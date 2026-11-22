@@ -27,4 +27,3 @@ export async function mostrarToast(mensaje: string, color: ColorToast = 'medium'
 export async function mostrarError(error: unknown, porDefecto?: string): Promise<void> {
   await mostrarToast(mensajeDeError(error, porDefecto), 'danger', 5000);
 }
-

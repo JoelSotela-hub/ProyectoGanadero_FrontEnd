@@ -11,6 +11,14 @@ export interface LoginCredentials {
   remember?: boolean;
 }
 
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  role: 'admin' | 'veterinario' | 'operario';
+}
+
 export interface AuthSession {
   token: string;
   user: AuthUser;

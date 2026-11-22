@@ -23,7 +23,12 @@ async function pedirCoordenadasManuales(): Promise<Coordenadas | null> {
     message: 'No se pudo leer la ubicación. Escribe las coordenadas para continuar con las pruebas.',
     inputs: [
       { name: 'latitud', type: 'text', placeholder: 'Latitud (ej. 10.456789)', attributes: { inputmode: 'decimal' } },
-      { name: 'longitud', type: 'text', placeholder: 'Longitud (ej. -84.123456)', attributes: { inputmode: 'decimal' } },
+      {
+        name: 'longitud',
+        type: 'text',
+        placeholder: 'Longitud (ej. -84.123456)',
+        attributes: { inputmode: 'decimal' },
+      },
     ],
     buttons: [
       { text: 'Cancelar', role: 'cancel' },
@@ -60,4 +65,3 @@ export async function obtenerCoordenadas(): Promise<Coordenadas | null> {
   const posicion = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 15000 });
   return { latitud: posicion.coords.latitude, longitud: posicion.coords.longitude };
 }
-

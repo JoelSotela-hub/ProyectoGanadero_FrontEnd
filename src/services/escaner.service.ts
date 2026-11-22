@@ -64,4 +64,3 @@ export async function escanearQr(titulo = 'Escanear código QR', ejemplo = 'VACA
     throw error;
   }
 }
-

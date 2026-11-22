@@ -102,9 +102,7 @@
           </ion-card-header>
           <ion-card-content>
             <p><strong>Hora:</strong> {{ formatearFecha(p.registrado_en) }}</p>
-            <p>
-              <strong>Coordenadas:</strong> {{ Number(p.latitud).toFixed(6) }}, {{ Number(p.longitud).toFixed(6) }}
-            </p>
+            <p><strong>Coordenadas:</strong> {{ Number(p.latitud).toFixed(6) }}, {{ Number(p.longitud).toFixed(6) }}</p>
             <p v-if="p.observacion"><strong>Observación:</strong> {{ p.observacion }}</p>
 
             <!-- Renderizado visual del QR del potrero (sin imágenes en BD) -->
@@ -446,4 +444,3 @@ onIonViewWillEnter(() => {
   font-weight: 700;
 }
 </style>
-
