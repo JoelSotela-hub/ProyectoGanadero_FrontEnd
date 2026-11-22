@@ -2,10 +2,10 @@
  * Servicio de autenticacion (Persona 3).
  *
  * El backend es Laravel con Sanctum:
- *   POST /api/v1/auth/login   -> { message, token }   (no devuelve el usuario)
- *   POST /api/v1/auth/register-> 201 { message, token, usuario }  (clave usuario, no data)
- *   GET  /api/user            -> { id, name, email, role }  (plano, sin data ni /v1)
- *   POST /api/v1/auth/logout  -> 204
+ *   POST /api/v1/auth/login    -> { message, token }   (no devuelve el usuario)
+ *   POST /api/v1/auth/register -> 201 { message, usuario } (requiere Bearer token de admin; SIN token)
+ *   GET  /api/user             -> { id, name, email, role }  (plano, sin data ni /v1)
+ *   POST /api/v1/auth/logout   -> 204
  *
  * Como el login solo entrega el token, se consulta el perfil inmediatamente
  * despues para armar el `AuthSession` que espera el store de Pinia.
@@ -19,26 +19,32 @@ interface RespuestaLogin {
   token: string;
 }
 
-interface RespuestaRegistro {
+export interface RespuestaRegistroUsuario {
   message?: string;
-  token: string;
   usuario: AuthUser;
 }
 
 export const authService = {
-  /** Registra un usuario (POST /api/v1/auth/register) y lee el usuario de la clave usuario. */
-  async registrar(datos: RegisterPayload): Promise<AuthSession> {
-    const respuesta = await http.post<RespuestaRegistro>(
-      '/auth/register',
-      { ...datos, name: datos.name.trim(), email: datos.email.trim() },
-      { sinAutenticacion: true },
-    );
+  /**
+   * Registra un usuario en el sistema (POST /api/v1/auth/register).
+   * Requiere Authorization: Bearer <token> de un administrador (`admin`).
+   * Responde HTTP 201 con `{ message, usuario }` SIN campo `token`.
+   */
+  async registrar(datos: RegisterPayload): Promise<AuthUser> {
+    const payload: RegisterPayload = {
+      ...datos,
+      name: datos.name.trim(),
+      email: datos.email.trim().toLowerCase(),
+    };
 
-    if (!respuesta?.token || !respuesta.usuario) {
-      throw new ApiError(500, 'El servidor no devolvió los datos del registro.');
+    const respuesta = await http.post<RespuestaRegistroUsuario>('/auth/register', payload);
+    const usuario = respuesta?.usuario ?? desenvolver<AuthUser>(respuesta);
+
+    if (!usuario || typeof usuario !== 'object' || !('email' in usuario)) {
+      throw new ApiError(500, 'El servidor no devolvió los datos del usuario creado.');
     }
 
-    return { token: respuesta.token, user: respuesta.usuario };
+    return usuario;
   },
 
   /**

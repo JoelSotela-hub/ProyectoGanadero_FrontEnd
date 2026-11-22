@@ -67,13 +67,6 @@
         {{ loading ? 'Ingresando...' : 'Ingresar al sistema' }}
       </button>
     </form>
-
-    <template #pie>
-      <p class="gg-auth-foot">
-        ¿Necesita una cuenta?
-        <a class="gg-link" href="/register" @click.prevent="router.push('/register')">Regístrese aquí</a>
-      </p>
-    </template>
   </auth-layout>
 </template>
 

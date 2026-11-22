@@ -16,12 +16,6 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false, guestOnly: true },
   },
   {
-    path: '/register',
-    name: 'Register',
-    component: () => import('@/views/RegisterPage.vue'),
-    meta: { requiresAuth: false, guestOnly: true },
-  },
-  {
     // Shell autenticado: ion-split-pane (escritorio) + drawer y tabs (móvil)
     path: '/tabs/',
     component: () => import('@/views/TabsPage.vue'),
@@ -108,6 +102,16 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'usuarios',
+        name: 'UsuarioList',
+        component: () => import('@/views/Usuarios.vue'),
+        meta: {
+          requiresAuth: true,
+          isRootScreen: true,
+          roles: rolesDeModulo('usuarios'),
+        },
+      },
+      {
         path: '/potreros/:id',
         name: 'PotreroDetail',
         alias: ['/tabs/potreros/:id'],
@@ -149,6 +153,7 @@ const RUTAS_LISTADO_PREFIJOS = [
   '/tabs/tratamientos',
   '/tabs/insumos',
   '/tabs/catalogos',
+  '/tabs/usuarios',
 ];
 
 let ultimaRutaListado = '/tabs/animales';

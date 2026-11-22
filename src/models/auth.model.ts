@@ -2,7 +2,9 @@ export interface AuthUser {
   id: number | string;
   name: string;
   email: string;
-  role?: string;
+  role?: 'admin' | 'veterinario' | 'operario' | string;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface LoginCredentials {

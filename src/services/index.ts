@@ -17,6 +17,7 @@ import { useAuthStore } from '@/stores/auth';
 
 export * from './http';
 export * from './auth.service';
+export * from './usuario.service';
 export * from './animal.service';
 export * from './potrero.service';
 export * from './pesaje.service';
