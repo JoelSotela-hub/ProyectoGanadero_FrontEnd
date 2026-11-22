@@ -42,6 +42,21 @@
       </ul>
     </nav>
 
+    <div class="gg-sidebar__theme">
+      <button
+        type="button"
+        class="gg-sidebar__theme-btn gg-theme-toggle"
+        data-testid="btn-toggle-theme"
+        :aria-label="esOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        :aria-pressed="esOscuro"
+        :title="esOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        @click="alternarTema()"
+      >
+        <ion-icon :icon="esOscuro ? sunnyOutline : moonOutline" aria-hidden="true" />
+        <span :class="{ 'gg-sr-only': compacto }">{{ esOscuro ? 'Modo claro' : 'Modo oscuro' }}</span>
+      </button>
+    </div>
+
     <div class="gg-sidebar__user">
       <button
         id="gg-user-btn"
@@ -75,12 +90,20 @@
 
 <script setup lang="ts">
 import { IonIcon, IonPopover, menuController, popoverController } from '@ionic/vue';
-import { chevronBackOutline, chevronForwardOutline, logOutOutline, pawOutline } from 'ionicons/icons';
+import {
+  chevronBackOutline,
+  chevronForwardOutline,
+  logOutOutline,
+  moonOutline,
+  pawOutline,
+  sunnyOutline,
+} from 'ionicons/icons';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { useEscritorio } from '@/composables/useEscritorio';
 import { useRol } from '@/composables/useRol';
+import { useTheme } from '@/composables/useTheme';
 import { ETIQUETA_ROL, type Rol } from '@/config/roles';
 import {
   authService,
@@ -107,6 +130,7 @@ const authStore = useAuthStore();
 const ui = useUiStore();
 const { rol, modulosVisibles } = useRol();
 const { esEscritorio } = useEscritorio();
+const { esOscuro, alternarTema } = useTheme();
 
 /** El modo compacto (solo íconos) solo aplica en escritorio; en móvil el drawer siempre es completo. */
 const compacto = computed<boolean>(() => esEscritorio.value && ui.sidebarColapsado);
@@ -272,6 +296,7 @@ async function cerrarSesion(): Promise<void> {
   color: var(--gg-on-forest);
 }
 .gg-sidebar--compact .gg-sidebar__item,
+.gg-sidebar--compact .gg-sidebar__theme-btn,
 .gg-sidebar--compact .gg-sidebar__user-btn {
   justify-content: center;
   padding-left: 0;
@@ -280,6 +305,34 @@ async function cerrarSesion(): Promise<void> {
 .gg-sidebar--compact .gg-sidebar__head {
   flex-direction: column;
   padding-bottom: 1rem;
+}
+.gg-sidebar__theme {
+  padding: 0.6rem 0;
+  border-top: 1px solid rgb(247 245 232 / 14%);
+}
+.gg-sidebar__theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.8rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--gg-on-forest);
+  text-align: left;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gg-sidebar__theme-btn ion-icon {
+  flex: 0 0 auto;
+  font-size: 1.25rem;
+}
+.gg-sidebar__theme-btn:hover {
+  background: rgb(247 245 232 / 10%);
 }
 .gg-sidebar__user {
   padding-top: 0.9rem;

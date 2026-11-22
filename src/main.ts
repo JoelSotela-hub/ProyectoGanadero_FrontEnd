@@ -29,13 +29,26 @@ import '@ionic/vue/css/display.css';
  * https://ionicframework.com/docs/theming/dark-mode
  */
 
-/* @import '@ionic/vue/css/palettes/dark.always.css'; */
-/* @import '@ionic/vue/css/palettes/dark.class.css'; */
-/* GuateGanado usa un tema claro cálido (WCAG AA); no se activa la paleta oscura del sistema. */
+/*
+ * GuateGanado define su propia paleta oscura (src/theme/dark.css) activada por
+ * la clase `.ion-palette-dark` / `.gg-dark` en <html>; no se importa la paleta
+ * genérica de Ionic para conservar la identidad verde/oliva con contraste AA.
+ */
 
-/* Theme variables + clases utilitarias gg-* */
+/* Theme variables + clases utilitarias gg-* + modo oscuro + movimiento */
 import './theme/variables.css';
 import './theme/components.css';
+import './theme/dark.css';
+import './theme/motion.css';
+
+import { inicializarTema } from './composables/useTheme';
+
+/*
+ * Aplica el tema (localStorage `gg_theme` o `prefers-color-scheme`) antes de
+ * montar la app. `index.html` ya lo adelanta con un script en línea para que
+ * no exista destello blanco; aquí se sincroniza el estado reactivo.
+ */
+inicializarTema();
 
 const pinia = createPinia();
 const app = createApp(App).use(pinia).use(IonicVue).use(router);

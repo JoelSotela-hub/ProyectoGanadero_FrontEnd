@@ -18,6 +18,17 @@
             </p>
           </div>
           <div class="gg-actions">
+            <button
+              v-if="esAdmin"
+              type="button"
+              class="gg-btn gg-btn--outline"
+              data-testid="btn-exportar-csv"
+              :disabled="store.cargando || !store.usuariosFiltrados.length"
+              @click="exportarListado"
+            >
+              <ion-icon :icon="downloadOutline" aria-hidden="true" />
+              Exportar CSV
+            </button>
             <button type="button" class="gg-btn" data-testid="btn-nuevo-usuario" @click="abrirModal">
               <ion-icon :icon="addOutline" aria-hidden="true" />
               Nuevo usuario
@@ -155,17 +166,22 @@
 
 <script setup lang="ts">
 import { IonContent, IonIcon, IonPage, IonRefresher, IonRefresherContent, onIonViewWillEnter } from '@ionic/vue';
-import { addOutline, searchOutline } from 'ionicons/icons';
+import { addOutline, downloadOutline, searchOutline } from 'ionicons/icons';
 import { onMounted, ref } from 'vue';
 
 import AppHeader from '@/components/AppHeader.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import UsuarioFormModal from '@/components/UsuarioFormModal.vue';
+import { useRol } from '@/composables/useRol';
 import { ETIQUETA_ROL, ROLES, type Rol } from '@/config/roles';
+import type { AuthUser } from '@/models/auth.model';
+import { mostrarToast } from '@/services';
 import { useUsuariosStore } from '@/stores/usuarios';
+import { exportarCsv, type ColumnaCsv } from '@/utils/csv';
 
 const store = useUsuariosStore();
+const { esAdmin } = useRol();
 const modalAbierto = ref<boolean>(false);
 
 onMounted(() => {
@@ -210,6 +226,27 @@ function formatearFecha(iso?: string | null): string {
 async function onRefresh(evento: CustomEvent): Promise<void> {
   await store.cargarUsuarios();
   (evento.target as HTMLIonRefresherElement).complete();
+}
+
+const COLUMNAS_CSV: ReadonlyArray<ColumnaCsv<AuthUser>> = [
+  { encabezado: 'Nombre', valor: (u) => u.name },
+  { encabezado: 'Correo', valor: (u) => u.email },
+  { encabezado: 'Rol', valor: (u) => etiquetaRol(u.role) },
+  { encabezado: 'Fecha de registro', valor: (u) => formatearFecha(u.created_at) },
+];
+
+async function exportarListado(): Promise<void> {
+  if (!esAdmin.value) return;
+  if (!store.usuariosFiltrados.length) {
+    await mostrarToast('No hay registros para exportar.', 'warning', 2500);
+    return;
+  }
+  const { nombreArchivo, totalFilas } = exportarCsv('usuarios', COLUMNAS_CSV, store.usuariosFiltrados);
+  await mostrarToast(
+    `Se exportaron ${totalFilas} ${totalFilas === 1 ? 'registro' : 'registros'} a ${nombreArchivo}`,
+    'success',
+    2800,
+  );
 }
 </script>
 

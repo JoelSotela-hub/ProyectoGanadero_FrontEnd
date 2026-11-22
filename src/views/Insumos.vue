@@ -16,8 +16,24 @@
               Consulta y administra el catálogo de insumos agrícolas, nutricionales y sanitarios de la finca.
             </p>
           </div>
-          <div v-if="store.puedeGestionar" class="gg-actions">
-            <button type="button" class="gg-btn" data-testid="btn-crear-insumo" @click="abrirCrear">
+          <div class="gg-actions">
+            <button
+              type="button"
+              class="gg-btn gg-btn--outline"
+              data-testid="btn-exportar-csv"
+              :disabled="store.loading || !store.items.length"
+              @click="exportarListado"
+            >
+              <ion-icon :icon="downloadOutline" aria-hidden="true" />
+              Exportar CSV
+            </button>
+            <button
+              v-if="store.puedeGestionar"
+              type="button"
+              class="gg-btn"
+              data-testid="btn-crear-insumo"
+              @click="abrirCrear"
+            >
               <ion-icon :icon="addOutline" aria-hidden="true" />
               Nuevo insumo
             </button>
@@ -435,7 +451,14 @@ import {
   onIonViewWillEnter,
   onIonViewWillLeave,
 } from '@ionic/vue';
-import { addOutline, alertCircleOutline, cloudOfflineOutline, searchOutline, warningOutline } from 'ionicons/icons';
+import {
+  addOutline,
+  alertCircleOutline,
+  cloudOfflineOutline,
+  downloadOutline,
+  searchOutline,
+  warningOutline,
+} from 'ionicons/icons';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -444,6 +467,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import { mostrarToast, networkService, type Insumo } from '@/services';
 import { OPCIONES_ORDEN_INSUMO, useInsumoStore } from '@/stores/insumo';
+import { exportarCsv, type ColumnaCsv } from '@/utils/csv';
 
 const router = useRouter();
 const store = useInsumoStore();
@@ -593,6 +617,28 @@ async function onInfinite(evento: CustomEvent): Promise<void> {
     await mostrarToast(store.mensajeError, 'danger', 4000);
   }
   (evento.target as HTMLIonInfiniteScrollElement).complete();
+}
+
+const COLUMNAS_CSV: ReadonlyArray<ColumnaCsv<Insumo>> = [
+  { encabezado: 'Nombre', valor: (ins) => ins.nombre },
+  { encabezado: 'Categoría', valor: (ins) => obtenerNombreCategoria(ins) },
+  { encabezado: 'Tipo categoría', valor: (ins) => obtenerTipoCategoria(ins) ?? '' },
+  { encabezado: 'Unidad de medida', valor: (ins) => obtenerNombreUnidad(ins) },
+  { encabezado: 'Abreviatura', valor: (ins) => obtenerAperturaUnidad(ins) ?? '' },
+  { encabezado: 'Precio (Q)', valor: (ins) => (Number.isFinite(ins.precio) ? ins.precio.toFixed(2) : '') },
+];
+
+async function exportarListado(): Promise<void> {
+  if (!store.items.length) {
+    await mostrarToast('No hay registros para exportar.', 'warning', 2500);
+    return;
+  }
+  const { nombreArchivo, totalFilas } = exportarCsv('insumos', COLUMNAS_CSV, store.items);
+  await mostrarToast(
+    `Se exportaron ${totalFilas} ${totalFilas === 1 ? 'registro' : 'registros'} a ${nombreArchivo}`,
+    'success',
+    2800,
+  );
 }
 </script>
 

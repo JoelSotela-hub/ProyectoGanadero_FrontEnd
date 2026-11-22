@@ -15,6 +15,16 @@
             <p class="gg-subtitle">Consulta, filtra y administra los animales registrados en la finca.</p>
           </div>
           <div class="gg-actions">
+            <button
+              type="button"
+              class="gg-btn gg-btn--outline"
+              data-testid="btn-exportar-csv"
+              :disabled="store.loading || !store.items.length"
+              @click="exportarListado"
+            >
+              <ion-icon :icon="downloadOutline" aria-hidden="true" />
+              Exportar CSV
+            </button>
             <button type="button" class="gg-btn gg-btn--outline" :disabled="escaneando" @click="escanearVaca">
               <ion-icon :icon="qrCodeOutline" aria-hidden="true" />
               Escanear QR
@@ -238,7 +248,7 @@ import {
   onIonViewWillEnter,
   onIonViewWillLeave,
 } from '@ionic/vue';
-import { addOutline, cloudOfflineOutline, qrCodeOutline, searchOutline } from 'ionicons/icons';
+import { addOutline, cloudOfflineOutline, downloadOutline, qrCodeOutline, searchOutline } from 'ionicons/icons';
 import { onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -247,10 +257,12 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import { useEscanearVaca } from '@/composables/useEscanearVaca';
 import { useRol } from '@/composables/useRol';
+import type { AnimalItem } from '@/models/auth.model';
 import { mostrarToast, networkService } from '@/services';
 import { ESTADOS_ANIMAL } from '@/stores/animalForm';
 import { OPCIONES_ORDEN, useAnimalesStore } from '@/stores/animales';
 import { useCatalogosStore } from '@/stores/catalogos';
+import { exportarCsv, type ColumnaCsv } from '@/utils/csv';
 
 const router = useRouter();
 const store = useAnimalesStore();
@@ -310,6 +322,29 @@ async function onInfinite(evento: CustomEvent): Promise<void> {
     await mostrarToast(store.mensajeError, 'danger', 4000);
   }
   (evento.target as HTMLIonInfiniteScrollElement).complete();
+}
+
+const COLUMNAS_CSV: ReadonlyArray<ColumnaCsv<AnimalItem>> = [
+  { encabezado: 'Arete', valor: (a) => a.arete },
+  { encabezado: 'Código QR', valor: (a) => a.codigoQr ?? a.codigo_qr ?? '' },
+  { encabezado: 'Raza', valor: (a) => a.raza },
+  { encabezado: 'Sexo', valor: (a) => a.sexo },
+  { encabezado: 'Estado', valor: (a) => a.estado },
+  { encabezado: 'Potrero', valor: (a) => a.potrero },
+  { encabezado: 'Fecha nacimiento', valor: (a) => (a.fechaNacimiento ? fechaCorta(a.fechaNacimiento) : '') },
+];
+
+async function exportarListado(): Promise<void> {
+  if (!store.items.length) {
+    await mostrarToast('No hay registros para exportar.', 'warning', 2500);
+    return;
+  }
+  const { nombreArchivo, totalFilas } = exportarCsv('animales', COLUMNAS_CSV, store.items);
+  await mostrarToast(
+    `Se exportaron ${totalFilas} ${totalFilas === 1 ? 'registro' : 'registros'} a ${nombreArchivo}`,
+    'success',
+    2800,
+  );
 }
 </script>
 

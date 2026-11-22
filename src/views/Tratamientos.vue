@@ -16,9 +16,19 @@
               Gestiona las aplicaciones sanitarias del hato y el catálogo de vacunas, vitaminas y desparasitantes.
             </p>
           </div>
-          <div v-if="store.puedeGestionar" class="gg-actions">
+          <div class="gg-actions">
             <button
-              v-if="segmento === 'aplicaciones'"
+              type="button"
+              class="gg-btn gg-btn--outline"
+              data-testid="btn-exportar-csv"
+              :disabled="exportarDeshabilitado"
+              @click="exportarListado"
+            >
+              <ion-icon :icon="downloadOutline" aria-hidden="true" />
+              Exportar CSV
+            </button>
+            <button
+              v-if="store.puedeGestionar && segmento === 'aplicaciones'"
               type="button"
               class="gg-btn"
               data-testid="btn-crear-aplicacion"
@@ -27,7 +37,13 @@
               <ion-icon :icon="addOutline" aria-hidden="true" />
               Aplicar tratamiento
             </button>
-            <button v-else type="button" class="gg-btn" data-testid="btn-crear-catalogo" @click="abrirCrearCatalogo">
+            <button
+              v-else-if="store.puedeGestionar"
+              type="button"
+              class="gg-btn"
+              data-testid="btn-crear-catalogo"
+              @click="abrirCrearCatalogo"
+            >
               <ion-icon :icon="addOutline" aria-hidden="true" />
               Nuevo tratamiento
             </button>
@@ -781,7 +797,14 @@ import {
   onIonViewWillEnter,
   onIonViewWillLeave,
 } from '@ionic/vue';
-import { addOutline, alertCircleOutline, cloudOfflineOutline, searchOutline, warningOutline } from 'ionicons/icons';
+import {
+  addOutline,
+  alertCircleOutline,
+  cloudOfflineOutline,
+  downloadOutline,
+  searchOutline,
+  warningOutline,
+} from 'ionicons/icons';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -801,6 +824,7 @@ import {
   useTratamientoStore,
   type SegmentoTratamientos,
 } from '@/stores/tratamiento';
+import { exportarCsv, type ColumnaCsv } from '@/utils/csv';
 
 const router = useRouter();
 const store = useTratamientoStore();
@@ -808,6 +832,12 @@ const store = useTratamientoStore();
 const segmento = ref<SegmentoTratamientos>('aplicaciones');
 const modalAplicacionAbierto = ref<boolean>(false);
 const modalCatalogoAbierto = ref<boolean>(false);
+
+const exportarDeshabilitado = computed<boolean>(() =>
+  segmento.value === 'aplicaciones'
+    ? store.loadingAplicaciones || !store.aplicaciones.length
+    : store.loadingCatalogo || !store.catalogo.length,
+);
 
 let cancelarSuscripcionRed: (() => void) | null = null;
 
@@ -1029,6 +1059,52 @@ async function onInfiniteCatalogo(evento: CustomEvent): Promise<void> {
     await mostrarToast(store.mensajeErrorCatalogo, 'danger', 4000);
   }
   (evento.target as HTMLIonInfiniteScrollElement).complete();
+}
+
+const COLUMNAS_CSV_APLICACIONES: ReadonlyArray<ColumnaCsv<TratamientoAplicacion>> = [
+  { encabezado: 'Animal (Arete)', valor: (a) => a.animal?.numero_arete || `Animal #${a.id_animal}` },
+  { encabezado: 'Tratamiento', valor: (a) => a.tratamiento?.nombre || `Tratamiento #${a.tratamiento_id}` },
+  { encabezado: 'Tipo', valor: (a) => a.tratamiento?.tipo ?? '' },
+  { encabezado: 'Dosis (ml)', valor: (a) => a.dosis_ml },
+  { encabezado: 'Fecha de aplicación', valor: (a) => formatearFecha(a.fecha_aplicacion) },
+  { encabezado: 'Observaciones', valor: (a) => a.observaciones ?? '' },
+];
+
+const COLUMNAS_CSV_CATALOGO: ReadonlyArray<ColumnaCsv<TratamientoCatalogo>> = [
+  { encabezado: 'Nombre', valor: (t) => t.nombre },
+  { encabezado: 'Tipo', valor: (t) => t.tipo ?? '' },
+  { encabezado: 'Descripción', valor: (t) => t.descripcion ?? '' },
+];
+
+async function exportarListado(): Promise<void> {
+  if (segmento.value === 'aplicaciones') {
+    if (!store.aplicaciones.length) {
+      await mostrarToast('No hay registros para exportar.', 'warning', 2500);
+      return;
+    }
+    const { nombreArchivo, totalFilas } = exportarCsv(
+      'tratamientos_aplicaciones',
+      COLUMNAS_CSV_APLICACIONES,
+      store.aplicaciones,
+    );
+    await mostrarToast(
+      `Se exportaron ${totalFilas} ${totalFilas === 1 ? 'registro' : 'registros'} a ${nombreArchivo}`,
+      'success',
+      2800,
+    );
+    return;
+  }
+
+  if (!store.catalogo.length) {
+    await mostrarToast('No hay registros para exportar.', 'warning', 2500);
+    return;
+  }
+  const { nombreArchivo, totalFilas } = exportarCsv('tratamientos_catalogo', COLUMNAS_CSV_CATALOGO, store.catalogo);
+  await mostrarToast(
+    `Se exportaron ${totalFilas} ${totalFilas === 1 ? 'registro' : 'registros'} a ${nombreArchivo}`,
+    'success',
+    2800,
+  );
 }
 </script>
 

@@ -1,0 +1,206 @@
+/**
+ * Movimiento y transiciones globales de GuateGanado.
+ *
+ * - `.gg-boot-splash`: pantalla de arranque mientras se restaura la sesión.
+ * - `gg-fade`: transición de Vue (<Transition name="gg-fade">).
+ * - `.gg-theme-transition`: fundido de colores al alternar claro/oscuro.
+ * - Entrada suave de tarjetas, banners y estados de carga.
+ *
+ * Todo se desactiva con `prefers-reduced-motion: reduce`.
+ */
+
+:root {
+  --gg-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --gg-duration-fast: 0.18s;
+  --gg-duration: 0.28s;
+  --gg-duration-slow: 0.45s;
+}
+
+/* ---------- Transición de Vue: gg-fade ---------- */
+.gg-fade-enter-active,
+.gg-fade-leave-active {
+  transition: opacity var(--gg-duration-slow) ease, visibility var(--gg-duration-slow) ease;
+}
+.gg-fade-enter-from,
+.gg-fade-leave-to {
+  opacity: 0;
+}
+
+/* ---------- Pantalla de arranque ---------- */
+.gg-boot-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: grid;
+  place-items: center;
+  padding: max(1.5rem, env(safe-area-inset-top, 0px)) 1.5rem max(1.5rem, env(safe-area-inset-bottom, 0px));
+  background: radial-gradient(120% 90% at 50% 0%, var(--gg-forest-soft) 0%, var(--gg-forest) 62%);
+  color: var(--gg-on-forest);
+  font-family: var(--gg-font);
+  text-align: center;
+}
+.gg-boot-splash__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  animation: gg-boot-rise var(--gg-duration-slow) var(--gg-ease-out) both;
+}
+.gg-boot-splash__logo {
+  display: grid;
+  place-items: center;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 1.2rem;
+  background: var(--gg-on-forest);
+  color: var(--gg-forest);
+  font-size: 2.3rem;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 28%);
+}
+.gg-boot-splash__logo svg,
+.gg-boot-splash__logo ion-icon {
+  width: 2.3rem;
+  height: 2.3rem;
+}
+.gg-boot-splash__name {
+  margin: 0.35rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.gg-boot-splash__tagline {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--gg-on-forest-muted);
+}
+.gg-boot-splash__bar {
+  position: relative;
+  width: 9rem;
+  height: 0.25rem;
+  margin-top: 0.9rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(247 245 232 / 16%);
+}
+.gg-boot-splash__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--gg-earth);
+  animation: gg-boot-bar 1.1s ease-in-out infinite;
+}
+.gg-boot-splash__status {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--gg-on-forest-muted);
+}
+
+@keyframes gg-boot-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes gg-boot-bar {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+/* ---------- Cambio de tema: fundido de colores ---------- */
+:root.gg-theme-transition,
+:root.gg-theme-transition *,
+:root.gg-theme-transition *::before,
+:root.gg-theme-transition *::after {
+  transition:
+    background-color var(--gg-duration) ease,
+    border-color var(--gg-duration) ease,
+    color var(--gg-duration) ease,
+    fill var(--gg-duration) ease,
+    stroke var(--gg-duration) ease,
+    box-shadow var(--gg-duration) ease !important;
+}
+
+/* ---------- Entrada suave: tarjetas, banners y estados de carga ---------- */
+@keyframes gg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes gg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* `backwards`: no deja transformaciones residuales (no rompe position: fixed internos) */
+.gg-card,
+.gg-kpi-card {
+  animation: gg-rise var(--gg-duration) var(--gg-ease-out) backwards;
+}
+.gg-alert {
+  animation: gg-rise var(--gg-duration-fast) var(--gg-ease-out) backwards;
+}
+[aria-busy='true'] {
+  animation: gg-fade-in var(--gg-duration-fast) ease-out backwards;
+}
+.gg-modal-backdrop {
+  animation: gg-fade-in var(--gg-duration-fast) ease-out backwards;
+}
+
+/* Controles interactivos: transición de estado (hover / foco / deshabilitado) */
+.gg-btn,
+.gg-input,
+.gg-select,
+.gg-textarea,
+.gg-theme-toggle {
+  transition:
+    background-color var(--gg-duration-fast) ease,
+    border-color var(--gg-duration-fast) ease,
+    color var(--gg-duration-fast) ease,
+    box-shadow var(--gg-duration-fast) ease;
+}
+
+/* ---------- Accesibilidad: menos movimiento ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .gg-card,
+  .gg-kpi-card,
+  .gg-alert,
+  [aria-busy='true'],
+  .gg-modal-backdrop,
+  .gg-boot-splash__inner {
+    animation: none !important;
+  }
+  .gg-boot-splash__bar::after {
+    animation: none !important;
+    width: 100%;
+    opacity: 0.6;
+  }
+  .gg-fade-enter-active,
+  .gg-fade-leave-active,
+  :root.gg-theme-transition,
+  :root.gg-theme-transition *,
+  :root.gg-theme-transition *::before,
+  :root.gg-theme-transition *::after {
+    transition: none !important;
+  }
+}

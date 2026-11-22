@@ -21,8 +21,19 @@
             </p>
           </div>
           <!-- Solo el operario inicia rondas; el admin audita. Sin PUT ni DELETE (no existen en la API). -->
-          <div v-if="esOperario" class="gg-actions">
+          <div class="gg-actions">
             <button
+              type="button"
+              class="gg-btn gg-btn--outline"
+              data-testid="btn-exportar-csv"
+              :disabled="loading || !rondas.length"
+              @click="exportarListado"
+            >
+              <ion-icon :icon="downloadOutline" aria-hidden="true" />
+              Exportar CSV
+            </button>
+            <button
+              v-if="esOperario"
               type="button"
               class="gg-btn"
               :disabled="iniciando"
@@ -186,7 +197,7 @@ import {
   onIonViewWillEnter,
   onIonViewWillLeave,
 } from '@ionic/vue';
-import { cloudOfflineOutline, walkOutline } from 'ionicons/icons';
+import { cloudOfflineOutline, downloadOutline, walkOutline } from 'ionicons/icons';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -204,6 +215,7 @@ import {
   networkService,
   rondaService,
 } from '@/services';
+import { exportarCsv, type ColumnaCsv } from '@/utils/csv';
 
 const router = useRouter();
 const { esAdmin, esOperario } = useRol();
@@ -386,6 +398,35 @@ onIonViewWillEnter(() => {
 onIonViewWillLeave(() => {
   cancelarPendiente();
 });
+
+async function exportarListado(): Promise<void> {
+  if (!rondas.value.length) {
+    await mostrarToast('No hay registros para exportar.', 'warning', 2500);
+    return;
+  }
+
+  const columnas: ColumnaCsv<Ronda>[] = [
+    { encabezado: 'Ronda', valor: (r) => `#${r.id}` },
+    ...(esAdmin.value
+      ? ([
+          { encabezado: 'Operario', valor: (r) => r.operador?.name ?? '' },
+          { encabezado: 'Correo operario', valor: (r) => r.operador?.email ?? '' },
+        ] satisfies ColumnaCsv<Ronda>[])
+      : []),
+    { encabezado: 'Inicio', valor: (r) => formatearFecha(r.fecha_inicio) },
+    { encabezado: 'Finalizada', valor: (r) => (r.fecha_fin ? formatearFecha(r.fecha_fin) : '') },
+    { encabezado: 'Potreros', valor: (r) => r.total_puntos },
+    { encabezado: 'Estado', valor: (r) => (r.estado === 'en_progreso' ? 'En progreso' : 'Completada') },
+    { encabezado: 'Observaciones', valor: (r) => r.observaciones ?? '' },
+  ];
+
+  const { nombreArchivo, totalFilas } = exportarCsv('rondas', columnas, rondas.value);
+  await mostrarToast(
+    `Se exportaron ${totalFilas} ${totalFilas === 1 ? 'registro' : 'registros'} a ${nombreArchivo}`,
+    'success',
+    2800,
+  );
+}
 </script>
 
 <style scoped>
