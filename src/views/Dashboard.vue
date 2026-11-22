@@ -18,9 +18,15 @@
           </div>
 
           <div class="gg-actions">
-            <button type="button" class="gg-btn gg-btn--outline" :disabled="escaneando" @click="escanearVaca">
+            <button
+              type="button"
+              class="gg-btn gg-btn--outline"
+              :disabled="escaneando"
+              data-testid="btn-escanear-qr-vaca"
+              @click="escanearVaca"
+            >
               <ion-icon :icon="qrCodeOutline" aria-hidden="true" />
-              Escanear QR
+              Escanear QR de vaca
             </button>
             <button v-if="esAdmin" type="button" class="gg-btn" @click="ir('/tabs/registro')">
               <ion-icon :icon="addOutline" aria-hidden="true" />

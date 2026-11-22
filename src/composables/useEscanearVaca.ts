@@ -1,11 +1,13 @@
 /**
- * Accion "Escanear QR de Vaca" (Persona 5): camara -> GET /animales/qr/{codigo}
- * -> Detalle del animal por su `id_animal`.
+ * Acción "Escanear QR de vaca" (Fase 1):
+ *   cámara / respaldo manual -> Pinia store `buscarPorQr(codigo)`
+ *   (`GET /api/v1/animales/qr/{codigo_qr}`) -> `AnimalDetail.vue` con el animal cargado.
  */
 import { ref, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { animalService, ApiError, escanearQr, mostrarError, mostrarToast } from '@/services';
+import { ApiError, escanearQr, mostrarError, mostrarToast } from '@/services';
+import { useAnimalDetalleStore } from '@/stores/animalDetalle';
 
 export interface UsoEscanearVaca {
   escaneando: Ref<boolean>;
@@ -14,6 +16,7 @@ export interface UsoEscanearVaca {
 
 export function useEscanearVaca(): UsoEscanearVaca {
   const router = useRouter();
+  const detalleStore = useAnimalDetalleStore();
   const escaneando = ref<boolean>(false);
 
   async function escanearVaca(): Promise<void> {
@@ -25,7 +28,7 @@ export function useEscanearVaca(): UsoEscanearVaca {
       codigo = await escanearQr('Escanear QR de la vaca', 'VACA-001');
       if (!codigo) return;
 
-      const animal = await animalService.obtenerPorQr(codigo);
+      const animal = await detalleStore.buscarPorQr(codigo);
       await router.push(`/detalle/${animal.id}`);
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) {
