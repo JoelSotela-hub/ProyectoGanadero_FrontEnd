@@ -16,6 +16,7 @@ import {
   libraryOutline,
   medkitOutline,
   pawOutline,
+  peopleOutline,
   scaleOutline,
   walkOutline,
 } from 'ionicons/icons';
@@ -74,6 +75,14 @@ export const MODULOS: readonly ModuloNavegacion[] = [
     etiqueta: 'Catálogos',
     ruta: '/tabs/catalogos',
     icono: libraryOutline,
+    roles: ['admin'],
+    enTabs: false,
+  },
+  {
+    clave: 'usuarios',
+    etiqueta: 'Usuarios',
+    ruta: '/tabs/usuarios',
+    icono: peopleOutline,
     roles: ['admin'],
     enTabs: false,
   },

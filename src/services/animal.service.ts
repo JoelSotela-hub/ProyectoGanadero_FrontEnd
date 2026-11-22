@@ -43,9 +43,8 @@ export interface AnimalApi {
     fecha_pesaje: string | null;
     observaciones?: string | null;
   }[];
-  /** Persona 5: QR, foto y tratamientos del detalle / consulta por QR. */
+  /** Persona 5: QR y tratamientos del detalle / consulta por QR. */
   codigo_qr?: string | null;
-  foto?: string | null;
   tratamientos?: {
     tratamiento_id: number;
     nombre: string;

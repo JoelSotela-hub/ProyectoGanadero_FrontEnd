@@ -42,6 +42,12 @@ export interface OpcionCatalogo {
   nombre: string;
 }
 
+export interface OpcionPotreroCatalogo extends OpcionCatalogo {
+  capacidad_maxima: number;
+  ocupacion_actual: number;
+  espacios_disponibles: number;
+}
+
 export interface RazaApi {
   raza_id: number;
   nombre: string;
@@ -145,7 +151,9 @@ export interface FiltrosUnidadesMedida {
 interface PotreroApi {
   potrero_id: number;
   nombre: string;
-  capacidad_maxima?: number;
+  capacidad_maxima?: number | string;
+  ocupacion_actual?: number;
+  espacios_disponibles?: number;
 }
 
 interface RespuestaCatalogo<T> {
@@ -413,14 +421,22 @@ export const catalogoService = {
     return (respuesta.data ?? []).map((raza) => ({ id: Number(raza.raza_id), nombre: raza.nombre }));
   },
 
-  async potreros(): Promise<OpcionCatalogo[]> {
+  async potreros(): Promise<OpcionPotreroCatalogo[]> {
     const respuesta = await http.get<RespuestaCatalogo<PotreroApi>>('/potreros', {
       query: { per_page: 100 },
     });
-    return (respuesta.data ?? []).map((potrero) => ({
-      id: Number(potrero.potrero_id),
-      nombre: potrero.nombre,
-    }));
+    return (respuesta.data ?? []).map((potrero) => {
+      const capacidad = Number(potrero.capacidad_maxima ?? 0);
+      const ocupacion = Number(potrero.ocupacion_actual ?? 0);
+      const disponibles = Number(potrero.espacios_disponibles ?? Math.max(0, capacidad - ocupacion));
+      return {
+        id: Number(potrero.potrero_id),
+        nombre: potrero.nombre,
+        capacidad_maxima: Number.isFinite(capacidad) ? Math.max(0, capacidad) : 0,
+        ocupacion_actual: Number.isFinite(ocupacion) ? Math.max(0, ocupacion) : 0,
+        espacios_disponibles: Number.isFinite(disponibles) ? Math.max(0, disponibles) : Math.max(0, capacidad),
+      };
+    });
   },
 
   async categorias(): Promise<Categoria[]> {

@@ -64,6 +64,8 @@ const POTREROS_MOCK: Potrero[] = [
     hectareas_de_extension: 25.5,
     capacidad_maxima: 40,
     estado_pasto: 'Excelente',
+    ocupacion_actual: 30,
+    espacios_disponibles: 10,
   },
   {
     potrero_id: 2,
@@ -72,6 +74,8 @@ const POTREROS_MOCK: Potrero[] = [
     hectareas_de_extension: 12,
     capacidad_maxima: 20,
     estado_pasto: 'Regular',
+    ocupacion_actual: 5,
+    espacios_disponibles: 15,
   },
 ];
 

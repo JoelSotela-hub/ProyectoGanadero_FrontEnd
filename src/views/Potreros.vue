@@ -150,6 +150,7 @@
                   <th scope="col">Nombre</th>
                   <th scope="col">Extensión</th>
                   <th scope="col">Capacidad máx.</th>
+                  <th scope="col">Ocupación</th>
                   <th scope="col">Estado del pasto</th>
                   <th scope="col">Código QR</th>
                   <th v-if="esAdmin" scope="col">Acciones</th>
@@ -164,6 +165,20 @@
                   </td>
                   <td data-label="Extensión">{{ formatearHectareas(p.hectareas_de_extension) }}</td>
                   <td data-label="Capacidad máx.">{{ p.capacidad_maxima }} animales</td>
+                  <td data-label="Ocupación" :data-testid="`ocupacion-potrero-${p.potrero_id}`">
+                    <div class="gg-occupancy-cell">
+                      <span class="gg-occupancy-cell__count">
+                        {{ ocupacionActual(p) }} / {{ p.capacidad_maxima }}
+                      </span>
+                      <span
+                        class="gg-badge"
+                        :class="claseOcupacionPotrero(p)"
+                        :data-testid="`badge-ocupacion-potrero-${p.potrero_id}`"
+                      >
+                        {{ etiquetaOcupacionPotrero(p) }}
+                      </span>
+                    </div>
+                  </td>
                   <td data-label="Estado del pasto">
                     <span class="gg-badge" :class="claseEstadoPasto(p.estado_pasto)">
                       {{ p.estado_pasto || 'Sin especificar' }}
@@ -276,6 +291,35 @@ function claseEstadoPasto(estado: string | null): string {
   if (estado === 'Excelente') return 'gg-badge--success';
   if (estado === 'Regular') return 'gg-badge--warning';
   return 'gg-badge--neutral';
+}
+
+function ocupacionActual(potrero: Potrero): number {
+  return Number(potrero.ocupacion_actual ?? 0);
+}
+
+function espaciosDisponibles(potrero: Potrero): number {
+  if (typeof potrero.espacios_disponibles === 'number' && Number.isFinite(potrero.espacios_disponibles)) {
+    return Math.max(0, potrero.espacios_disponibles);
+  }
+  return Math.max(0, Number(potrero.capacidad_maxima) - ocupacionActual(potrero));
+}
+
+function claseOcupacionPotrero(potrero: Potrero): string {
+  const disp = espaciosDisponibles(potrero);
+  const cap = Number(potrero.capacidad_maxima) || 0;
+  const ocup = ocupacionActual(potrero);
+  if (disp === 0 || (cap > 0 && ocup >= cap)) return 'gg-badge--danger';
+  if (cap > 0 && ocup / cap >= 0.75) return 'gg-badge--warning';
+  return 'gg-badge--success';
+}
+
+function etiquetaOcupacionPotrero(potrero: Potrero): string {
+  const disp = espaciosDisponibles(potrero);
+  const cap = Number(potrero.capacidad_maxima) || 0;
+  const ocup = ocupacionActual(potrero);
+  if (disp === 0 || (cap > 0 && ocup >= cap)) return 'Lleno';
+  if (cap > 0 && ocup / cap >= 0.75) return `Casi lleno (${disp} disp.)`;
+  return `${disp} disp.`;
 }
 
 function abrirCrear(): void {
@@ -393,6 +437,18 @@ async function onInfinite(evento: CustomEvent): Promise<void> {
 .gg-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.82rem;
+}
+
+.gg-occupancy-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gg-occupancy-cell__count {
+  font-weight: 700;
+  color: var(--gg-ink);
 }
 
 .gg-row-actions {

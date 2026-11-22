@@ -116,7 +116,14 @@
               required
             >
               <option value="" disabled>Selecciona un potrero</option>
-              <option v-for="p in catalogos.potreros" :key="p.id" :value="String(p.id)">{{ p.nombre }}</option>
+              <option
+                v-for="p in catalogos.potreros"
+                :key="p.id"
+                :value="String(p.id)"
+                :disabled="esPotreroDeshabilitado(p)"
+              >
+                {{ etiquetaOpcionPotrero(p) }}
+              </option>
             </select>
             <p v-if="form.errores.potrero_id" id="a-potrero-error" class="gg-field__error">
               {{ form.errores.potrero_id }}
@@ -228,7 +235,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 import AppHeader from '@/components/AppHeader.vue';
 import ErrorState from '@/components/ErrorState.vue';
-import { mostrarToast } from '@/services';
+import { mostrarToast, type OpcionPotreroCatalogo } from '@/services';
 import { ESTADOS_ANIMAL, useAnimalFormStore } from '@/stores/animalForm';
 import { useCatalogosStore } from '@/stores/catalogos';
 
@@ -253,8 +260,37 @@ const estadosDisponibles = computed<string[]>(() => {
   return actual && !ESTADOS_ANIMAL.includes(actual) ? [...ESTADOS_ANIMAL, actual] : ESTADOS_ANIMAL;
 });
 
+function etiquetaOpcionPotrero(potrero: Partial<OpcionPotreroCatalogo> & { id: number; nombre: string }): string {
+  const tieneCapacidad = typeof potrero.capacidad_maxima === 'number' && potrero.capacidad_maxima > 0;
+  const tieneOcupacion = typeof potrero.ocupacion_actual === 'number';
+  const tieneDisponibles = typeof potrero.espacios_disponibles === 'number';
+
+  if (!tieneCapacidad && !tieneOcupacion && !tieneDisponibles) {
+    return potrero.nombre;
+  }
+
+  const capacidad = Number(potrero.capacidad_maxima ?? 0);
+  const ocupacion = Number(potrero.ocupacion_actual ?? 0);
+  const disponibles = Number(potrero.espacios_disponibles ?? Math.max(0, capacidad - ocupacion));
+
+  if (disponibles === 0) {
+    return `${potrero.nombre} (${ocupacion}/${capacidad} — Lleno)`;
+  }
+  return `${potrero.nombre} (${ocupacion}/${capacidad} — ${disponibles} disp.)`;
+}
+
+function esPotreroDeshabilitado(potrero: Partial<OpcionPotreroCatalogo> & { id: number; nombre: string }): boolean {
+  if (typeof potrero.espacios_disponibles !== 'number') return false;
+  if (potrero.espacios_disponibles > 0) return false;
+  if (form.form.estado === 'Vendido') return false;
+  if (form.esEdicion && String(potrero.id) === String(form.originalPotreroId || form.form.potrero_id)) {
+    return false;
+  }
+  return true;
+}
+
 async function iniciar(): Promise<void> {
-  await Promise.all([catalogos.cargar(), form.iniciar(idEnRuta.value)]);
+  await Promise.all([catalogos.cargar(true), form.iniciar(idEnRuta.value)]);
 }
 
 onIonViewWillEnter(iniciar);

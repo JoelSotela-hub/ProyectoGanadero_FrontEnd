@@ -81,16 +81,25 @@ export const dashboardService = {
     return { animales, potreros, tratamientos, pesajes, insumos };
   },
 
-  /** Los 3 potreros de mayor capacidad con su ocupación real. */
+  /** Los 3 potreros de mayor capacidad con su ocupación real (`ocupacion_actual` del backend). */
   async potrerosCapacidad(signal?: AbortSignal): Promise<PotreroCapacidad[]> {
     const respuesta = await http.get<
-      Listado<{ potrero_id: number; nombre: string; capacidad_maxima: number | string }>
+      Listado<{
+        potrero_id: number;
+        nombre: string;
+        capacidad_maxima: number | string;
+        ocupacion_actual?: number | null;
+      }>
     >('/potreros', { query: { per_page: 3, sort_by: 'capacidad_maxima', order: 'desc' }, signal });
 
     return Promise.all(
       (respuesta.data ?? []).map(async (potrero) => {
         const capacidad = Number(potrero.capacidad_maxima) || 0;
-        const ocupados = await total(`/potreros/${potrero.potrero_id}/animales`, signal);
+        const tieneOcupacionDirecta =
+          typeof potrero.ocupacion_actual === 'number' && Number.isFinite(potrero.ocupacion_actual);
+        const ocupados = tieneOcupacionDirecta
+          ? Math.max(0, potrero.ocupacion_actual!)
+          : await total(`/potreros/${potrero.potrero_id}/animales`, signal);
         const porcentaje =
           ocupados !== null && capacidad > 0 ? Math.min(100, Math.round((ocupados / capacidad) * 100)) : 0;
         return { id: potrero.potrero_id, nombre: potrero.nombre, capacidad, ocupados, porcentaje };

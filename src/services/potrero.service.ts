@@ -32,17 +32,23 @@ export interface Potrero {
   hectareas_de_extension: number;
   capacidad_maxima: number;
   estado_pasto: string | null;
+  ocupacion_actual: number;
+  espacios_disponibles: number;
+  /** True cuando la respuesta de la API incluyó `ocupacion_actual` explícitamente. */
+  tiene_ocupacion_api?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
-interface PotreroApi {
+export interface PotreroApi {
   potrero_id: number;
   nombre: string;
   codigo_qr?: string | null;
   hectareas_de_extension: number | string;
   capacidad_maxima: number | string;
   estado_pasto?: string | null;
+  ocupacion_actual?: number;
+  espacios_disponibles?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -116,13 +122,20 @@ interface CacheListadoPotreros {
 const LINKS_VACIOS: ApiLinks = { first: null, last: null, prev: null, next: null };
 
 function normalizarPotrero(raw: PotreroApi): Potrero {
+  const capacidad = Number(raw.capacidad_maxima);
+  const tieneOcupacionApi = raw.ocupacion_actual !== undefined && raw.ocupacion_actual !== null;
+  const ocupacion = Number(raw.ocupacion_actual ?? 0);
+  const disponibles = Number(raw.espacios_disponibles ?? Math.max(0, capacidad - ocupacion));
   return {
     potrero_id: Number(raw.potrero_id),
     nombre: raw.nombre,
     codigo_qr: raw.codigo_qr ?? '',
     hectareas_de_extension: Number(raw.hectareas_de_extension),
-    capacidad_maxima: Number(raw.capacidad_maxima),
+    capacidad_maxima: capacidad,
     estado_pasto: raw.estado_pasto ?? null,
+    ocupacion_actual: Number.isFinite(ocupacion) ? Math.max(0, ocupacion) : 0,
+    espacios_disponibles: Number.isFinite(disponibles) ? Math.max(0, disponibles) : Math.max(0, capacidad),
+    tiene_ocupacion_api: tieneOcupacionApi,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
   };

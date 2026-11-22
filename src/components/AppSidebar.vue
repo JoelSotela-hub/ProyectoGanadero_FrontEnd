@@ -99,6 +99,7 @@ import { useInsumoStore } from '@/stores/insumo';
 import { usePesajeStore } from '@/stores/pesaje';
 import { useTratamientoStore } from '@/stores/tratamiento';
 import { useUiStore } from '@/stores/ui';
+import { useUsuariosStore } from '@/stores/usuarios';
 
 const route = useRoute();
 const router = useRouter();
@@ -155,6 +156,7 @@ async function cerrarSesion(): Promise<void> {
   useInsumoStore().limpiarEstado();
   useCatalogoAdminStore().limpiarEstado();
   useCatalogosStore().limpiar();
+  useUsuariosStore().limpiarEstado();
   await authStore.logout();
   await router.replace('/login');
 }
