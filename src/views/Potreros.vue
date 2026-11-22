@@ -16,8 +16,18 @@
               Consulta áreas, estado del pasto, capacidad máxima y los animales asignados a cada potrero.
             </p>
           </div>
-          <div v-if="esAdmin" class="gg-actions">
-            <button type="button" class="gg-btn" data-testid="btn-crear-potrero" @click="abrirCrear">
+          <div class="gg-actions">
+            <button
+              type="button"
+              class="gg-btn gg-btn--outline"
+              data-testid="btn-exportar-csv"
+              :disabled="store.loading || !store.items.length"
+              @click="exportarListado"
+            >
+              <ion-icon :icon="downloadOutline" aria-hidden="true" />
+              Exportar CSV
+            </button>
+            <button v-if="esAdmin" type="button" class="gg-btn" data-testid="btn-crear-potrero" @click="abrirCrear">
               <ion-icon :icon="addOutline" aria-hidden="true" />
               Nuevo potrero
             </button>
@@ -239,7 +249,7 @@ import {
   onIonViewWillEnter,
   onIonViewWillLeave,
 } from '@ionic/vue';
-import { addOutline, cloudOfflineOutline, searchOutline } from 'ionicons/icons';
+import { addOutline, cloudOfflineOutline, downloadOutline, searchOutline } from 'ionicons/icons';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -250,6 +260,7 @@ import PotreroFormModal from '@/components/PotreroFormModal.vue';
 import { useRol } from '@/composables/useRol';
 import { ESTADOS_PASTO, mostrarToast, networkService, type Potrero } from '@/services';
 import { OPCIONES_ORDEN_POTRERO, usePotreroStore } from '@/stores/potrero';
+import { exportarCsv, type ColumnaCsv } from '@/utils/csv';
 
 const router = useRouter();
 const store = usePotreroStore();
@@ -388,6 +399,29 @@ async function onInfinite(evento: CustomEvent): Promise<void> {
     await mostrarToast(store.mensajeError, 'danger', 4000);
   }
   (evento.target as HTMLIonInfiniteScrollElement).complete();
+}
+
+const COLUMNAS_CSV: ReadonlyArray<ColumnaCsv<Potrero>> = [
+  { encabezado: 'Nombre', valor: (p) => p.nombre },
+  { encabezado: 'Extensión (ha)', valor: (p) => (Number.isFinite(p.hectareas_de_extension) ? p.hectareas_de_extension : '') },
+  { encabezado: 'Capacidad máx.', valor: (p) => p.capacidad_maxima },
+  { encabezado: 'Ocupación actual', valor: (p) => ocupacionActual(p) },
+  { encabezado: 'Espacios disponibles', valor: (p) => espaciosDisponibles(p) },
+  { encabezado: 'Estado del pasto', valor: (p) => p.estado_pasto ?? '' },
+  { encabezado: 'Código QR', valor: (p) => p.codigo_qr ?? '' },
+];
+
+async function exportarListado(): Promise<void> {
+  if (!store.items.length) {
+    await mostrarToast('No hay registros para exportar.', 'warning', 2500);
+    return;
+  }
+  const { nombreArchivo, totalFilas } = exportarCsv('potreros', COLUMNAS_CSV, store.items);
+  await mostrarToast(
+    `Se exportaron ${totalFilas} ${totalFilas === 1 ? 'registro' : 'registros'} a ${nombreArchivo}`,
+    'success',
+    2800,
+  );
 }
 </script>
 

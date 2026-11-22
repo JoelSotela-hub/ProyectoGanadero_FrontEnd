@@ -16,8 +16,24 @@
               Consulta el historial global de pesajes del hato, filtra por animal, fechas o rango de peso.
             </p>
           </div>
-          <div v-if="store.puedeCrear" class="gg-actions">
-            <button type="button" class="gg-btn" data-testid="btn-crear-pesaje" @click="abrirCrear">
+          <div class="gg-actions">
+            <button
+              type="button"
+              class="gg-btn gg-btn--outline"
+              data-testid="btn-exportar-csv"
+              :disabled="store.loading || !store.items.length"
+              @click="exportarListado"
+            >
+              <ion-icon :icon="downloadOutline" aria-hidden="true" />
+              Exportar CSV
+            </button>
+            <button
+              v-if="store.puedeCrear"
+              type="button"
+              class="gg-btn"
+              data-testid="btn-crear-pesaje"
+              @click="abrirCrear"
+            >
               <ion-icon :icon="addOutline" aria-hidden="true" />
               Registrar pesaje
             </button>
@@ -392,7 +408,7 @@ import {
   onIonViewWillEnter,
   onIonViewWillLeave,
 } from '@ionic/vue';
-import { addOutline, alertCircleOutline, cloudOfflineOutline, warningOutline } from 'ionicons/icons';
+import { addOutline, alertCircleOutline, cloudOfflineOutline, downloadOutline, warningOutline } from 'ionicons/icons';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -401,6 +417,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import { mostrarToast, networkService, type PesajeAnimal } from '@/services';
 import { OPCIONES_ORDEN_PESAJE, usePesajeStore } from '@/stores/pesaje';
+import { exportarCsv, type ColumnaCsv } from '@/utils/csv';
 
 const router = useRouter();
 const store = usePesajeStore();
@@ -516,6 +533,26 @@ async function onInfinite(evento: CustomEvent): Promise<void> {
     await mostrarToast(store.mensajeError, 'danger', 4000);
   }
   (evento.target as HTMLIonInfiniteScrollElement).complete();
+}
+
+const COLUMNAS_CSV: ReadonlyArray<ColumnaCsv<PesajeAnimal>> = [
+  { encabezado: 'Animal (Arete)', valor: (p) => p.animal?.numero_arete || `Animal #${p.id_animal}` },
+  { encabezado: 'Peso (kg)', valor: (p) => (Number.isFinite(p.peso_kg) ? p.peso_kg : '') },
+  { encabezado: 'Fecha de pesaje', valor: (p) => formatearFecha(p.fecha_pesaje) },
+  { encabezado: 'Observaciones', valor: (p) => p.observaciones ?? '' },
+];
+
+async function exportarListado(): Promise<void> {
+  if (!store.items.length) {
+    await mostrarToast('No hay registros para exportar.', 'warning', 2500);
+    return;
+  }
+  const { nombreArchivo, totalFilas } = exportarCsv('pesajes', COLUMNAS_CSV, store.items);
+  await mostrarToast(
+    `Se exportaron ${totalFilas} ${totalFilas === 1 ? 'registro' : 'registros'} a ${nombreArchivo}`,
+    'success',
+    2800,
+  );
 }
 </script>
 

@@ -1,6 +1,20 @@
 <template>
   <auth-layout>
-    <p class="gg-auth-eyebrow">Bienvenido de nuevo</p>
+    <div class="gg-auth-top">
+      <p class="gg-auth-eyebrow">Bienvenido de nuevo</p>
+      <button
+        type="button"
+        class="gg-btn gg-btn--ghost gg-theme-toggle gg-auth-theme-btn"
+        data-testid="btn-toggle-theme-login"
+        :aria-label="esOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        :aria-pressed="esOscuro"
+        :title="esOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        @click="alternarTema()"
+      >
+        <ion-icon :icon="esOscuro ? sunnyOutline : moonOutline" aria-hidden="true" />
+        <span>{{ esOscuro ? 'Claro' : 'Oscuro' }}</span>
+      </button>
+    </div>
     <h1 class="gg-auth-title">Inicia sesión en <span>GuateGanado</span></h1>
 
     <form class="gg-auth-form" novalidate @submit.prevent="login">
@@ -73,16 +87,25 @@
 <script setup lang="ts">
 import { IonIcon } from '@ionic/vue';
 import { Preferences } from '@capacitor/preferences';
-import { alertCircleOutline, eyeOffOutline, eyeOutline, mailOutline } from 'ionicons/icons';
+import {
+  alertCircleOutline,
+  eyeOffOutline,
+  eyeOutline,
+  mailOutline,
+  moonOutline,
+  sunnyOutline,
+} from 'ionicons/icons';
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import AuthLayout from '@/components/AuthLayout.vue';
+import { useTheme } from '@/composables/useTheme';
 import { ApiError, authService, mensajeDeError, mostrarToast } from '@/services';
 import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { esOscuro, alternarTema } = useTheme();
 
 /** "Recordarme" solo recuerda el correo (no es sensible). El token vive en el almacenamiento cifrado. */
 const CLAVE_EMAIL_RECORDADO = 'guateganado_email_recordado';
@@ -164,6 +187,24 @@ async function login(): Promise<void> {
 </script>
 
 <style scoped>
+.gg-auth-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.3rem;
+}
+
+.gg-auth-top .gg-auth-eyebrow {
+  margin: 0;
+}
+
+.gg-auth-theme-btn {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+}
+
 /* Garantiza en escritorio que la ilustración y el sol naranja del panel verde bosque
    permanezcan detrás (z-index: 0) y desplazados al horizonte inferior sin superponerse
    sobre el título "Control y Registro" ni sobre el subtítulo. */
