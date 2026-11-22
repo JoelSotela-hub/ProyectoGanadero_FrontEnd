@@ -169,3 +169,19 @@ async function login(): Promise<void> {
   }
 }
 </script>
+
+<style scoped>
+/* Garantiza en escritorio que la ilustración y el sol naranja del panel verde bosque
+   permanezcan detrás (z-index: 0) y desplazados al horizonte inferior sin superponerse
+   sobre el título "Control y Registro" ni sobre el subtítulo. */
+:deep(.gg-auth__hero) {
+  position: relative;
+  z-index: 2;
+}
+
+:deep(.gg-auth__art) {
+  z-index: 0;
+  height: 54%;
+  max-height: 21rem;
+}
+</style>

@@ -22,6 +22,7 @@ export * from './potrero.service';
 export * from './pesaje.service';
 export * from './tratamiento.service';
 export * from './catalogo.service';
+export * from './insumo.service';
 export * from './dashboard.service';
 export * from './secureStorage.service';
 export * from './cache.service';

@@ -39,7 +39,15 @@
               <path d="M0 275 C 120 245, 200 305, 320 275 S 520 255, 600 285" />
               <path d="M0 310 C 120 280, 200 340, 320 310 S 520 290, 600 320" />
             </g>
-            <circle cx="300" cy="330" r="62" fill="#DDA15E" />
+            <circle
+              class="gg-auth__sun"
+              data-testid="auth-decorative-sun"
+              cx="450"
+              cy="376"
+              r="52"
+              fill="#DDA15E"
+              fill-opacity="0.9"
+            />
             <path d="M0 400 C 120 340, 240 350, 340 395 S 520 430, 600 380 L600 560 L0 560 Z" fill="#606C38" />
             <path d="M0 450 C 140 400, 260 420, 360 455 S 540 490, 600 440 L600 560 L0 560 Z" fill="#55622F" />
             <path d="M0 505 C 160 470, 300 490, 600 485 L600 560 L0 560 Z" fill="#34461F" />
@@ -167,12 +175,17 @@ ion-content.gg-auth-content {
     padding: 2rem 3rem;
     justify-content: space-between;
   }
+  .gg-auth__brand-top {
+    z-index: 2;
+  }
   .gg-auth__hero {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: block;
     max-width: 30rem;
     margin-top: 2rem;
+    margin-bottom: auto;
+    padding-bottom: 12rem;
   }
   .gg-auth__kicker {
     display: flex;
@@ -206,16 +219,18 @@ ion-content.gg-auth-content {
   .gg-auth__art {
     display: block;
     position: absolute;
+    z-index: 0;
     left: 0;
     right: 0;
     bottom: 0;
     width: 100%;
-    height: 78%;
+    height: 54%;
+    max-height: 21rem;
     pointer-events: none;
   }
   .gg-auth__copy {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: block;
     margin: 0;
     font-size: 0.78rem;
