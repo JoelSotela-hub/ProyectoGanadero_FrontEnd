@@ -3,7 +3,8 @@
  *
  * El backend es Laravel con Sanctum:
  *   POST /api/v1/auth/login   -> { message, token }   (no devuelve el usuario)
- *   GET  /api/user            -> { data: { id, name, email, role } }
+ *   POST /api/v1/auth/register-> 201 { message, token, usuario }  (clave usuario, no data)
+ *   GET  /api/user            -> { id, name, email, role }  (plano, sin data ni /v1)
  *   POST /api/v1/auth/logout  -> 204
  *
  * Como el login solo entrega el token, se consulta el perfil inmediatamente
@@ -11,14 +12,35 @@
  */
 import { ApiError, desenvolver, http } from './http';
 
-import type { AuthSession, AuthUser, LoginCredentials } from '@/models/auth.model';
+import type { AuthSession, AuthUser, LoginCredentials, RegisterPayload } from '@/models/auth.model';
 
 interface RespuestaLogin {
   message?: string;
   token: string;
 }
 
+interface RespuestaRegistro {
+  message?: string;
+  token: string;
+  usuario: AuthUser;
+}
+
 export const authService = {
+  /** Registra un usuario (POST /api/v1/auth/register) y lee el usuario de la clave usuario. */
+  async registrar(datos: RegisterPayload): Promise<AuthSession> {
+    const respuesta = await http.post<RespuestaRegistro>(
+      '/auth/register',
+      { ...datos, name: datos.name.trim(), email: datos.email.trim() },
+      { sinAutenticacion: true },
+    );
+
+    if (!respuesta?.token || !respuesta.usuario) {
+      throw new ApiError(500, 'El servidor no devolvió los datos del registro.');
+    }
+
+    return { token: respuesta.token, user: respuesta.usuario };
+  },
+
   /**
    * Inicia sesion y devuelve la sesion completa (token + usuario).
    * No adjunta token saliente ni dispara el manejador de 401: un 401 aqui

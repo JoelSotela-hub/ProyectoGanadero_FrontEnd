@@ -1,242 +1,385 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>GuateGanado</ion-title>
-        <ion-buttons slot="end">
-          <ion-button @click="logout">Salir</ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+    <app-header titulo="Panel de Control" />
 
-    <ion-content class="ion-padding">
-      <!-- Saludo / encabezado -->
-      <section class="header-block">
-        <p class="eyebrow">{{ fecha }}</p>
-        <h1>{{ saludo }}</h1>
-        <p class="subtitle">Bienvenido, este es el estado actual de tu operación ganadera.</p>
-      </section>
+    <ion-content class="gg-content">
+      <ion-refresher slot="fixed" @ionRefresh="onRefresh($event)">
+        <ion-refresher-content />
+      </ion-refresher>
 
-      <!-- Acciones principales según el rol -->
-      <ion-button expand="block" color="secondary" :disabled="escaneando" @click="escanearVaca">
-        <ion-icon slot="start" :icon="qrCodeOutline" />
-        Escanear QR de Vaca
-      </ion-button>
-      <ion-button v-if="esAdmin" expand="block" class="ion-margin-top" @click="goToForm">
-        <ion-icon slot="start" :icon="add" />
-        Registrar Animal
-      </ion-button>
-      <ion-button
-        v-if="esAdmin || esOperario"
-        expand="block"
-        fill="outline"
-        class="ion-margin-top"
-        @click="goToRondas"
-      >
-        <ion-icon slot="start" :icon="walkOutline" />
-        {{ esAdmin ? 'Auditar Rondas' : 'Mis Rondas' }}
-      </ion-button>
+      <div class="gg-page">
+        <header class="gg-page-header">
+          <div>
+            <p class="gg-eyebrow">{{ fecha }}</p>
+            <h1 class="gg-title">Panel de Control</h1>
+            <p class="gg-subtitle">
+              Bienvenido{{ primerNombre ? `, ${primerNombre}` : '' }}. Este es el estado general de tu finca.
+            </p>
+          </div>
 
-      <!-- Estado de carga -->
-      <ion-grid v-if="cargando" class="ion-margin-top">
-        <ion-row>
-          <ion-col v-for="i in 4" :key="i" size="12" size-sm="6">
-            <ion-card>
-              <ion-card-header>
-                <ion-skeleton-text :animated="true" style="width: 60%" />
-              </ion-card-header>
-              <ion-card-content>
-                <ion-skeleton-text :animated="true" style="width: 30%; height: 28px" />
-                <ion-skeleton-text :animated="true" style="width: 50%" />
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+          <div class="gg-actions">
+            <button type="button" class="gg-btn gg-btn--outline" :disabled="escaneando" @click="escanearVaca">
+              <ion-icon :icon="qrCodeOutline" aria-hidden="true" />
+              Escanear QR
+            </button>
+            <button v-if="esAdmin" type="button" class="gg-btn" @click="ir('/tabs/registro')">
+              <ion-icon :icon="addOutline" aria-hidden="true" />
+              Registrar Animal
+            </button>
+            <button v-if="puedeVer('rondas')" type="button" class="gg-btn gg-btn--outline" @click="ir('/tabs/rondas')">
+              <ion-icon :icon="walkOutline" aria-hidden="true" />
+              Rondas
+            </button>
+          </div>
+        </header>
 
-      <!-- Estado de error con reintento -->
-      <ErrorState
-        v-else-if="falloTotal"
-        title="No se pudieron cargar las métricas"
-        message="No se obtuvo respuesta del servidor. Revisa tu conexión e inténtalo de nuevo."
-        @retry="cargarConteos"
-      />
+        <!-- Estado: cargando -->
+        <template v-if="store.cargando">
+          <div class="gg-kpi-grid" aria-busy="true" aria-label="Cargando métricas">
+            <div v-for="i in 3" :key="i" class="gg-kpi-card">
+              <span class="gg-skeleton" style="width: 2.75rem; height: 2.75rem" />
+              <div style="flex: 1">
+                <span class="gg-skeleton" style="width: 60%" />
+                <span class="gg-skeleton" style="width: 35%; height: 2rem; margin-top: 0.5rem" />
+              </div>
+            </div>
+          </div>
+        </template>
 
-      <!-- Tarjetas de métricas -->
-      <ion-grid v-else class="ion-margin-top">
-        <ion-row>
-          <ion-col v-for="m in metricas" :key="m.key" size="12" size-sm="6">
-            <ion-card button @click="goToList()">
-              <ion-card-header>
-                <ion-card-title>
-                  <span class="emoji">{{ m.emoji }}</span>
-                  {{ m.label }}
-                </ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <p class="metric-value">{{ m.value }}</p>
-                <p class="metric-foot">{{ m.foot }}</p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+        <!-- Estado: error con reintento -->
+        <error-state
+          v-else-if="store.error"
+          title="No se pudieron cargar las métricas"
+          :message="store.mensajeError"
+          @retry="cargar"
+        />
 
-      <!-- FAB (acción flotante): solo el admin registra animales -->
-      <ion-fab v-if="esAdmin" vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button @click="goToForm">
-          <ion-icon :icon="add" />
-        </ion-fab-button>
-      </ion-fab>
+        <!-- Estado: datos -->
+        <template v-else>
+          <section aria-label="Resumen general">
+            <div class="gg-kpi-grid">
+              <component
+                :is="kpi.ruta ? 'a' : 'div'"
+                v-for="kpi in kpis"
+                :key="kpi.clave"
+                class="gg-kpi-card"
+                :href="kpi.ruta"
+                @click="kpi.ruta ? navegar($event, kpi.ruta) : undefined"
+              >
+                <span class="gg-kpi-card__icon" :class="kpi.clase" aria-hidden="true">
+                  <ion-icon :icon="kpi.icono" />
+                </span>
+                <span>
+                  <span class="gg-kpi-card__label">{{ kpi.etiqueta }}</span>
+                  <span class="gg-kpi-card__value" style="display: block">{{ formatear(kpi.valor) }}</span>
+                  <span class="gg-kpi-card__hint">{{ kpi.pista }}</span>
+                </span>
+              </component>
+            </div>
+          </section>
+
+          <section aria-labelledby="dash-potreros">
+            <div class="gg-section-head">
+              <div>
+                <p class="gg-eyebrow">Ocupación actual</p>
+                <h2 id="dash-potreros" class="gg-section-title">Capacidad de potreros</h2>
+              </div>
+              <a class="gg-link" href="/tabs/potreros" @click="navegar($event, '/tabs/potreros')">Ver todos →</a>
+            </div>
+
+            <p v-if="!store.potreros.length" class="gg-card gg-subtitle">Aún no hay potreros registrados.</p>
+            <div v-else class="gg-potrero-grid">
+              <a
+                v-for="potrero in store.potreros"
+                :key="potrero.id"
+                class="gg-card"
+                href="/tabs/potreros"
+                @click="navegar($event, '/tabs/potreros')"
+              >
+                <div class="gg-potrero__head">
+                  <strong>{{ potrero.nombre }}</strong>
+                  <span class="gg-badge" :class="estadoPotrero(potrero).clase">{{ estadoPotrero(potrero).texto }}</span>
+                </div>
+                <p class="gg-kpi-card__hint">{{ potrero.ocupados ?? '—' }} de {{ potrero.capacidad }} animales</p>
+                <span
+                  class="gg-progress-bar"
+                  :class="estadoPotrero(potrero).barra"
+                  role="progressbar"
+                  :aria-label="`Ocupación de ${potrero.nombre}`"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  :aria-valuenow="potrero.porcentaje"
+                >
+                  <span class="gg-progress-bar__fill" :style="{ width: `${potrero.porcentaje}%` }" />
+                </span>
+              </a>
+            </div>
+          </section>
+
+          <section class="gg-card gg-card--flush" aria-labelledby="dash-actividad">
+            <div class="gg-section-head" style="padding: 1.1rem 1.25rem 0">
+              <div>
+                <p class="gg-eyebrow">Actividad reciente</p>
+                <h2 id="dash-actividad" class="gg-section-title">
+                  {{ store.tipoActividad === 'pesajes' ? 'Últimos pesajes' : 'Últimos animales registrados' }}
+                </h2>
+              </div>
+              <a class="gg-link" href="/tabs/animales" @click="navegar($event, '/tabs/animales')">Ver animales →</a>
+            </div>
+
+            <p v-if="!hayActividad" class="gg-subtitle" style="padding: 0 1.25rem 1.25rem">
+              Todavía no hay actividad para mostrar.
+            </p>
+
+            <div v-else class="gg-table-wrapper">
+              <table v-if="store.tipoActividad === 'pesajes'" class="gg-table">
+                <caption class="gg-sr-only">
+                  Últimos pesajes registrados
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Animal</th>
+                    <th scope="col">Peso</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Observaciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="p in store.pesajes" :key="p.id">
+                    <td data-label="Animal">
+                      <a :href="`/detalle/${p.idAnimal}`" @click="navegar($event, `/detalle/${p.idAnimal}`)">{{
+                        p.arete
+                      }}</a>
+                    </td>
+                    <td data-label="Peso">{{ p.pesoKg }} kg</td>
+                    <td data-label="Fecha">{{ fechaCorta(p.fecha) }}</td>
+                    <td data-label="Observaciones">{{ p.observaciones || '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table v-else class="gg-table">
+                <caption class="gg-sr-only">
+                  Últimos animales registrados
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Animal</th>
+                    <th scope="col">Raza</th>
+                    <th scope="col">Sexo</th>
+                    <th scope="col">Potrero</th>
+                    <th scope="col">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="a in store.animales" :key="a.id">
+                    <td data-label="Animal">
+                      <a :href="`/detalle/${a.id}`" @click="navegar($event, `/detalle/${a.id}`)">{{ a.arete }}</a>
+                    </td>
+                    <td data-label="Raza">{{ a.raza }}</td>
+                    <td data-label="Sexo">{{ a.sexo }}</td>
+                    <td data-label="Potrero">{{ a.potrero }}</td>
+                    <td data-label="Estado">
+                      <span class="gg-badge" :class="claseEstadoAnimal(a.estado)">{{ a.estado }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </template>
+      </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { IonContent, IonIcon, IonPage, IonRefresher, IonRefresherContent, onIonViewWillEnter } from '@ionic/vue';
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButton,
-  IonButtons,
-  IonGrid,
-  IonRow,
-  IonCol,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonFab,
-  IonFabButton,
-  IonIcon,
-  IonSkeletonText,
-} from '@ionic/vue';
-import { add, qrCodeOutline, walkOutline } from 'ionicons/icons';
+  addOutline,
+  cubeOutline,
+  leafOutline,
+  medkitOutline,
+  pawOutline,
+  qrCodeOutline,
+  scaleOutline,
+  walkOutline,
+} from 'ionicons/icons';
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+import AppHeader from '@/components/AppHeader.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import { useEscanearVaca } from '@/composables/useEscanearVaca';
 import { useRol } from '@/composables/useRol';
+import type { PotreroCapacidad } from '@/services';
 import { useAuthStore } from '@/stores/auth';
-import { panelService } from '@/services';
+import { useDashboardStore } from '@/stores/dashboard';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const { esAdmin, esOperario } = useRol();
+const store = useDashboardStore();
+const { esAdmin, esVeterinario, puedeVer } = useRol();
 const { escaneando, escanearVaca } = useEscanearVaca();
 
-// Fecha actual
-const fecha = new Date().toLocaleDateString('es-CR', {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
+const fecha = new Date().toLocaleDateString('es-GT', { weekday: 'long', day: 'numeric', month: 'long' });
+const primerNombre = computed<string>(() => authStore.user?.name?.trim().split(/\s+/)[0] ?? '');
 
-const saludo = computed(() => {
-  const h = new Date().getHours();
-  if (h < 12) return 'Buenos días';
-  if (h < 18) return 'Buenas tardes';
-  return 'Buenas noches';
-});
+/** Tratamientos e Insumos solo para admin y veterinario: el operario recibiría 403. */
+const veTratamientosEInsumos = computed<boolean>(() => esAdmin.value || esVeterinario.value);
 
-/**
- * Totales reales del panel (Persona 3): cada tarjeta lee `meta.total` del
- * listado correspondiente. Si un recurso falla, solo esa tarjeta queda sin dato.
- */
-const cargando = ref(true);
-const falloTotal = ref(false);
-
-const metricas = ref([
-  { key: 'animales', emoji: '\u{1F404}', label: 'Total de Animales', value: '—', foot: 'Ver catálogo de animales' },
-  { key: 'potreros', emoji: '\u{1F33F}', label: 'Potreros Registrados', value: '—', foot: 'Distribución del hato' },
-  {
-    key: 'tratamientos',
-    emoji: '\u{1F489}',
-    label: 'Tratamientos Registrados',
-    value: '—',
-    foot: 'En seguimiento activo',
-  },
-  { key: 'insumos', emoji: '\u{1F4E6}', label: 'Insumos en Inventario', value: '—', foot: 'Stock actualizado' },
-]);
-
-function texto(valor: number | null): string {
-  return valor === null ? '—' : String(valor);
+interface Kpi {
+  clave: string;
+  etiqueta: string;
+  valor: number | null;
+  pista: string;
+  icono: string;
+  clase: string;
+  ruta?: string;
 }
 
-/**
- * Carga los totales. Si TODOS fallan (sin red o servidor caido) se muestra el
- * estado de error con reintento; si falla solo alguno (p. ej. 403 por rol),
- * esa tarjeta queda con «—» y las demas se muestran.
- */
-async function cargarConteos(): Promise<void> {
-  cargando.value = true;
-  falloTotal.value = false;
-  try {
-    const conteos = await panelService.conteos();
-    falloTotal.value = Object.values(conteos).every((valor) => valor === null);
-    metricas.value = metricas.value.map((m) => ({
-      ...m,
-      value: texto(conteos[m.key as keyof typeof conteos]),
-    }));
-  } finally {
-    cargando.value = false;
+const kpis = computed<Kpi[]>(() => {
+  const c = store.conteos;
+  const lista: Kpi[] = [
+    {
+      clave: 'animales',
+      etiqueta: 'Total de animales',
+      valor: c.animales,
+      pista: 'Registrados en el sistema',
+      icono: pawOutline,
+      clase: '',
+      ruta: '/tabs/animales',
+    },
+    {
+      clave: 'potreros',
+      etiqueta: 'Potreros registrados',
+      valor: c.potreros,
+      pista: 'Áreas de pastoreo',
+      icono: leafOutline,
+      clase: 'gg-kpi-card__icon--earth',
+      ruta: '/tabs/potreros',
+    },
+  ];
+  if (veTratamientosEInsumos.value) {
+    lista.push({
+      clave: 'tratamientos',
+      etiqueta: 'Tratamientos aplicados',
+      valor: c.tratamientos,
+      pista: 'Aplicaciones sanitarias',
+      icono: medkitOutline,
+      clase: 'gg-kpi-card__icon--rose',
+      ruta: '/tabs/tratamientos',
+    });
   }
+  lista.push({
+    clave: 'pesajes',
+    etiqueta: 'Pesajes registrados',
+    valor: c.pesajes,
+    pista: 'Historial de peso del hato',
+    icono: scaleOutline,
+    clase: 'gg-kpi-card__icon--neutral',
+    ruta: '/tabs/pesajes',
+  });
+  if (veTratamientosEInsumos.value) {
+    lista.push({
+      clave: 'insumos',
+      etiqueta: 'Insumos registrados',
+      valor: c.insumos,
+      pista: 'Productos del inventario',
+      icono: cubeOutline,
+      clase: 'gg-kpi-card__icon--earth',
+      ruta: '/tabs/insumos',
+    });
+  }
+  return lista;
+});
+
+const hayActividad = computed<boolean>(() =>
+  store.tipoActividad === 'pesajes' ? store.pesajes.length > 0 : store.animales.length > 0,
+);
+
+function formatear(valor: number | null): string {
+  return valor === null ? '—' : valor.toLocaleString('es-GT');
 }
 
-onMounted(cargarConteos);
-
-function goToForm() {
-  router.push('/tabs/registro');
+function fechaCorta(iso: string | null): string {
+  if (!iso) return '—';
+  const fecha = new Date(iso);
+  return Number.isNaN(fecha.getTime())
+    ? iso
+    : fecha.toLocaleDateString('es-GT', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function goToList() {
-  router.push('/tabs/animales');
+function estadoPotrero(potrero: PotreroCapacidad): { texto: string; clase: string; barra: string } {
+  if (potrero.ocupados === null) return { texto: 'Sin datos', clase: 'gg-badge--neutral', barra: '' };
+  if (potrero.capacidad <= 0) return { texto: 'Sin capacidad', clase: 'gg-badge--neutral', barra: '' };
+  if (potrero.porcentaje >= 100)
+    return { texto: 'Completo', clase: 'gg-badge--danger', barra: 'gg-progress-bar--danger' };
+  if (potrero.porcentaje >= 80) return { texto: 'Alta', clase: 'gg-badge--warning', barra: 'gg-progress-bar--warning' };
+  return { texto: 'Óptima', clase: 'gg-badge--success', barra: '' };
 }
 
-function goToRondas() {
-  router.push('/tabs/rondas');
+function claseEstadoAnimal(estado: string): string {
+  if (estado === 'Activo') return 'gg-badge--success';
+  if (estado === 'Tratamiento') return 'gg-badge--warning';
+  return 'gg-badge--neutral';
 }
 
-async function logout() {
-  // Limpia el estado de sesión en Pinia, borra el token y redirige reemplazando el historial
-  await authStore.logout();
-  await router.replace('/login');
+function ir(ruta: string): void {
+  void router.push(ruta);
 }
+
+function navegar(evento: Event, ruta: string): void {
+  evento.preventDefault();
+  ir(ruta);
+}
+
+async function cargar(): Promise<void> {
+  await store.cargar({ tratamientos: veTratamientosEInsumos.value, insumos: veTratamientosEInsumos.value });
+}
+
+async function onRefresh(evento: CustomEvent): Promise<void> {
+  await cargar();
+  (evento.target as HTMLIonRefresherElement).complete();
+}
+
+onIonViewWillEnter(cargar);
 </script>
 
 <style scoped>
-.header-block {
-  margin-bottom: 1rem;
+.gg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
-.eyebrow {
-  text-transform: capitalize;
-  font-size: 0.8rem;
-  color: var(--ion-color-medium);
-  margin: 0;
+.gg-potrero-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
 }
-.header-block h1 {
-  margin: 0.25rem 0;
-  font-size: 1.6rem;
+@media (min-width: 48rem) {
+  .gg-potrero-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
-.subtitle {
-  color: var(--ion-color-medium);
-  margin: 0;
+@media (min-width: 62rem) {
+  .gg-potrero-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
-.emoji {
-  margin-right: 0.4rem;
+.gg-potrero__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
 }
-.metric-value {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--ion-color-primary);
+.gg-potrero__head strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.metric-foot {
-  font-size: 0.8rem;
-  color: var(--ion-color-medium);
-  margin: 0;
+.gg-potrero-grid .gg-progress-bar {
+  margin-top: 0.75rem;
 }
 </style>

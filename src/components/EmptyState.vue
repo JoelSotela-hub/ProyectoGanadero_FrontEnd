@@ -1,8 +1,9 @@
 <template>
-  <div class="empty-container ion-text-center ion-padding">
-    <ion-icon :icon="folderOpenOutline" class="empty-icon"></ion-icon>
+  <div class="gg-state" role="status">
+    <ion-icon :icon="folderOpenOutline" aria-hidden="true" />
     <h3>{{ title || 'No hay datos disponibles' }}</h3>
     <p>{{ message || 'No se encontraron registros en este momento.' }}</p>
+    <slot />
   </div>
 </template>
 
@@ -15,18 +16,3 @@ defineProps<{
   message?: string;
 }>();
 </script>
-
-<style scoped>
-.empty-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
-  color: var(--ion-color-medium);
-}
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-</style>

@@ -16,5 +16,8 @@ export default defineConfig({
     environment: 'jsdom',
     // Playwright e2e specs live in tests/e2e.
     include: ['tests/unit/**/*.spec.{js,ts}'],
+    env: {
+      VITE_API_URL: 'https://proyectoganadero-backend.onrender.com',
+    },
   },
 });

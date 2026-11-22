@@ -33,7 +33,12 @@
       </ion-grid>
 
       <!-- Estado de error con reintento -->
-      <ErrorState v-else-if="error" title="No se pudieron cargar las rondas" :message="errorMessage" @retry="recargar" />
+      <ErrorState
+        v-else-if="error"
+        title="No se pudieron cargar las rondas"
+        :message="errorMessage"
+        @retry="recargar"
+      />
 
       <!-- Estado vacío -->
       <EmptyState
@@ -263,4 +268,3 @@ onIonViewWillEnter(() => {
   font-size: 0.85rem;
 }
 </style>
-

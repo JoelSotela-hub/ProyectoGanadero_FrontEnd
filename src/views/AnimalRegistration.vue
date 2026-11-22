@@ -1,352 +1,313 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/animales" text="Volver" />
-        </ion-buttons>
-        <ion-title>{{ isEditMode ? `Editar Animal #${editingId}` : 'Registrar Animal' }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
+    <app-header :titulo="titulo" atras="/tabs/animales" />
 
-    <ion-content class="ion-padding">
-      <div class="form-container">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-subtitle>Operación Ganadera</ion-card-subtitle>
-            <ion-card-title>
-              {{ isEditMode ? 'Actualizar Ficha del Animal' : 'Nuevo Registro de Animal' }}
-            </ion-card-title>
-          </ion-card-header>
+    <ion-content class="gg-content">
+      <div class="gg-page gg-form-page">
+        <a class="gg-link gg-back" href="/tabs/animales" @click.prevent="router.push('/tabs/animales')">
+          ← Volver al listado
+        </a>
 
-          <ion-card-content>
-            <ion-list lines="full">
-              <ion-item>
-                <ion-input
-                  v-model="form.arete"
-                  label="Número de Arete *"
-                  label-placement="floating"
-                  placeholder="Ej: GT-0006"
-                  :disabled="submitting"
-                />
-              </ion-item>
+        <header class="gg-page-header">
+          <div>
+            <p class="gg-eyebrow">Operación ganadera</p>
+            <h1 class="gg-title">{{ titulo }}</h1>
+            <p class="gg-subtitle">
+              {{
+                form.esEdicion
+                  ? 'Actualiza los datos de la ficha del animal.'
+                  : 'Completa los datos para registrar un nuevo animal.'
+              }}
+            </p>
+          </div>
+        </header>
 
-              <ion-item>
-                <ion-input
-                  v-model="form.codigo_qr"
-                  label="Código QR (opcional)"
-                  label-placement="floating"
-                  :placeholder="form.arete.trim() ? `Se autogenera: VACA-${form.arete.trim()}` : 'Ej: VACA-001'"
-                  :disabled="submitting"
-                />
-              </ion-item>
+        <!-- Carga del registro a editar -->
+        <section v-if="form.cargando" class="gg-card" aria-busy="true" aria-label="Cargando animal">
+          <span v-for="i in 4" :key="i" class="gg-skeleton" style="margin-bottom: 1.1rem; height: 2.5rem" />
+        </section>
 
-              <ion-item>
-                <ion-input
-                  v-model="form.nombre"
-                  label="Nombre del Animal *"
-                  label-placement="floating"
-                  placeholder="Ej: Relámpago"
-                  :disabled="submitting"
-                />
-              </ion-item>
+        <error-state
+          v-else-if="form.errorCarga"
+          title="No se pudo cargar el animal"
+          :message="form.errorCarga"
+          @retry="iniciar"
+        />
 
-              <ion-item>
-                <ion-select
-                  v-model="form.raza"
-                  label="Raza *"
-                  label-placement="floating"
-                  interface="popover"
-                  :disabled="submitting"
-                >
-                  <ion-select-option v-for="r in razas" :key="r.id" :value="String(r.id)">
-                    {{ r.nombre }}
-                  </ion-select-option>
-                </ion-select>
-              </ion-item>
+        <form v-else class="gg-card gg-form" novalidate @submit.prevent="enviar">
+          <div v-if="form.errorNegocio" class="gg-alert gg-alert--warning gg-form__full" role="alert">
+            <ion-icon :icon="warningOutline" aria-hidden="true" />
+            <span><strong>Regla de negocio:</strong> {{ form.errorNegocio }}</span>
+          </div>
+          <div v-if="form.errorGeneral" class="gg-alert gg-alert--danger gg-form__full" role="alert">
+            <ion-icon :icon="alertCircleOutline" aria-hidden="true" />
+            <span>{{ form.errorGeneral }}</span>
+          </div>
+          <div v-if="catalogos.error" class="gg-alert gg-alert--warning gg-form__full" role="status">
+            <ion-icon :icon="warningOutline" aria-hidden="true" />
+            <span>No se pudieron cargar las razas y potreros.</span>
+            <button type="button" class="gg-link" @click="catalogos.cargar(true)">Reintentar</button>
+          </div>
 
-              <ion-item>
-                <ion-select
-                  v-model="form.sexo"
-                  label="Sexo *"
-                  label-placement="floating"
-                  interface="popover"
-                  :disabled="submitting"
-                >
-                  <ion-select-option value="Hembra">Hembra</ion-select-option>
-                  <ion-select-option value="Macho">Macho</ion-select-option>
-                </ion-select>
-              </ion-item>
+          <div class="gg-field" :class="{ 'gg-field--error': form.errores.numero_arete }">
+            <label class="gg-field__label" for="a-arete">Número de arete *</label>
+            <input
+              id="a-arete"
+              v-model="form.form.numero_arete"
+              class="gg-input"
+              type="text"
+              maxlength="50"
+              placeholder="Ej: CR-001-LIB"
+              :disabled="form.guardando"
+              :aria-invalid="Boolean(form.errores.numero_arete)"
+              :aria-describedby="form.errores.numero_arete ? 'a-arete-error' : undefined"
+              required
+            />
+            <p v-if="form.errores.numero_arete" id="a-arete-error" class="gg-field__error">
+              {{ form.errores.numero_arete }}
+            </p>
+          </div>
 
-              <ion-item>
-                <ion-select
-                  v-model="form.potrero"
-                  label="Potrero *"
-                  label-placement="floating"
-                  interface="popover"
-                  :disabled="submitting"
-                >
-                  <ion-select-option v-for="p in potreros" :key="p.id" :value="String(p.id)">
-                    {{ p.nombre }}
-                  </ion-select-option>
-                </ion-select>
-              </ion-item>
+          <div class="gg-field" :class="{ 'gg-field--error': form.errores.codigo_qr }">
+            <label class="gg-field__label" for="a-qr">Código QR (opcional)</label>
+            <input
+              id="a-qr"
+              v-model="form.form.codigo_qr"
+              class="gg-input"
+              type="text"
+              maxlength="100"
+              :placeholder="
+                form.form.numero_arete.trim() ? `Se autogenera: VACA-${form.form.numero_arete.trim()}` : 'Ej: VACA-001'
+              "
+              :disabled="form.guardando"
+              :aria-invalid="Boolean(form.errores.codigo_qr)"
+              :aria-describedby="form.errores.codigo_qr ? 'a-qr-error' : 'a-qr-hint'"
+            />
+            <p v-if="form.errores.codigo_qr" id="a-qr-error" class="gg-field__error">{{ form.errores.codigo_qr }}</p>
+            <p v-else id="a-qr-hint" class="gg-field__hint">Si lo dejas vacío, el sistema lo genera automáticamente.</p>
+          </div>
 
-              <ion-item>
-                <ion-input
-                  v-model="form.peso"
-                  type="number"
-                  label="Peso (kg) *"
-                  label-placement="floating"
-                  placeholder="Ej: 430"
-                  :disabled="submitting"
-                />
-              </ion-item>
+          <div class="gg-field" :class="{ 'gg-field--error': form.errores.raza_id }">
+            <label class="gg-field__label" for="a-raza">Raza *</label>
+            <select
+              id="a-raza"
+              v-model="form.form.raza_id"
+              class="gg-select"
+              :disabled="form.guardando"
+              :aria-invalid="Boolean(form.errores.raza_id)"
+              :aria-describedby="form.errores.raza_id ? 'a-raza-error' : undefined"
+              required
+            >
+              <option value="" disabled>Selecciona una raza</option>
+              <option v-for="r in catalogos.razas" :key="r.id" :value="String(r.id)">{{ r.nombre }}</option>
+            </select>
+            <p v-if="form.errores.raza_id" id="a-raza-error" class="gg-field__error">{{ form.errores.raza_id }}</p>
+          </div>
 
-              <ion-item>
-                <ion-select
-                  v-model="form.estado"
-                  label="Estado *"
-                  label-placement="floating"
-                  interface="popover"
-                  :disabled="submitting"
-                >
-                  <ion-select-option value="Activo">Activo</ion-select-option>
-                  <ion-select-option value="Tratamiento">En Tratamiento</ion-select-option>
-                  <ion-select-option value="Vendido">Vendido</ion-select-option>
-                </ion-select>
-              </ion-item>
+          <div class="gg-field" :class="{ 'gg-field--error': form.errores.potrero_id }">
+            <label class="gg-field__label" for="a-potrero">Potrero *</label>
+            <select
+              id="a-potrero"
+              v-model="form.form.potrero_id"
+              class="gg-select"
+              :disabled="form.guardando"
+              :aria-invalid="Boolean(form.errores.potrero_id)"
+              :aria-describedby="form.errores.potrero_id ? 'a-potrero-error' : undefined"
+              required
+            >
+              <option value="" disabled>Selecciona un potrero</option>
+              <option v-for="p in catalogos.potreros" :key="p.id" :value="String(p.id)">{{ p.nombre }}</option>
+            </select>
+            <p v-if="form.errores.potrero_id" id="a-potrero-error" class="gg-field__error">
+              {{ form.errores.potrero_id }}
+            </p>
+          </div>
 
-              <ion-item lines="none">
-                <ion-textarea
-                  v-model="form.observaciones"
-                  label="Observaciones"
-                  label-placement="floating"
-                  placeholder="Notas adicionales sobre salud, alimentación o trazabilidad..."
-                  :rows="3"
-                  :disabled="submitting"
-                />
-              </ion-item>
-            </ion-list>
+          <div class="gg-field" :class="{ 'gg-field--error': form.errores.sexo }">
+            <label class="gg-field__label" for="a-sexo">Sexo *</label>
+            <select
+              id="a-sexo"
+              v-model="form.form.sexo"
+              class="gg-select"
+              :disabled="form.guardando"
+              :aria-invalid="Boolean(form.errores.sexo)"
+              :aria-describedby="form.errores.sexo ? 'a-sexo-error' : undefined"
+              required
+            >
+              <option value="" disabled>Selecciona el sexo</option>
+              <option value="Hembra">Hembra</option>
+              <option value="Macho">Macho</option>
+            </select>
+            <p v-if="form.errores.sexo" id="a-sexo-error" class="gg-field__error">{{ form.errores.sexo }}</p>
+          </div>
 
-            <div class="form-actions ion-margin-top">
-              <ion-button expand="block" :disabled="submitting || !isFormValid" @click="onSubmit">
-                <ion-icon slot="start" :icon="saveOutline" />
-                {{ submitting ? 'Guardando...' : isEditMode ? 'Guardar Cambios' : 'Registrar Animal' }}
-              </ion-button>
+          <div class="gg-field" :class="{ 'gg-field--error': form.errores.fecha_nacimiento }">
+            <label class="gg-field__label" for="a-nacimiento">Fecha de nacimiento</label>
+            <input
+              id="a-nacimiento"
+              v-model="form.form.fecha_nacimiento"
+              class="gg-input"
+              type="date"
+              :max="hoy"
+              :disabled="form.guardando"
+              :aria-invalid="Boolean(form.errores.fecha_nacimiento)"
+              :aria-describedby="form.errores.fecha_nacimiento ? 'a-nacimiento-error' : undefined"
+            />
+            <p v-if="form.errores.fecha_nacimiento" id="a-nacimiento-error" class="gg-field__error">
+              {{ form.errores.fecha_nacimiento }}
+            </p>
+          </div>
 
-              <ion-button expand="block" fill="outline" color="medium" :disabled="submitting" @click="onCancel">
-                Cancelar
-              </ion-button>
+          <div class="gg-field" :class="{ 'gg-field--error': form.errores.estado }">
+            <label class="gg-field__label" for="a-estado">Estado</label>
+            <select
+              id="a-estado"
+              v-model="form.form.estado"
+              class="gg-select"
+              :disabled="form.guardando"
+              :aria-invalid="Boolean(form.errores.estado)"
+            >
+              <option v-for="e in estadosDisponibles" :key="e" :value="e">{{ e }}</option>
+            </select>
+            <p v-if="form.errores.estado" class="gg-field__error">{{ form.errores.estado }}</p>
+          </div>
+
+          <template v-if="!form.esEdicion">
+            <div class="gg-field" :class="{ 'gg-field--error': form.errores.peso_kg }">
+              <label class="gg-field__label" for="a-peso">Peso inicial (kg, opcional)</label>
+              <input
+                id="a-peso"
+                v-model="form.form.peso_kg"
+                class="gg-input"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                max="9999.99"
+                step="0.01"
+                placeholder="Ej: 430"
+                :disabled="form.guardando"
+                :aria-invalid="Boolean(form.errores.peso_kg)"
+                :aria-describedby="form.errores.peso_kg ? 'a-peso-error' : undefined"
+              />
+              <p v-if="form.errores.peso_kg" id="a-peso-error" class="gg-field__error">{{ form.errores.peso_kg }}</p>
             </div>
-          </ion-card-content>
-        </ion-card>
-      </div>
 
-      <ion-loading :is-open="submitting" message="Guardando registro..." />
+            <div class="gg-field">
+              <label class="gg-field__label" for="a-obs">Observaciones del pesaje</label>
+              <textarea
+                id="a-obs"
+                v-model="form.form.observaciones"
+                class="gg-textarea"
+                rows="2"
+                placeholder="Notas del primer pesaje (opcional)"
+                :disabled="form.guardando"
+              />
+            </div>
+          </template>
+
+          <div class="gg-form__actions gg-form__full">
+            <button type="submit" class="gg-btn" :disabled="form.guardando">
+              <ion-icon :icon="saveOutline" aria-hidden="true" />
+              {{ form.guardando ? 'Guardando...' : form.esEdicion ? 'Guardar cambios' : 'Registrar animal' }}
+            </button>
+            <button type="button" class="gg-btn gg-btn--outline" :disabled="form.guardando" @click="router.back()">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { IonContent, IonIcon, IonPage, onIonViewWillEnter } from '@ionic/vue';
+import { alertCircleOutline, saveOutline, warningOutline } from 'ionicons/icons';
+import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButtons,
-  IonBackButton,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonCardContent,
-  IonList,
-  IonItem,
-  IonInput,
-  IonSelect,
-  IonSelectOption,
-  IonTextarea,
-  IonButton,
-  IonIcon,
-  IonLoading,
-  toastController,
-  onIonViewWillEnter,
-} from '@ionic/vue';
-import { saveOutline } from 'ionicons/icons';
 
-import { ApiError, animalService, catalogoService, type OpcionCatalogo } from '@/services';
+import AppHeader from '@/components/AppHeader.vue';
+import ErrorState from '@/components/ErrorState.vue';
+import { mostrarToast } from '@/services';
+import { ESTADOS_ANIMAL, useAnimalFormStore } from '@/stores/animalForm';
+import { useCatalogosStore } from '@/stores/catalogos';
 
 const route = useRoute();
 const router = useRouter();
+const form = useAnimalFormStore();
+const catalogos = useCatalogosStore();
 
-const submitting = ref(false);
+const hoy = new Date().toISOString().slice(0, 10);
 
-const editingId = computed(() => {
-  const idFromParam = route.params.id;
-  const idFromQuery = route.query.id;
-  return idFromParam ?? idFromQuery ?? null;
+const idEnRuta = computed<string | null>(() => {
+  const valor = route.query.id ?? route.params.id;
+  const id = Array.isArray(valor) ? valor[0] : valor;
+  return id ? String(id) : null;
 });
 
-const isEditMode = computed(() => Boolean(editingId.value));
+const titulo = computed<string>(() => (form.esEdicion ? `Editar animal #${form.editingId}` : 'Registrar animal'));
 
-/** Catalogos reales: la API exige raza_id y potrero_id, no texto libre. */
-const razas = ref<OpcionCatalogo[]>([]);
-const potreros = ref<OpcionCatalogo[]>([]);
-
-const form = reactive({
-  arete: '',
-  codigo_qr: '',
-  nombre: '',
-  raza: '',
-  sexo: 'Hembra',
-  potrero: '',
-  peso: '',
-  estado: 'Activo',
-  observaciones: '',
+/** Si el animal trae un estado fuera del catálogo habitual, se conserva como opción. */
+const estadosDisponibles = computed<string[]>(() => {
+  const actual = form.form.estado;
+  return actual && !ESTADOS_ANIMAL.includes(actual) ? [...ESTADOS_ANIMAL, actual] : ESTADOS_ANIMAL;
 });
 
-/**
- * Campos obligatorios segun StoreAnimalRequest del backend:
- * numero_arete, raza_id, potrero_id y sexo. El nombre y el peso no existen
- * como columnas del animal: el peso se guarda aparte como primer pesaje.
- */
-const isFormValid = computed(() => {
-  return (
-    form.arete.trim().length > 0 &&
-    form.raza.trim().length > 0 &&
-    form.sexo.trim().length > 0 &&
-    form.potrero.trim().length > 0
+async function iniciar(): Promise<void> {
+  await Promise.all([catalogos.cargar(), form.iniciar(idEnRuta.value)]);
+}
+
+onIonViewWillEnter(iniciar);
+
+async function enviar(): Promise<void> {
+  const edicion = form.esEdicion;
+  const resultado = await form.guardar();
+
+  if (!resultado.ok) {
+    if (form.errorNegocio) {
+      // 409 — regla de negocio (RN-03: potrero en capacidad máxima)
+      await mostrarToast(form.errorNegocio, 'warning', 5000);
+    } else if (form.errorGeneral) {
+      await mostrarToast(form.errorGeneral, 'danger', 4000);
+    }
+    return;
+  }
+
+  await mostrarToast(
+    edicion ? 'Animal actualizado correctamente.' : 'Animal registrado correctamente.',
+    'success',
+    2200,
   );
-});
+  if (resultado.aviso) await mostrarToast(resultado.aviso, 'warning', 6000);
 
-async function cargarCatalogos() {
-  try {
-    const [listaRazas, listaPotreros] = await Promise.all([catalogoService.razas(), catalogoService.potreros()]);
-    razas.value = listaRazas;
-    potreros.value = listaPotreros;
-  } catch {
-    const toast = await toastController.create({
-      message: 'No se pudieron cargar las razas y potreros',
-      duration: 2500,
-      color: 'warning',
-    });
-    await toast.present();
-  }
-}
-
-onIonViewWillEnter(async () => {
-  await cargarCatalogos();
-
-  if (isEditMode.value) {
-    // Edicion: se trae el registro real desde GET /api/v1/animales/{id}
-    try {
-      const animal = await animalService.obtener(String(editingId.value));
-      form.arete = animal.arete;
-      form.codigo_qr = animal.codigo_qr ?? animal.codigoQr ?? '';
-      form.nombre = animal.nombre ?? '';
-      form.raza = animal.razaId ? String(animal.razaId) : '';
-      form.sexo = animal.sexo;
-      form.potrero = animal.potreroId ? String(animal.potreroId) : '';
-      form.peso = animal.peso !== null && animal.peso !== undefined ? String(animal.peso) : '';
-      form.estado = animal.estado;
-      form.observaciones = '';
-    } catch {
-      const toast = await toastController.create({
-        message: 'No se pudo cargar el animal a editar',
-        duration: 2500,
-        color: 'danger',
-      });
-      await toast.present();
-    }
-  } else {
-    form.arete = '';
-    form.codigo_qr = '';
-    form.nombre = '';
-    form.raza = '';
-    form.sexo = 'Hembra';
-    form.potrero = '';
-    form.peso = '';
-    form.estado = 'Activo';
-    form.observaciones = '';
-  }
-});
-
-/**
- * Operacion de escritura real (Persona 3):
- *   POST /api/v1/animales          al registrar
- *   PUT  /api/v1/animales/{id}     al editar
- * Si el usuario escribio un peso, se guarda como primer pesaje del animal.
- */
-async function onSubmit() {
-  if (!isFormValid.value) return;
-  submitting.value = true;
-
-  const areteLimpio = form.arete.trim();
-  const qrLimpio = form.codigo_qr.trim();
-  const datos = {
-    numero_arete: areteLimpio,
-    codigo_qr: qrLimpio || `VACA-${areteLimpio}`,
-    raza_id: Number(form.raza),
-    potrero_id: Number(form.potrero),
-    sexo: form.sexo as 'Macho' | 'Hembra',
-    estado: form.estado || null,
-  };
-
-  try {
-    const animal = isEditMode.value
-      ? await animalService.actualizar(String(editingId.value), datos)
-      : await animalService.crear(datos);
-
-    const peso = Number(form.peso);
-    if (!isEditMode.value && Number.isFinite(peso) && peso > 0) {
-      try {
-        await animalService.registrarPesaje(animal.id, peso, form.observaciones);
-      } catch {
-        // El animal ya quedo registrado; el pesaje se puede agregar despues.
-      }
-    }
-
-    const toast = await toastController.create({
-      message: isEditMode.value ? 'Animal actualizado correctamente' : 'Animal registrado correctamente',
-      duration: 1800,
-      color: 'success',
-    });
-    await toast.present();
-
-    router.replace('/tabs/animales');
-  } catch (err) {
-    const mensaje =
-      err instanceof ApiError ? (err.primerErrorDeValidacion ?? err.message) : 'No se pudo guardar el animal';
-
-    const toast = await toastController.create({
-      message: mensaje,
-      duration: 3000,
-      color: 'danger',
-    });
-    await toast.present();
-  } finally {
-    submitting.value = false;
-  }
-}
-
-function onCancel() {
-  router.back();
+  await router.replace('/tabs/animales');
 }
 </script>
 
 <style scoped>
-.form-container {
-  max-width: 640px;
-  margin: 0 auto;
+.gg-form-page {
+  max-width: 52rem;
 }
-
-.form-actions {
+.gg-back {
+  align-self: flex-start;
+}
+.gg-form {
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 48rem) {
+  .gg-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1.5rem;
+  }
+  .gg-form__full {
+    grid-column: 1 / -1;
+  }
+}
+.gg-form__actions {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
 </style>

@@ -135,7 +135,9 @@
               <ion-item v-for="p in animal.pesajes" :key="p.id">
                 <ion-label>
                   <h3>{{ p.pesoKg }} kg</h3>
-                  <p>{{ p.fecha ?? 'Sin fecha' }}<span v-if="p.observaciones"> · {{ p.observaciones }}</span></p>
+                  <p>
+                    {{ p.fecha ?? 'Sin fecha' }}<span v-if="p.observaciones"> · {{ p.observaciones }}</span>
+                  </p>
                 </ion-label>
               </ion-item>
             </ion-list>
@@ -145,7 +147,9 @@
             <ion-list v-if="animal.tratamientos?.length" lines="full">
               <ion-item v-for="t in animal.tratamientos" :key="t.id">
                 <ion-label class="ion-text-wrap">
-                  <h3>{{ t.nombre }}<span v-if="t.tipo"> · {{ t.tipo }}</span></h3>
+                  <h3>
+                    {{ t.nombre }}<span v-if="t.tipo"> · {{ t.tipo }}</span>
+                  </h3>
                   <p>
                     {{ t.fechaAplicacion ?? 'Sin fecha' }}<span v-if="t.dosisMl"> · {{ t.dosisMl }} ml</span
                     ><span v-if="t.observaciones"> · {{ t.observaciones }}</span>

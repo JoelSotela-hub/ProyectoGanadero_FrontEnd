@@ -1,141 +1,161 @@
 /**
- * Paleta de GuateGanado.
+ * Sistema de diseño GuateGanado — tokens y variables de Ionic.
  *
- * Los valores vienen de docs/checklist-accesibilidad.md, donde ya estaban
- * calculadas las razones de contraste WCAG 2.1 AA:
- *   - Verde finca  #15803D sobre blanco ......... 5.0:1  (boton primario)
- *   - Texto        #1E293B sobre blanco ........ 16.1:1  (cuerpo)
- *   - Encabezados  #0F172A sobre #F8FAFC ....... 17.0:1
- *   - Estado activo #166534 sobre #DCFCE7 ....... 5.6:1
- *   - Alerta       #991B1B sobre #FEE2E2 ........ 7.5:1
+ * Identidad: lienzo crema cálido + verde bosque (sidebar / marca) + oliva (acción).
+ * Todos los pares texto/fondo cumplen WCAG 2.1 AA (>= 4.5:1 texto normal,
+ * >= 3:1 bordes de controles, íconos y anillo de foco). Razones calculadas:
  *
- * Los tonos -shade y -tint son los que Ionic usa para los estados
- * presionado y resaltado de cada componente.
+ *   Blanco     sobre oliva primario  #55622F ... 6.62:1  (botón primario)
+ *   Blanco     sobre oliva activo    #606C38 ... 5.68:1
+ *   #F7F5E8    sobre oliva activo    #606C38 ... 5.18:1  (ítem activo del sidebar)
+ *   #F7F5E8    sobre bosque          #283618 ... 11.76:1 (texto del sidebar)
+ *   #C9CFB4    sobre bosque          #283618 ... 8.01:1  (texto secundario sidebar)
+ *   #DDA15E    sobre bosque          #283618 ... 5.72:1  (acento del panel de marca)
+ *   #283618    sobre crema           #FEFAE0 ... 12.24:1 (texto principal)
+ *   #5C6048    sobre crema/blanco    ........... 6.20:1 / 6.52:1 (texto secundario)
+ *   #283618    sobre badge éxito     #E3EBCB ... 10.43:1
+ *   #283618    sobre badge advert.   #F6E3C8 ... 10.26:1
+ *   #B91C1C    sobre badge error     #FEF2F2 ... 5.91:1
+ *   #7A7F62    sobre crema (borde de input) .... 3.96:1 (>= 3:1)
+ *   #283618    sobre crema (anillo de foco) .... 12.24:1 (>= 3:1)
+ *
+ * Regla: el tono tierra (#DDA15E / #BC6C25) NUNCA lleva texto blanco ni se usa
+ * como foco; solo en gráficos, fondos suaves de badge con texto #283618, o
+ * en la versión oscurecida #8A4F14 (blanco 6.54:1) cuando necesita texto claro.
  */
 
 :root {
-  /** primary — verde finca, acciones principales **/
-  --ion-color-primary: #15803d;
-  --ion-color-primary-rgb: 21, 128, 61;
+  /* ---------- Tokens GuateGanado ---------- */
+  --gg-canvas: #fefae0;
+  --gg-canvas-alt: #fcf9e8;
+  --gg-surface: #ffffff;
+  --gg-border: #e7e4d3;
+  --gg-border-strong: #7a7f62;
+
+  --gg-forest: #283618;
+  --gg-forest-soft: #34461f;
+  --gg-olive: #55622f;
+  --gg-olive-hover: #46521f;
+  --gg-olive-pill: #606c38;
+  --gg-on-forest: #f7f5e8;
+  --gg-on-forest-muted: #c9cfb4;
+
+  --gg-ink: #283618;
+  --gg-ink-muted: #5c6048;
+
+  --gg-earth: #dda15e;
+  --gg-earth-dark: #8a4f14;
+  --gg-earth-deep: #bc6c25;
+
+  --gg-success-bg: #e3ebcb;
+  --gg-success-fg: #283618;
+  --gg-warning-bg: #f6e3c8;
+  --gg-warning-fg: #283618;
+  --gg-danger-bg: #fef2f2;
+  --gg-danger-fg: #b91c1c;
+  --gg-neutral-bg: #efece0;
+  --gg-neutral-fg: #4a4a40;
+
+  --gg-disabled-bg: #efece0;
+  --gg-disabled-fg: #7a7a6e;
+  --gg-disabled-border: #d5d2c3;
+
+  --gg-focus: #283618;
+  --gg-focus-on-dark: #f7f5e8;
+
+  --gg-radius: 0.875rem; /* 14px */
+  --gg-radius-lg: 1rem; /* 16px */
+  --gg-shadow: 0 1px 2px rgb(40 54 24 / 6%), 0 4px 14px rgb(40 54 24 / 7%);
+
+  --gg-sidebar-width: 17rem;
+  --gg-sidebar-width-compact: 4.75rem;
+
+  --gg-font: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* ---------- Variables de Ionic ---------- */
+  --ion-font-family: var(--gg-font);
+
+  --ion-color-primary: #55622f;
+  --ion-color-primary-rgb: 85, 98, 47;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #127136;
-  --ion-color-primary-tint: #2c8d50;
+  --ion-color-primary-shade: #4b5629;
+  --ion-color-primary-tint: #667240;
 
-  /** secondary — verde azulado para acciones de apoyo **/
-  --ion-color-secondary: #0f766e;
-  --ion-color-secondary-rgb: 15, 118, 110;
+  --ion-color-secondary: #606c38;
+  --ion-color-secondary-rgb: 96, 108, 56;
   --ion-color-secondary-contrast: #ffffff;
   --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #0d6861;
-  --ion-color-secondary-tint: #27847c;
+  --ion-color-secondary-shade: #54602f;
+  --ion-color-secondary-tint: #707b4b;
 
-  /** tertiary — pizarra para navegacion **/
-  --ion-color-tertiary: #334155;
-  --ion-color-tertiary-rgb: 51, 65, 85;
-  --ion-color-tertiary-contrast: #ffffff;
-  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
-  --ion-color-tertiary-shade: #2d394b;
-  --ion-color-tertiary-tint: #475466;
+  --ion-color-tertiary: #283618;
+  --ion-color-tertiary-rgb: 40, 54, 24;
+  --ion-color-tertiary-contrast: #f7f5e8;
+  --ion-color-tertiary-contrast-rgb: 247, 245, 232;
+  --ion-color-tertiary-shade: #233015;
+  --ion-color-tertiary-tint: #3e4a2e;
 
-  /** success — estado "Activo" **/
-  --ion-color-success: #166534;
-  --ion-color-success-rgb: 22, 101, 52;
+  --ion-color-success: #3b5323;
+  --ion-color-success-rgb: 59, 83, 35;
   --ion-color-success-contrast: #ffffff;
   --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #13592e;
-  --ion-color-success-tint: #2d7448;
+  --ion-color-success-shade: #34491f;
+  --ion-color-success-tint: #4f6439;
 
-  /** warning — estado "Tratamiento" **/
-  --ion-color-warning: #b45309;
-  --ion-color-warning-rgb: 180, 83, 9;
+  /* Advertencia oscurecida: lleva texto blanco (6.54:1), jamás #BC6C25 con blanco */
+  --ion-color-warning: #8a4f14;
+  --ion-color-warning-rgb: 138, 79, 20;
   --ion-color-warning-contrast: #ffffff;
   --ion-color-warning-contrast-rgb: 255, 255, 255;
-  --ion-color-warning-shade: #9e4908;
-  --ion-color-warning-tint: #bc6422;
+  --ion-color-warning-shade: #794512;
+  --ion-color-warning-tint: #965f2c;
 
-  /** danger — errores y alertas sanitarias **/
-  --ion-color-danger: #991b1b;
-  --ion-color-danger-rgb: 153, 27, 27;
+  --ion-color-danger: #b91c1c;
+  --ion-color-danger-rgb: 185, 28, 28;
   --ion-color-danger-contrast: #ffffff;
   --ion-color-danger-contrast-rgb: 255, 255, 255;
-  --ion-color-danger-shade: #871818;
-  --ion-color-danger-tint: #a33232;
+  --ion-color-danger-shade: #a21919;
+  --ion-color-danger-tint: #c03333;
 
-  /** dark **/
-  --ion-color-dark: #0f172a;
-  --ion-color-dark-rgb: 15, 23, 42;
-  --ion-color-dark-contrast: #ffffff;
-  --ion-color-dark-contrast-rgb: 255, 255, 255;
-  --ion-color-dark-shade: #0d1425;
-  --ion-color-dark-tint: #272e3f;
+  --ion-color-dark: #283618;
+  --ion-color-dark-rgb: 40, 54, 24;
+  --ion-color-dark-contrast: #f7f5e8;
+  --ion-color-dark-contrast-rgb: 247, 245, 232;
+  --ion-color-dark-shade: #233015;
+  --ion-color-dark-tint: #3e4a2e;
 
-  /** medium — estado "Vendido" y texto secundario **/
-  --ion-color-medium: #64748b;
-  --ion-color-medium-rgb: 100, 116, 139;
+  --ion-color-medium: #5c6048;
+  --ion-color-medium-rgb: 92, 96, 72;
   --ion-color-medium-contrast: #ffffff;
   --ion-color-medium-contrast-rgb: 255, 255, 255;
-  --ion-color-medium-shade: #58667a;
-  --ion-color-medium-tint: #748297;
+  --ion-color-medium-shade: #515540;
+  --ion-color-medium-tint: #6d715b;
 
-  /** light **/
-  --ion-color-light: #f1f5f9;
-  --ion-color-light-rgb: 241, 245, 249;
-  --ion-color-light-contrast: #0f172a;
-  --ion-color-light-contrast-rgb: 15, 23, 42;
-  --ion-color-light-shade: #d4d8db;
-  --ion-color-light-tint: #f2f6fa;
+  --ion-color-light: #efece0;
+  --ion-color-light-rgb: 239, 236, 224;
+  --ion-color-light-contrast: #283618;
+  --ion-color-light-contrast-rgb: 40, 54, 24;
+  --ion-color-light-shade: #d2d0c5;
+  --ion-color-light-tint: #f1eee3;
 
-  /** Fondo y texto **/
-  --ion-background-color: #f8fafc;
-  --ion-background-color-rgb: 248, 250, 252;
-  --ion-text-color: #1e293b;
-  --ion-text-color-rgb: 30, 41, 59;
+  --ion-background-color: #fefae0;
+  --ion-background-color-rgb: 254, 250, 224;
+  --ion-text-color: #283618;
+  --ion-text-color-rgb: 40, 54, 24;
 
-  --ion-toolbar-background: #15803d;
-  --ion-toolbar-color: #ffffff;
-
+  --ion-toolbar-background: #283618;
+  --ion-toolbar-color: #f7f5e8;
   --ion-item-background: #ffffff;
   --ion-card-background: #ffffff;
+  --ion-tab-bar-background: #ffffff;
+  --ion-tab-bar-color: #5c6048;
+  --ion-tab-bar-color-selected: #283618;
+  --ion-tab-bar-border-color: #e7e4d3;
 
-  /** Áreas seguras del dispositivo (muescas / barras de navegación) **/
+  /* Áreas seguras (muescas / barras de gestos) */
   --ion-safe-area-top: env(safe-area-inset-top, 0px);
   --ion-safe-area-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/** Modo oscuro: mismo verde de marca, con mas luminosidad para el contraste. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ion-color-primary: #4ade80;
-    --ion-color-primary-rgb: 74, 222, 128;
-    --ion-color-primary-contrast: #052e16;
-    --ion-color-primary-contrast-rgb: 5, 46, 22;
-    --ion-color-primary-shade: #41c370;
-    --ion-color-primary-tint: #5ce18d;
-
-    --ion-color-success: #4ade80;
-    --ion-color-success-rgb: 74, 222, 128;
-    --ion-color-success-contrast: #052e16;
-    --ion-color-success-contrast-rgb: 5, 46, 22;
-    --ion-color-success-shade: #41c370;
-    --ion-color-success-tint: #5ce18d;
-
-    --ion-color-danger: #f87171;
-    --ion-color-danger-rgb: 248, 113, 113;
-    --ion-color-danger-contrast: #450a0a;
-    --ion-color-danger-contrast-rgb: 69, 10, 10;
-    --ion-color-danger-shade: #da6363;
-    --ion-color-danger-tint: #f97f7f;
-
-    --ion-background-color: #0f172a;
-    --ion-background-color-rgb: 15, 23, 42;
-    --ion-text-color: #f1f5f9;
-    --ion-text-color-rgb: 241, 245, 249;
-
-    --ion-toolbar-background: #14532d;
-    --ion-toolbar-color: #f1f5f9;
-
-    --ion-item-background: #1e293b;
-    --ion-card-background: #1e293b;
-  }
+  --ion-safe-area-left: env(safe-area-inset-left, 0px);
+  --ion-safe-area-right: env(safe-area-inset-right, 0px);
 }

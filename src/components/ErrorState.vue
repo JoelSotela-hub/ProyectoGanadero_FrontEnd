@@ -1,36 +1,29 @@
 <template>
-  <div class="error-container ion-text-center ion-padding">
-    <ion-icon :icon="alertCircleOutline" class="error-icon"></ion-icon>
+  <div class="gg-state gg-card" role="alert">
+    <ion-icon :icon="alertCircleOutline" class="gg-state__icon--error" aria-hidden="true" />
     <h3>{{ title || 'Ocurrió un error' }}</h3>
     <p>{{ message || 'No se pudo conectar con el servidor o cargar la información.' }}</p>
-    <ion-button color="primary" @click="$emit('retry')">Reintentar</ion-button>
+    <button type="button" class="gg-btn" @click="$emit('retry')">
+      <ion-icon :icon="refreshOutline" aria-hidden="true" />
+      Reintentar
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { IonIcon, IonButton } from '@ionic/vue';
-import { alertCircleOutline } from 'ionicons/icons';
+import { IonIcon } from '@ionic/vue';
+import { alertCircleOutline, refreshOutline } from 'ionicons/icons';
 
 defineProps<{
   title?: string;
   message?: string;
 }>();
 
-defineEmits(['retry']);
+defineEmits<{ (e: 'retry'): void }>();
 </script>
 
 <style scoped>
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
-  color: var(--ion-color-medium);
-}
-.error-icon {
-  font-size: 64px;
-  color: var(--ion-color-danger);
-  margin-bottom: 16px;
+.gg-state__icon--error {
+  color: var(--gg-danger-fg);
 }
 </style>

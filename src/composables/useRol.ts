@@ -1,15 +1,20 @@
 /**
- * Rol del usuario autenticado (Persona 5).
+ * Rol del usuario autenticado.
  * El backend entrega `role` como 'admin' | 'veterinario' | 'operario'.
  */
 import { computed, type ComputedRef } from 'vue';
 
+import { MODULOS, rolPermitido, type ModuloNavegacion } from '@/config/roles';
 import { useAuthStore } from '@/stores/auth';
 
 export interface UsoRol {
   rol: ComputedRef<string>;
   esAdmin: ComputedRef<boolean>;
+  esVeterinario: ComputedRef<boolean>;
   esOperario: ComputedRef<boolean>;
+  /** Módulos de navegación visibles para el rol actual. */
+  modulosVisibles: ComputedRef<ModuloNavegacion[]>;
+  puedeVer: (clave: string) => boolean;
 }
 
 export function useRol(): UsoRol {
@@ -17,8 +22,16 @@ export function useRol(): UsoRol {
 
   const rol = computed<string>(() => (authStore.user?.role ?? '').toLowerCase());
   const esAdmin = computed<boolean>(() => rol.value === 'admin');
+  const esVeterinario = computed<boolean>(() => rol.value === 'veterinario');
   const esOperario = computed<boolean>(() => rol.value === 'operario');
 
-  return { rol, esAdmin, esOperario };
-}
+  const modulosVisibles = computed<ModuloNavegacion[]>(() =>
+    MODULOS.filter((modulo) => rolPermitido(rol.value, modulo.roles)),
+  );
 
+  function puedeVer(clave: string): boolean {
+    return modulosVisibles.value.some((modulo) => modulo.clave === clave);
+  }
+
+  return { rol, esAdmin, esVeterinario, esOperario, modulosVisibles, puedeVer };
+}

@@ -1,375 +1,364 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Animales</ion-title>
-        <ion-buttons slot="end">
-          <ion-button aria-label="Escanear QR de Vaca" :disabled="escaneando" @click="escanearVaca">
-            <ion-icon slot="icon-only" :icon="qrCodeOutline" />
-          </ion-button>
-          <ion-button v-if="esAdmin" @click="goToForm">
-            <ion-icon slot="icon-only" :icon="add" />
-          </ion-button>
-          <ion-button @click="logout">Salir</ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-      <ion-toolbar>
-        <ion-searchbar v-model="search" placeholder="N° de arete, nombre..." :debounce="300" />
-      </ion-toolbar>
-    </ion-header>
+    <app-header titulo="Animales" />
 
-    <ion-content>
+    <ion-content class="gg-content">
       <ion-refresher slot="fixed" @ionRefresh="onRefresh($event)">
         <ion-refresher-content />
       </ion-refresher>
 
-      <!-- Aviso obligatorio de datos no actualizados cuando se sirve desde cache o no hay red (Persona 4) -->
-      <div
-        v-if="mostrandoAvisoOffline"
-        class="offline-banner ion-padding-horizontal ion-padding-top"
-        role="status"
-        aria-live="polite"
-        data-testid="offline-cache-banner"
-      >
-        <ion-chip color="warning" class="offline-chip">
-          <ion-icon :icon="cloudOfflineOutline" />
-          <ion-label>
+      <div class="gg-page">
+        <header class="gg-page-header">
+          <div>
+            <p class="gg-eyebrow">Inventario del hato</p>
+            <h1 class="gg-title">Animales</h1>
+            <p class="gg-subtitle">Consulta, filtra y administra los animales registrados en la finca.</p>
+          </div>
+          <div class="gg-actions">
+            <button type="button" class="gg-btn gg-btn--outline" :disabled="escaneando" @click="escanearVaca">
+              <ion-icon :icon="qrCodeOutline" aria-hidden="true" />
+              Escanear QR
+            </button>
+            <button v-if="esAdmin" type="button" class="gg-btn" @click="router.push('/tabs/registro')">
+              <ion-icon :icon="addOutline" aria-hidden="true" />
+              Registrar Animal
+            </button>
+          </div>
+        </header>
+
+        <!-- Aviso obligatorio de datos no actualizados (caché offline con marca de tiempo) -->
+        <div
+          v-if="store.mostrandoAvisoOffline"
+          class="gg-alert gg-alert--warning"
+          role="status"
+          data-testid="offline-cache-banner"
+        >
+          <ion-icon :icon="cloudOfflineOutline" aria-hidden="true" />
+          <span>
             <strong>Datos no actualizados</strong> · Modo sin conexión (Última actualización:
-            {{ ultimaActualizacionTexto }})
-          </ion-label>
-        </ion-chip>
+            {{ store.ultimaActualizacionTexto }})
+          </span>
+        </div>
+
+        <!-- Filtros -->
+        <form class="gg-card gg-filters" role="search" aria-label="Filtros de animales" @submit.prevent>
+          <div class="gg-field gg-filters__search">
+            <label class="gg-field__label" for="f-search">Buscar por número de arete</label>
+            <div class="gg-field__control">
+              <input
+                id="f-search"
+                class="gg-input gg-input--icon"
+                type="search"
+                placeholder="Ej: CR-001"
+                autocomplete="off"
+                :value="store.filtros.search"
+                @input="store.buscar(($event.target as HTMLInputElement).value)"
+              />
+              <span class="gg-field__icon"><ion-icon :icon="searchOutline" aria-hidden="true" /></span>
+            </div>
+          </div>
+
+          <div class="gg-field">
+            <label class="gg-field__label" for="f-potrero">Potrero</label>
+            <select
+              id="f-potrero"
+              class="gg-select"
+              :value="store.filtros.potrero_id"
+              @change="store.establecerFiltro('potrero_id', ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">Todos</option>
+              <option v-for="p in catalogos.potreros" :key="p.id" :value="String(p.id)">{{ p.nombre }}</option>
+            </select>
+          </div>
+
+          <div class="gg-field">
+            <label class="gg-field__label" for="f-raza">Raza</label>
+            <select
+              id="f-raza"
+              class="gg-select"
+              :value="store.filtros.raza_id"
+              @change="store.establecerFiltro('raza_id', ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">Todas</option>
+              <option v-for="r in catalogos.razas" :key="r.id" :value="String(r.id)">{{ r.nombre }}</option>
+            </select>
+          </div>
+
+          <div class="gg-field">
+            <label class="gg-field__label" for="f-sexo">Sexo</label>
+            <select
+              id="f-sexo"
+              class="gg-select"
+              :value="store.filtros.sexo"
+              @change="store.establecerFiltro('sexo', ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">Cualquiera</option>
+              <option value="Macho">Macho</option>
+              <option value="Hembra">Hembra</option>
+            </select>
+          </div>
+
+          <div class="gg-field">
+            <label class="gg-field__label" for="f-estado">Estado</label>
+            <select
+              id="f-estado"
+              class="gg-select"
+              :value="store.filtros.estado"
+              @change="store.establecerFiltro('estado', ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">Todos</option>
+              <option v-for="e in ESTADOS_ANIMAL" :key="e" :value="e">{{ e }}</option>
+            </select>
+          </div>
+
+          <div class="gg-field">
+            <label class="gg-field__label" for="f-orden">Ordenar por</label>
+            <select
+              id="f-orden"
+              class="gg-select"
+              :value="store.claveOrden"
+              @change="store.establecerOrden(($event.target as HTMLSelectElement).value)"
+            >
+              <option v-for="o in OPCIONES_ORDEN" :key="o.clave" :value="o.clave">{{ o.etiqueta }}</option>
+            </select>
+          </div>
+
+          <div class="gg-filters__clear">
+            <button
+              v-if="store.hayFiltrosActivos"
+              type="button"
+              class="gg-btn gg-btn--ghost"
+              @click="store.limpiarFiltros()"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        </form>
+
+        <!-- Estado: cargando -->
+        <section v-if="store.loading" class="gg-card gg-card--flush" aria-busy="true" aria-label="Cargando animales">
+          <div v-for="i in 5" :key="i" class="gg-skeleton-row">
+            <span class="gg-skeleton" style="width: 22%" />
+            <span class="gg-skeleton" style="width: 18%" />
+            <span class="gg-skeleton" style="width: 30%" />
+          </div>
+        </section>
+
+        <!-- Estado: error con reintento -->
+        <error-state
+          v-else-if="store.error"
+          title="No se pudo cargar el listado"
+          :message="store.mensajeError"
+          @retry="store.recargar()"
+        />
+
+        <!-- Estado: vacío -->
+        <section v-else-if="!store.items.length" class="gg-card">
+          <empty-state
+            :title="store.hayFiltrosActivos ? 'Sin resultados' : 'Sin animales'"
+            :message="
+              store.hayFiltrosActivos
+                ? 'No hay animales que coincidan con los filtros aplicados.'
+                : 'Aún no hay animales registrados.'
+            "
+          >
+            <button
+              v-if="store.hayFiltrosActivos"
+              type="button"
+              class="gg-btn gg-btn--outline"
+              @click="store.limpiarFiltros()"
+            >
+              Limpiar filtros
+            </button>
+          </empty-state>
+        </section>
+
+        <!-- Estado: datos -->
+        <section v-else class="gg-card gg-card--flush" aria-label="Listado de animales">
+          <p class="gg-count" role="status">{{ store.total }} {{ store.total === 1 ? 'animal' : 'animales' }}</p>
+          <div class="gg-table-wrapper">
+            <table class="gg-table">
+              <caption class="gg-sr-only">
+                Listado de animales
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Arete</th>
+                  <th scope="col">Raza</th>
+                  <th scope="col">Sexo</th>
+                  <th scope="col">Potrero</th>
+                  <th scope="col">Nacimiento</th>
+                  <th scope="col">Estado</th>
+                  <th v-if="esAdmin" scope="col">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="a in store.items" :key="a.id">
+                  <td data-label="Arete">
+                    <a :href="`/detalle/${a.id}`" @click.prevent="router.push(`/detalle/${a.id}`)">{{ a.arete }}</a>
+                  </td>
+                  <td data-label="Raza">{{ a.raza }}</td>
+                  <td data-label="Sexo">{{ a.sexo }}</td>
+                  <td data-label="Potrero">{{ a.potrero }}</td>
+                  <td data-label="Nacimiento">{{ fechaCorta(a.fechaNacimiento) }}</td>
+                  <td data-label="Estado">
+                    <span class="gg-badge" :class="claseEstado(a.estado)">{{ a.estado }}</span>
+                  </td>
+                  <td v-if="esAdmin" data-label="Acciones">
+                    <a
+                      :href="`/tabs/registro?id=${a.id}`"
+                      :aria-label="`Editar animal ${a.arete}`"
+                      @click.prevent="router.push(`/tabs/registro?id=${a.id}`)"
+                      >Editar</a
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
-      <!-- Filtros -->
-      <ion-list lines="full" class="filters-list">
-        <ion-item>
-          <ion-select v-model="filters.potrero" label="Potrero" interface="popover" @ionChange="onFilterChange">
-            <ion-select-option value="">Todos</ion-select-option>
-            <ion-select-option v-for="p in potreros" :key="p.id" :value="String(p.id)">
-              {{ p.nombre }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-        <ion-item>
-          <ion-select v-model="filters.raza" label="Raza" interface="popover" @ionChange="onFilterChange">
-            <ion-select-option value="">Todas</ion-select-option>
-            <ion-select-option v-for="r in razas" :key="r.id" :value="String(r.id)">
-              {{ r.nombre }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-        <ion-item>
-          <ion-select v-model="filters.sexo" label="Sexo" interface="popover" @ionChange="onFilterChange">
-            <ion-select-option value="">Cualquiera</ion-select-option>
-            <ion-select-option value="Macho">Macho</ion-select-option>
-            <ion-select-option value="Hembra">Hembra</ion-select-option>
-          </ion-select>
-        </ion-item>
-        <ion-item>
-          <ion-select v-model="filters.estado" label="Estado" interface="popover" @ionChange="onFilterChange">
-            <ion-select-option value="">Todos</ion-select-option>
-            <ion-select-option value="Activo">Activo</ion-select-option>
-            <ion-select-option value="Tratamiento">En Tratamiento</ion-select-option>
-            <ion-select-option value="Vendido">Vendido</ion-select-option>
-          </ion-select>
-        </ion-item>
-      </ion-list>
-
-      <!-- Estado de error con reintento -->
-      <ErrorState v-if="error" title="No se pudo cargar el listado" :message="errorMessage" @retry="recargar" />
-
-      <!-- Skeleton (carga) -->
-      <ion-grid v-else-if="loading" class="ion-padding-horizontal">
-        <ion-row>
-          <ion-col v-for="i in 4" :key="i" size="12" size-sm="6" size-md="4">
-            <ion-card>
-              <ion-card-header>
-                <ion-skeleton-text :animated="true" style="width: 40%" />
-                <ion-skeleton-text :animated="true" style="width: 70%" />
-              </ion-card-header>
-              <ion-card-content>
-                <ion-skeleton-text :animated="true" />
-                <ion-skeleton-text :animated="true" style="width: 80%" />
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
-
-      <!-- Listado -->
-      <ion-grid v-else class="ion-padding-horizontal">
-        <ion-row>
-          <ion-col v-for="a in animalFiltrado" :key="a.id_animal ?? a.id" size="12" size-sm="6" size-md="4">
-            <ion-card button @click="goToDetail(a.id_animal ?? a.id)">
-              <ion-card-header>
-                <ion-card-subtitle>Arete: {{ a.arete }}</ion-card-subtitle>
-                <ion-card-title>{{ a.nombre }}</ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <p><strong>Raza:</strong> {{ a.raza }}</p>
-                <p><strong>Sexo:</strong> {{ a.sexo }}</p>
-                <p><strong>Potrero:</strong> {{ a.potrero }}</p>
-                <p><strong>Peso:</strong> {{ pesoTexto(a.peso) }}</p>
-                <ion-chip :color="estadoColor(a.estado)" outline>{{ a.estado }}</ion-chip>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-
-        <EmptyState
-          v-if="!animalFiltrado.length"
-          title="Sin animales"
-          message="No hay animales que coincidan con los filtros."
-        />
-      </ion-grid>
-
-      <ion-infinite-scroll :disabled="!hayMas" @ionInfinite="onInfinite($event)">
+      <ion-infinite-scroll :disabled="!store.hayMas" @ionInfinite="onInfinite($event)">
         <ion-infinite-scroll-content loading-spinner="crescent" />
       </ion-infinite-scroll>
-
-      <ion-fab v-if="esAdmin" vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button @click="goToForm">
-          <ion-icon :icon="add" />
-        </ion-fab-button>
-      </ion-fab>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonContent,
-  IonSearchbar,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonSelect,
-  IonSelectOption,
-  IonButtons,
-  IonButton,
   IonIcon,
-  IonGrid,
-  IonRow,
-  IonCol,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonCardContent,
-  IonChip,
-  IonRefresher,
-  IonRefresherContent,
-  IonSkeletonText,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
-  IonFab,
-  IonFabButton,
+  IonPage,
+  IonRefresher,
+  IonRefresherContent,
+  onIonViewWillEnter,
+  onIonViewWillLeave,
 } from '@ionic/vue';
-import { add, cloudOfflineOutline, qrCodeOutline } from 'ionicons/icons';
+import { addOutline, cloudOfflineOutline, qrCodeOutline, searchOutline } from 'ionicons/icons';
+import { onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 
-import ErrorState from '@/components/ErrorState.vue';
+import AppHeader from '@/components/AppHeader.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import ErrorState from '@/components/ErrorState.vue';
 import { useEscanearVaca } from '@/composables/useEscanearVaca';
 import { useRol } from '@/composables/useRol';
-import type { AnimalItem } from '@/models/auth.model';
-import { useAuthStore } from '@/stores/auth';
-import {
-  animalService,
-  catalogoService,
-  formatearMarcaDeTiempo,
-  mostrarError,
-  networkService,
-  type OpcionCatalogo,
-} from '@/services';
+import { mostrarToast, networkService } from '@/services';
+import { ESTADOS_ANIMAL } from '@/stores/animalForm';
+import { OPCIONES_ORDEN, useAnimalesStore } from '@/stores/animales';
+import { useCatalogosStore } from '@/stores/catalogos';
 
 const router = useRouter();
-const authStore = useAuthStore();
-const { escaneando, escanearVaca } = useEscanearVaca();
+const store = useAnimalesStore();
+const catalogos = useCatalogosStore();
 const { esAdmin } = useRol();
-
-const search = ref('');
-const filters = ref({ potrero: '', raza: '', sexo: '', estado: '' });
-
-const loading = ref(true);
-const error = ref(false);
-const errorMessage = ref('');
-
-const animales = ref<AnimalItem[]>([]);
-const razas = ref<OpcionCatalogo[]>([]);
-const potreros = ref<OpcionCatalogo[]>([]);
-
-const paginaActual = ref(1);
-const hayMas = ref(false);
-
-/** Estado de cache y marca de tiempo (Persona 4). */
-const desdeCache = ref(false);
-const ultimaActualizacion = ref<string | null>(null);
-
-const mostrandoAvisoOffline = computed<boolean>(
-  () => desdeCache.value || (!networkService.isOnline.value && animales.value.length > 0),
-);
-
-const ultimaActualizacionTexto = computed<string>(() => formatearMarcaDeTiempo(ultimaActualizacion.value));
-
-/** Tamano de pagina; el backend lo topa en 100. */
-const POR_PAGINA = 15;
-
-/**
- * El filtrado y la busqueda los resuelve la API, no el cliente: solo asi la
- * paginacion es coherente (filtrar en memoria dejaria fuera los registros
- * de las paginas que todavia no se descargaron).
- */
-function filtrosDeConsulta(pagina: number) {
-  return {
-    page: pagina,
-    per_page: POR_PAGINA,
-    search: search.value.trim() || undefined,
-    sexo: filters.value.sexo || undefined,
-    estado: filters.value.estado || undefined,
-    raza_id: filters.value.raza || undefined,
-    potrero_id: filters.value.potrero || undefined,
-    sort_by: 'numero_arete',
-    order: 'asc' as const,
-  };
-}
-
-async function cargar(pagina = 1, anexar = false): Promise<void> {
-  if (!anexar) {
-    loading.value = true;
-    error.value = false;
-    errorMessage.value = '';
-  }
-
-  try {
-    const resultado = await animalService.listar(filtrosDeConsulta(pagina));
-    animales.value = anexar ? [...animales.value, ...resultado.items] : resultado.items;
-    paginaActual.value = resultado.paginacion.paginaActual;
-    hayMas.value = resultado.hayMas;
-    desdeCache.value = Boolean(resultado.desdeCache);
-    ultimaActualizacion.value = resultado.ultimaActualizacion ?? ultimaActualizacion.value;
-  } catch (err) {
-    if (!anexar) {
-      error.value = true;
-      errorMessage.value = err instanceof Error ? err.message : 'No se pudo obtener el listado de animales.';
-      animales.value = [];
-      hayMas.value = false;
-    } else {
-      // Fallo al cargar una pagina adicional: aviso con toast, el listado actual se conserva.
-      await mostrarError(err, 'No se pudo cargar más animales.');
-    }
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function recargar(): Promise<void> {
-  await cargar(1, false);
-}
-
-async function cargarCatalogos(): Promise<void> {
-  try {
-    const [listaRazas, listaPotreros] = await Promise.all([catalogoService.razas(), catalogoService.potreros()]);
-    razas.value = listaRazas;
-    potreros.value = listaPotreros;
-  } catch {
-    // Los catalogos son auxiliares: si fallan, los filtros quedan en "Todos".
-  }
-}
+const { escaneando, escanearVaca } = useEscanearVaca();
 
 let cancelarSuscripcionRed: (() => void) | null = null;
 
 onMounted(() => {
-  cargarCatalogos();
-  cargar(1);
-
-  // Al recuperar la red, refresca automaticamente el listado y los catalogos (Persona 4)
+  // Al recuperar la red, refresca el listado y los catálogos; al perderla, marca los datos como cacheados.
   cancelarSuscripcionRed = networkService.suscribirCambioDeRed((conectado) => {
     if (conectado) {
-      cargarCatalogos();
-      recargar();
-    } else if (animales.value.length > 0) {
-      desdeCache.value = true;
+      void catalogos.cargar(true);
+      void store.recargar();
+    } else {
+      store.marcarSinConexion();
     }
   });
 });
 
 onUnmounted(() => {
   cancelarSuscripcionRed?.();
+  store.cancelarPendiente();
 });
 
-// El ion-searchbar ya trae debounce de 300 ms en la plantilla.
-watch(search, () => {
-  recargar();
+// Al entrar (incluye volver tras registrar/editar un animal) se refresca el listado.
+onIonViewWillEnter(() => {
+  void catalogos.cargar();
+  void store.recargar();
 });
 
-/** El listado ya viene filtrado por la API (o por cache offline). */
-const animalFiltrado = computed<AnimalItem[]>(() => animales.value);
+onIonViewWillLeave(() => {
+  store.cancelarPendiente();
+});
 
-function pesoTexto(peso: number | null | undefined): string {
-  return peso === null || peso === undefined ? 'sin registro' : `${peso} kg`;
+function fechaCorta(fecha?: string): string {
+  if (!fecha) return '—';
+  const [anio, mes, dia] = fecha.slice(0, 10).split('-');
+  return anio && mes && dia ? `${dia}/${mes}/${anio}` : fecha;
 }
 
-function estadoColor(estado: string) {
-  if (estado === 'Activo') return 'success';
-  if (estado === 'Tratamiento') return 'warning';
-  if (estado === 'Vendido') return 'medium';
-  return 'primary';
+function claseEstado(estado: string): string {
+  if (estado === 'Activo') return 'gg-badge--success';
+  if (estado === 'Tratamiento') return 'gg-badge--warning';
+  return 'gg-badge--neutral';
 }
 
-function onFilterChange() {
-  recargar();
+async function onRefresh(evento: CustomEvent): Promise<void> {
+  await store.recargar();
+  (evento.target as HTMLIonRefresherElement).complete();
 }
 
-async function onRefresh(e: CustomEvent) {
-  await cargar(1, false);
-  (e.target as HTMLIonRefresherElement).complete();
-}
-
-async function onInfinite(e: CustomEvent) {
-  if (hayMas.value) {
-    await cargar(paginaActual.value + 1, true);
+async function onInfinite(evento: CustomEvent): Promise<void> {
+  await store.cargarMas();
+  if (store.mensajeError && !store.error) {
+    await mostrarToast(store.mensajeError, 'danger', 4000);
   }
-  (e.target as HTMLIonInfiniteScrollElement).complete();
-}
-
-function goToForm() {
-  router.push('/tabs/registro');
-}
-
-function goToDetail(id: number) {
-  router.push(`/detalle/${id}`);
-}
-
-async function logout() {
-  await authStore.logout();
-  await router.replace('/login');
+  (evento.target as HTMLIonInfiniteScrollElement).complete();
 }
 </script>
 
 <style scoped>
-.filters-list {
-  padding-top: 0;
-}
-.offline-banner {
+.gg-actions {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
-.offline-chip {
-  height: auto;
-  padding: 0.4rem 0.75rem;
-  white-space: normal;
+.gg-filters {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: 1fr;
+  align-items: end;
 }
-.empty-state ion-icon {
-  font-size: 3rem;
+@media (min-width: 40rem) {
+  .gg-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gg-filters__search {
+    grid-column: 1 / -1;
+  }
 }
-.empty-state p {
-  color: var(--ion-color-medium);
-  margin-top: 0.5rem;
+@media (min-width: 62rem) {
+  .gg-filters {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .gg-filters__search {
+    grid-column: 1 / 3;
+  }
+}
+.gg-filters__clear {
+  display: flex;
+  align-items: center;
+}
+.gg-count {
+  margin: 0;
+  padding: 0.9rem 1.25rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gg-ink-muted);
+}
+.gg-skeleton-row {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--gg-border);
+}
+.gg-skeleton-row:first-child {
+  border-top: 0;
 }
 </style>

@@ -97,6 +97,8 @@ export interface FiltrosAnimales {
   potrero_id?: number | string;
   sort_by?: string;
   order?: 'asc' | 'desc';
+  /** Cancela la peticion en curso (debounce / salir de la vista). */
+  signal?: AbortSignal;
 }
 
 /** Datos que acepta POST /animales (StoreAnimalRequest). */
@@ -227,6 +229,7 @@ export const animalService = {
           sort_by: filtros.sort_by,
           order: filtros.order,
         },
+        signal: filtros.signal,
       });
 
       const meta = respuesta.meta;
@@ -243,7 +246,8 @@ export const animalService = {
         !filtros.search && !filtros.sexo && !filtros.estado && !filtros.raza_id && !filtros.potrero_id;
 
       let updatedAt: string;
-      if ((filtros.page ?? 1) === 1 || sinFiltrosActivos) {
+      // Solo el listado SIN filtros reemplaza/amplia la cache: un resultado filtrado nunca la sobrescribe.
+      if (sinFiltrosActivos) {
         const previo = (filtros.page ?? 1) > 1 ? await cacheService.obtenerListado() : null;
         const combinados = previo
           ? [...previo.items, ...items.filter((nuevo) => !previo.items.some((ant) => ant.id === nuevo.id))]

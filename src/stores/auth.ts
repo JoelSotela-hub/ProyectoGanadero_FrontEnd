@@ -104,17 +104,26 @@ export const useAuthStore = defineStore('auth', () => {
       const savedToken = await tokenStorageAdapter.getToken();
       if (savedToken) {
         token.value = savedToken;
+        let primeraCarga = false;
         if (!user.value) {
-          // Persona 5: se recupera el usuario real (con su `role`) guardado en el login
-          // para que la segmentacion Admin/Operario funcione tambien sin conexion.
-          user.value = (await leerUsuarioLocal()) ?? {
-            id: 0,
-            name: 'Usuario GuateGanado',
-            email: '',
-          };
+          // Se recupera el usuario real (con su `role`) guardado localmente
+          // para que la matriz de roles funcione tambien sin conexion.
+          const local = await leerUsuarioLocal();
+          if (local) {
+            user.value = local;
+          } else {
+            primeraCarga = true;
+          }
         }
-        // Refresco en segundo plano: no bloquea la primera ruta si la red es lenta.
-        void refrescarPerfil(savedToken);
+
+        if (primeraCarga) {
+          // Sin perfil local no se conoce el rol: se consulta GET /api/user antes de resolver la ruta.
+          await refrescarPerfil(savedToken);
+          user.value ??= { id: 0, name: 'Usuario GuateGanado', email: '' };
+        } else {
+          // Refresco en segundo plano: no bloquea la primera ruta si la red es lenta.
+          void refrescarPerfil(savedToken);
+        }
       }
     } finally {
       initialized.value = true;
