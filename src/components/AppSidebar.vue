@@ -82,7 +82,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useEscritorio } from '@/composables/useEscritorio';
 import { useRol } from '@/composables/useRol';
 import { ETIQUETA_ROL, type Rol } from '@/config/roles';
-import { authService, cacheService } from '@/services';
+import { authService, cacheService, potreroService } from '@/services';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 
@@ -107,6 +107,7 @@ const iniciales = computed<string>(() => {
 const PREFIJOS: Record<string, string[]> = {
   dashboard: ['/tabs/dashboard', '/tabs/tab1'],
   animales: ['/tabs/animales', '/tabs/registro', '/detalle/', '/items'],
+  potreros: ['/tabs/potreros', '/potreros/'],
   rondas: ['/tabs/rondas', '/rondas/'],
 };
 
@@ -127,6 +128,7 @@ async function cerrarSesion(): Promise<void> {
   await menuController.close('gg-menu');
   await authService.logout();
   await cacheService.limpiar();
+  await potreroService.limpiarCache();
   await authStore.logout();
   await router.replace('/login');
 }

@@ -57,13 +57,11 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'potreros',
         name: 'PotreroList',
-        component: proximamente,
+        component: () => import('@/views/Potreros.vue'),
         meta: {
           requiresAuth: true,
           isRootScreen: true,
           roles: rolesDeModulo('potreros'),
-          titulo: 'Potreros',
-          descripcion: 'Gestión de potreros, capacidad y ocupación.',
         },
       },
       {
@@ -119,6 +117,13 @@ const routes: RouteRecordRaw[] = [
           titulo: 'Catálogos',
           descripcion: 'Razas, categorías y unidades de medida.',
         },
+      },
+      {
+        path: '/potreros/:id',
+        name: 'PotreroDetail',
+        alias: ['/tabs/potreros/:id'],
+        component: () => import('@/views/PotreroDetail.vue'),
+        meta: { requiresAuth: true, roles: rolesDeModulo('potreros') },
       },
       {
         path: '/rondas/:id',
