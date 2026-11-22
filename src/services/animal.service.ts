@@ -49,7 +49,14 @@ export interface AnimalApi {
   tratamientos?: {
     tratamiento_id: number;
     nombre: string;
+    descripcion?: string | null;
     tipo?: string | null;
+    aplicacion?: {
+      tratamiento_animal_id?: number;
+      fecha_aplicacion?: string | null;
+      dosis_ml?: number | string | null;
+      observaciones?: string | null;
+    };
     pivot?: { fecha_aplicacion?: string | null; dosis_ml?: number | string | null; observaciones?: string | null };
   }[];
   created_at?: string;
@@ -148,12 +155,12 @@ export function mapearAnimal(animal: AnimalApi): AnimalItem {
       observaciones: p.observaciones ?? null,
     })),
     tratamientos: animal.tratamientos?.map((t) => ({
-      id: t.tratamiento_id,
+      id: t.aplicacion?.tratamiento_animal_id ?? t.tratamiento_id,
       nombre: t.nombre,
       tipo: t.tipo ?? null,
-      fechaAplicacion: t.pivot?.fecha_aplicacion ?? null,
-      dosisMl: t.pivot?.dosis_ml ?? null,
-      observaciones: t.pivot?.observaciones ?? null,
+      fechaAplicacion: t.aplicacion?.fecha_aplicacion ?? t.pivot?.fecha_aplicacion ?? null,
+      dosisMl: t.aplicacion?.dosis_ml ?? t.pivot?.dosis_ml ?? null,
+      observaciones: t.aplicacion?.observaciones ?? t.pivot?.observaciones ?? null,
     })),
   };
 }
@@ -331,7 +338,9 @@ export const animalService = {
    */
   async obtenerPorQr(codigoQr: string): Promise<AnimalItem> {
     const respuesta = await http.get<{ data: AnimalApi }>(`/animales/qr/${encodeURIComponent(codigoQr.trim())}`);
-    return mapearAnimal(respuesta.data);
+    const mapeado = mapearAnimal(respuesta.data);
+    await cacheService.guardarDetalleAnimal(mapeado);
+    return mapeado;
   },
 
   /** Registra un animal nuevo. */

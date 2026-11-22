@@ -146,6 +146,32 @@ const router = createRouter({
   routes,
 });
 
+const RUTAS_LISTADO_PREFIJOS = [
+  '/tabs/animales',
+  '/tabs/tab2',
+  '/items',
+  '/tabs/potreros',
+  '/tabs/pesajes',
+  '/tabs/tratamientos',
+];
+
+let ultimaRutaListado = '/tabs/animales';
+
+export function esRutaDeListado(ruta?: string | null): boolean {
+  if (!ruta) return false;
+  return RUTAS_LISTADO_PREFIJOS.some((prefijo) => ruta === prefijo || ruta.startsWith(`${prefijo}?`));
+}
+
+export function obtenerRutaListadoAnterior(): string {
+  return ultimaRutaListado || '/tabs/animales';
+}
+
+router.afterEach((to) => {
+  if (esRutaDeListado(to.fullPath)) {
+    ultimaRutaListado = to.fullPath;
+  }
+});
+
 /**
  * Guardián de navegación:
  *  1. Consulta el estado reactivo de la sesión en Pinia (`authStore.isAuthenticated`).
