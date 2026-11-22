@@ -1,215 +1,283 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/rondas" text="Volver" />
-        </ion-buttons>
-        <ion-title>Ronda #{{ rondaId }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
+    <app-header :titulo="`Ronda #${rondaId}`" atras="/tabs/rondas" />
 
-    <ion-content class="ion-padding">
+    <ion-content class="gg-content">
       <ion-refresher slot="fixed" @ionRefresh="onRefresh($event)">
         <ion-refresher-content />
       </ion-refresher>
 
-      <!-- Estado de carga -->
-      <div v-if="loading">
-        <ion-card>
-          <ion-card-header>
-            <ion-skeleton-text :animated="true" style="width: 45%; height: 18px" />
-            <ion-skeleton-text :animated="true" style="width: 75%; height: 26px" />
-          </ion-card-header>
-          <ion-card-content>
-            <ion-skeleton-text :animated="true" style="width: 90%" />
-            <ion-skeleton-text :animated="true" style="width: 65%" />
-          </ion-card-content>
-        </ion-card>
+      <div class="gg-page">
+        <header class="gg-page-header">
+          <div>
+            <p class="gg-eyebrow">Detalle de inspección</p>
+            <h1 class="gg-title">Ronda #{{ rondaId }}</h1>
+            <p class="gg-subtitle">
+              {{
+                ronda
+                  ? `Iniciada el ${formatearFecha(ronda.fecha_inicio)} · ${ronda.total_puntos} potrero(s) visitado(s)`
+                  : 'Consulta los potreros inspeccionados, coordenadas GPS y estado del recorrido.'
+              }}
+            </p>
+          </div>
+          <div class="gg-actions">
+            <button type="button" class="gg-btn gg-btn--outline" @click="router.push('/tabs/rondas')">
+              <ion-icon :icon="arrowBackOutline" aria-hidden="true" />
+              Volver a rondas
+            </button>
+          </div>
+        </header>
+
+        <!-- Estado 1: Carga -->
+        <section v-if="loading" class="gg-card" aria-busy="true" aria-label="Cargando ronda">
+          <div class="gg-skeleton-stack">
+            <span class="gg-skeleton" style="width: 40%; height: 1.1rem" />
+            <span class="gg-skeleton" style="width: 70%; height: 1.5rem" />
+            <span class="gg-skeleton" style="width: 90%" />
+            <span class="gg-skeleton" style="width: 60%" />
+          </div>
+        </section>
+
+        <!-- Estado 2: Error con reintento -->
+        <error-state v-else-if="error" title="No se pudo cargar la ronda" :message="errorMessage" @retry="cargar" />
+
+        <!-- Estado 3: Vacío -->
+        <section v-else-if="!ronda" class="gg-card">
+          <empty-state
+            title="Ronda no encontrada"
+            :message="`No se encontró ninguna ronda con el identificador #${rondaId}.`"
+          />
+        </section>
+
+        <!-- Estado 4: Datos -->
+        <template v-else>
+          <!-- Resumen -->
+          <section class="gg-card" aria-label="Resumen de la ronda">
+            <div class="gg-section-head">
+              <div>
+                <p class="gg-eyebrow">Inicio: {{ formatearFecha(ronda.fecha_inicio) }}</p>
+                <h2 class="gg-section-title">{{ ronda.total_puntos }} potrero(s) visitado(s)</h2>
+              </div>
+              <span
+                class="gg-badge"
+                :class="ronda.estado === 'en_progreso' ? 'gg-badge--warning' : 'gg-badge--success'"
+              >
+                {{ ronda.estado === 'en_progreso' ? 'En progreso' : 'Completada' }}
+              </span>
+            </div>
+
+            <dl class="gg-meta-grid">
+              <div v-if="esAdmin && ronda.operador">
+                <dt>Operario</dt>
+                <dd>
+                  <strong>{{ ronda.operador.name }}</strong>
+                  <span class="gg-muted"> ({{ ronda.operador.email }})</span>
+                </dd>
+              </div>
+              <div v-if="ronda.fecha_fin">
+                <dt>Finalizada</dt>
+                <dd>{{ formatearFecha(ronda.fecha_fin) }}</dd>
+              </div>
+              <div v-if="ronda.observaciones">
+                <dt>Observaciones</dt>
+                <dd>{{ ronda.observaciones }}</dd>
+              </div>
+            </dl>
+
+            <!-- Acciones: solo el operario en una ronda en progreso (sin PUT ni DELETE) -->
+            <div v-if="puedeOperar" class="gg-actions gg-actions--spaced">
+              <button
+                type="button"
+                class="gg-btn"
+                :disabled="procesando"
+                data-testid="btn-registrar-potrero"
+                @click="registrarPotrero"
+              >
+                <ion-icon :icon="qrCodeOutline" aria-hidden="true" />
+                Registrar potrero
+              </button>
+              <button
+                type="button"
+                class="gg-btn gg-btn--outline"
+                :disabled="procesando"
+                data-testid="btn-finalizar-ronda"
+                @click="finalizarRonda"
+              >
+                <ion-icon :icon="checkmarkDoneOutline" aria-hidden="true" />
+                Finalizar ronda
+              </button>
+            </div>
+          </section>
+
+          <!-- Puntos visitados -->
+          <section aria-label="Potreros visitados">
+            <div class="gg-section-head">
+              <h2 class="gg-section-title">Potreros visitados</h2>
+            </div>
+
+            <section v-if="!puntos.length" class="gg-card">
+              <empty-state
+                title="Sin potreros registrados"
+                :message="
+                  puedeOperar
+                    ? 'Escanea el QR de un potrero con «Registrar potrero» para añadirlo a la ronda.'
+                    : 'Esta ronda no tiene potreros registrados.'
+                "
+              />
+            </section>
+
+            <div v-else class="gg-points-grid">
+              <article v-for="p in puntos" :key="p.id" class="gg-card gg-point-card">
+                <div class="gg-section-head">
+                  <div>
+                    <p class="gg-eyebrow">{{ p.potrero?.codigo_qr ?? `Potrero #${p.potrero_id}` }}</p>
+                    <h3 class="gg-point-title">{{ p.potrero?.nombre ?? `Potrero #${p.potrero_id}` }}</h3>
+                  </div>
+                  <span class="gg-badge" :class="claseEstadoPotrero(p.estado_potrero)">
+                    {{ ETIQUETA_ESTADO_POTRERO[p.estado_potrero] ?? p.estado_potrero }}
+                  </span>
+                </div>
+
+                <dl class="gg-meta-grid">
+                  <div>
+                    <dt>Hora</dt>
+                    <dd>{{ formatearFecha(p.registrado_en) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Coordenadas</dt>
+                    <dd class="gg-mono">{{ Number(p.latitud).toFixed(6) }}, {{ Number(p.longitud).toFixed(6) }}</dd>
+                  </div>
+                  <div v-if="p.observacion">
+                    <dt>Observación</dt>
+                    <dd>{{ p.observacion }}</dd>
+                  </div>
+                </dl>
+
+                <div v-if="p.potrero?.codigo_qr" class="gg-qr-block">
+                  <div class="gg-qr-box">
+                    <qrcode-vue :value="p.potrero.codigo_qr" :size="112" level="H" render-as="svg" />
+                  </div>
+                  <span class="gg-mono">{{ p.potrero.codigo_qr }}</span>
+                </div>
+
+                <div class="gg-point-footer">
+                  <a class="gg-btn gg-btn--outline" :href="enlaceMapa(p)" target="_blank" rel="noopener">
+                    <ion-icon :icon="locationOutline" aria-hidden="true" />
+                    Ver en el mapa
+                  </a>
+                </div>
+              </article>
+            </div>
+          </section>
+        </template>
       </div>
 
-      <!-- Estado de error con reintento -->
-      <ErrorState v-else-if="error" title="No se pudo cargar la ronda" :message="errorMessage" @retry="cargar" />
+      <!-- Modal Registrar Potrero (`observacion` singular y `estado_potrero` enum estricto) -->
+      <div
+        v-if="modalAbierto"
+        class="gg-modal-backdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-punto-titulo"
+        data-testid="modal-punto-ronda"
+        @click.self="cerrarModal"
+      >
+        <div class="gg-modal gg-card">
+          <div class="gg-section-head">
+            <div>
+              <p class="gg-eyebrow">Punto de inspección</p>
+              <h2 id="modal-punto-titulo" class="gg-section-title">Registrar potrero</h2>
+            </div>
+            <button
+              type="button"
+              class="gg-btn gg-btn--ghost"
+              aria-label="Cerrar formulario de punto"
+              :disabled="procesando"
+              @click="cerrarModal"
+            >
+              Cancelar
+            </button>
+          </div>
 
-      <!-- Estado vacío: ronda inexistente -->
-      <EmptyState
-        v-else-if="!ronda"
-        title="Ronda no encontrada"
-        :message="`No se encontró ninguna ronda con el identificador #${rondaId}.`"
-      />
+          <form class="gg-modal-form" novalidate @submit.prevent="guardarPunto">
+            <div v-if="errorPunto409" class="gg-alert gg-alert--warning" role="alert" data-testid="punto-error-409">
+              <ion-icon :icon="warningOutline" aria-hidden="true" />
+              <span><strong>Regla de negocio:</strong> {{ errorPunto409 }}</span>
+            </div>
 
-      <div v-else class="detail-container">
-        <!-- Resumen -->
-        <ion-card>
-          <ion-card-header>
-            <div class="header-row">
+            <div class="gg-meta-grid">
               <div>
-                <ion-card-subtitle>Inicio: {{ formatearFecha(ronda.fecha_inicio) }}</ion-card-subtitle>
-                <ion-card-title>{{ ronda.total_puntos }} potrero(s) visitado(s)</ion-card-title>
+                <dt>Código QR del potrero</dt>
+                <dd class="gg-mono">{{ nuevoPunto.codigo_qr }}</dd>
               </div>
-              <ion-chip :color="ronda.estado === 'en_progreso' ? 'warning' : 'success'" outline>
-                {{ ronda.estado === 'en_progreso' ? 'En progreso' : 'Completada' }}
-              </ion-chip>
-            </div>
-          </ion-card-header>
-          <ion-card-content>
-            <!-- Auditoría del admin: quién hizo la ronda -->
-            <p v-if="esAdmin && ronda.operador">
-              <strong>Operario:</strong> {{ ronda.operador.name }}<br />
-              <span class="muted">{{ ronda.operador.email }}</span>
-            </p>
-            <p v-if="ronda.fecha_fin"><strong>Finalizada:</strong> {{ formatearFecha(ronda.fecha_fin) }}</p>
-            <p v-if="ronda.observaciones"><strong>Observaciones:</strong> {{ ronda.observaciones }}</p>
-
-            <!-- Acciones: solo el operario dueño de una ronda en progreso -->
-            <div v-if="puedeOperar" class="actions-block ion-margin-top">
-              <ion-button expand="block" :disabled="procesando" @click="registrarPotrero">
-                <ion-icon slot="start" :icon="qrCodeOutline" />
-                Registrar Potrero
-              </ion-button>
-              <ion-button expand="block" fill="outline" color="success" :disabled="procesando" @click="finalizarRonda">
-                <ion-icon slot="start" :icon="checkmarkDoneOutline" />
-                Finalizar Ronda
-              </ion-button>
-            </div>
-          </ion-card-content>
-        </ion-card>
-
-        <!-- Puntos visitados -->
-        <h2 class="section-title">Potreros visitados</h2>
-
-        <EmptyState
-          v-if="!puntos.length"
-          title="Sin potreros registrados"
-          :message="
-            puedeOperar
-              ? 'Escanea el QR de un potrero con «Registrar Potrero» para añadirlo a la ronda.'
-              : 'Esta ronda no tiene potreros registrados.'
-          "
-        />
-
-        <ion-card v-for="p in puntos" :key="p.id">
-          <ion-card-header>
-            <div class="header-row">
               <div>
-                <ion-card-subtitle>{{ p.potrero?.codigo_qr ?? `Potrero #${p.potrero_id}` }}</ion-card-subtitle>
-                <ion-card-title>{{ p.potrero?.nombre ?? `Potrero #${p.potrero_id}` }}</ion-card-title>
+                <dt>Coordenadas GPS</dt>
+                <dd class="gg-mono">{{ nuevoPunto.latitud.toFixed(6) }}, {{ nuevoPunto.longitud.toFixed(6) }}</dd>
               </div>
-              <ion-chip :color="colorEstado(p.estado_potrero)" outline>
-                {{ ETIQUETA_ESTADO_POTRERO[p.estado_potrero] ?? p.estado_potrero }}
-              </ion-chip>
-            </div>
-          </ion-card-header>
-          <ion-card-content>
-            <p><strong>Hora:</strong> {{ formatearFecha(p.registrado_en) }}</p>
-            <p><strong>Coordenadas:</strong> {{ Number(p.latitud).toFixed(6) }}, {{ Number(p.longitud).toFixed(6) }}</p>
-            <p v-if="p.observacion"><strong>Observación:</strong> {{ p.observacion }}</p>
-
-            <!-- Renderizado visual del QR del potrero (sin imágenes en BD) -->
-            <div v-if="p.potrero?.codigo_qr" class="potrero-qr-block ion-margin-top ion-margin-bottom">
-              <div class="qr-box">
-                <qrcode-vue :value="p.potrero.codigo_qr" :size="120" level="H" render-as="svg" />
-              </div>
-              <p class="qr-code-text">{{ p.potrero.codigo_qr }}</p>
             </div>
 
-            <!-- Sin Leaflet instalado: enlace al mapa para auditar el recorrido -->
-            <ion-button size="small" fill="outline" :href="enlaceMapa(p)" target="_blank" rel="noopener">
-              <ion-icon slot="start" :icon="locationOutline" />
-              Ver en el mapa
-            </ion-button>
-          </ion-card-content>
-        </ion-card>
+            <div class="gg-field">
+              <label class="gg-field__label" for="punto-estado">Estado del potrero *</label>
+              <select
+                id="punto-estado"
+                v-model="nuevoPunto.estado_potrero"
+                class="gg-select"
+                :disabled="procesando"
+                required
+              >
+                <option v-for="(texto, valor) in ETIQUETA_ESTADO_POTRERO" :key="valor" :value="valor">
+                  {{ texto }}
+                </option>
+              </select>
+            </div>
+
+            <div class="gg-field">
+              <label class="gg-field__label" for="punto-observacion">Observación (opcional)</label>
+              <textarea
+                id="punto-observacion"
+                v-model="nuevoPunto.observacion"
+                class="gg-textarea"
+                rows="3"
+                maxlength="500"
+                placeholder="Ej: Cerca en buen estado y bebedero limpio"
+                :disabled="procesando"
+              />
+            </div>
+
+            <div class="gg-modal-actions">
+              <button type="submit" class="gg-btn" :disabled="procesando" data-testid="btn-guardar-punto">
+                {{ procesando ? 'Guardando...' : 'Guardar punto' }}
+              </button>
+              <button type="button" class="gg-btn gg-btn--outline" :disabled="procesando" @click="cerrarModal">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </ion-content>
-
-    <!-- Datos del punto antes de enviarlo (QR y GPS ya capturados) -->
-    <ion-modal :is-open="modalAbierto" @didDismiss="cerrarModal">
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>Registrar Potrero</ion-title>
-          <ion-buttons slot="end">
-            <ion-button @click="cerrarModal">Cancelar</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content class="ion-padding">
-        <ion-list lines="full">
-          <ion-item>
-            <ion-label>
-              <h3>Código QR del potrero</h3>
-              <p>{{ nuevoPunto.codigo_qr }}</p>
-            </ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>
-              <h3>Coordenadas GPS capturadas</h3>
-              <p>{{ nuevoPunto.latitud.toFixed(6) }}, {{ nuevoPunto.longitud.toFixed(6) }}</p>
-            </ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-select v-model="nuevoPunto.estado_potrero" label="Estado del potrero" interface="popover">
-              <ion-select-option v-for="(texto, valor) in ETIQUETA_ESTADO_POTRERO" :key="valor" :value="valor">
-                {{ texto }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-          <ion-item>
-            <ion-textarea
-              v-model="nuevoPunto.observacion"
-              label="Observación (opcional)"
-              label-placement="stacked"
-              :auto-grow="true"
-              :maxlength="500"
-            />
-          </ion-item>
-        </ion-list>
-        <ion-button expand="block" class="ion-margin-top" :disabled="procesando" @click="guardarPunto">
-          Guardar punto
-        </ion-button>
-      </ion-content>
-    </ion-modal>
 
     <ion-loading :is-open="procesando" message="Procesando..." />
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
-import { useRoute } from 'vue-router';
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
+  alertController,
   IonContent,
-  IonButtons,
-  IonBackButton,
-  IonButton,
   IonIcon,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonCardContent,
-  IonChip,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonSelect,
-  IonSelectOption,
-  IonTextarea,
-  IonModal,
+  IonLoading,
+  IonPage,
   IonRefresher,
   IonRefresherContent,
-  IonSkeletonText,
-  IonLoading,
-  alertController,
   onIonViewWillEnter,
 } from '@ionic/vue';
-import { checkmarkDoneOutline, locationOutline, qrCodeOutline } from 'ionicons/icons';
+import { arrowBackOutline, checkmarkDoneOutline, locationOutline, qrCodeOutline, warningOutline } from 'ionicons/icons';
 import QrcodeVue from 'qrcode.vue';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
+import AppHeader from '@/components/AppHeader.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import { useRol } from '@/composables/useRol';
@@ -234,17 +302,19 @@ import {
 } from '@/services';
 
 const route = useRoute();
+const router = useRouter();
 const { esAdmin, esOperario } = useRol();
 
 const rondaId = computed<string>(() => String(route.params.id ?? ''));
 
-const loading = ref(true);
-const error = ref(false);
-const errorMessage = ref('');
-const procesando = ref(false);
+const loading = ref<boolean>(true);
+const error = ref<boolean>(false);
+const errorMessage = ref<string>('');
+const procesando = ref<boolean>(false);
 const ronda = ref<Ronda | null>(null);
+const errorPunto409 = ref<string>('');
 
-const modalAbierto = ref(false);
+const modalAbierto = ref<boolean>(false);
 const nuevoPunto = reactive<Required<Omit<NuevoPuntoRonda, 'observacion'>> & { observacion: string }>({
   codigo_qr: '',
   latitud: 0,
@@ -260,10 +330,10 @@ const puntos = computed<PuntoRonda[]>(() => ronda.value?.puntos ?? []);
 /** Solo el operario puede registrar potreros y finalizar, y solo en rondas en progreso. */
 const puedeOperar = computed<boolean>(() => esOperario.value && ronda.value?.estado === 'en_progreso');
 
-function colorEstado(estado: EstadoPotrero): string {
-  if (estado === 'bueno') return 'success';
-  if (estado === 'regular') return 'warning';
-  return 'danger';
+function claseEstadoPotrero(estado: EstadoPotrero): string {
+  if (estado === 'bueno') return 'gg-badge--success';
+  if (estado === 'regular') return 'gg-badge--warning';
+  return 'gg-badge--danger';
 }
 
 function enlaceMapa(punto: PuntoRonda): string {
@@ -295,14 +365,13 @@ async function onRefresh(e: CustomEvent): Promise<void> {
 }
 
 /**
- * Registrar potrero: permisos de camara y GPS -> escanear QR -> capturar
- * coordenadas reales en ese instante -> elegir estado y observacion.
+ * Registrar potrero: permisos de cámara y GPS -> escanear QR -> capturar
+ * coordenadas reales en ese instante -> elegir estado y observación.
  */
 async function registrarPotrero(): Promise<void> {
   if (procesando.value || !ronda.value) return;
 
   try {
-    // Se validan ambos permisos antes de empezar, para no escanear y fallar despues.
     if (!(await asegurarPermiso('camara'))) return;
     if (!(await asegurarPermiso('ubicacion'))) return;
 
@@ -319,6 +388,7 @@ async function registrarPotrero(): Promise<void> {
     nuevoPunto.longitud = coordenadas.longitud;
     nuevoPunto.estado_potrero = 'bueno';
     nuevoPunto.observacion = '';
+    errorPunto409.value = '';
     modalAbierto.value = true;
   } catch (err) {
     await mostrarError(err, 'No se pudo preparar el registro del potrero.');
@@ -328,12 +398,15 @@ async function registrarPotrero(): Promise<void> {
 }
 
 function cerrarModal(): void {
+  if (procesando.value) return;
   modalAbierto.value = false;
+  errorPunto409.value = '';
 }
 
 async function guardarPunto(): Promise<void> {
   if (procesando.value || !ronda.value) return;
   procesando.value = true;
+  errorPunto409.value = '';
 
   try {
     await rondaService.registrarPunto(ronda.value.id, {
@@ -347,9 +420,24 @@ async function guardarPunto(): Promise<void> {
     await mostrarToast('Potrero registrado en la ronda.', 'success');
     await cargar();
   } catch (err) {
-    // 409: ronda completada o potrero repetido -> `mensaje` del backend.
-    // 404/422: QR inexistente o datos invalidos.
-    await mostrarError(err, 'No se pudo registrar el potrero.');
+    if (err instanceof ApiError && err.status === 409) {
+      // 409: ronda completada o potrero repetido en la misma ronda.
+      errorPunto409.value = err.message;
+      const alerta = await alertController.create({
+        header: 'No se pudo registrar el punto',
+        subHeader: 'Regla de negocio',
+        message: err.message,
+        buttons: ['Entendido'],
+      });
+      await alerta.present();
+      await mostrarToast(err.message, 'warning', 5000);
+      if (err.message.toLowerCase().includes('completada')) {
+        modalAbierto.value = false;
+        await cargar();
+      }
+    } else {
+      await mostrarError(err, 'No se pudo registrar el potrero.');
+    }
   } finally {
     procesando.value = false;
   }
@@ -377,7 +465,20 @@ async function finalizarRonda(): Promise<void> {
     await mostrarToast('Ronda finalizada.', 'success');
     await cargar();
   } catch (err) {
-    await mostrarError(err, 'No se pudo finalizar la ronda.');
+    if (err instanceof ApiError && err.status === 409) {
+      // 409: la ronda ya se encuentra finalizada.
+      const alertaConflicto = await alertController.create({
+        header: 'Ronda ya finalizada',
+        subHeader: 'Regla de negocio',
+        message: err.message,
+        buttons: ['Entendido'],
+      });
+      await alertaConflicto.present();
+      await mostrarToast(err.message, 'warning', 5000);
+      await cargar();
+    } else {
+      await mostrarError(err, 'No se pudo finalizar la ronda.');
+    }
   } finally {
     procesando.value = false;
   }
@@ -386,6 +487,7 @@ async function finalizarRonda(): Promise<void> {
 let cancelarSuscripcionRed: (() => void) | null = null;
 
 onMounted(() => {
+  void cargar();
   cancelarSuscripcionRed = networkService.suscribirCambioDeRed((conectado) => {
     if (conectado && !modalAbierto.value) void cargar();
   });
@@ -401,46 +503,129 @@ onIonViewWillEnter(() => {
 </script>
 
 <style scoped>
-.detail-container {
-  max-width: 640px;
-  margin: 0 auto;
-}
-.header-row {
+.gg-actions {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.65rem;
 }
-.actions-block {
+
+.gg-actions--spaced {
+  margin-top: 1.25rem;
+}
+
+.gg-skeleton-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
-.section-title {
-  font-size: 1.1rem;
-  margin: 1.25rem 0 0.25rem;
+
+.gg-meta-grid {
+  display: grid;
+  gap: 0.75rem 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  margin: 0;
 }
-.muted {
-  color: var(--ion-color-medium);
+
+.gg-meta-grid dt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gg-ink-muted);
+  margin-bottom: 0.2rem;
+}
+
+.gg-meta-grid dd {
+  margin: 0;
+  color: var(--gg-ink);
+  font-size: 0.92rem;
+}
+
+.gg-muted {
+  color: var(--gg-ink-muted);
   font-size: 0.85rem;
 }
-.potrero-qr-block {
+
+.gg-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.84rem;
+}
+
+.gg-points-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 48rem) {
+  .gg-points-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.gg-point-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.gg-point-title {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gg-ink);
+}
+
+.gg-qr-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border-radius: var(--gg-radius);
+  background: var(--gg-canvas-alt);
 }
-.qr-box {
+
+.gg-qr-box {
   background: #ffffff;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
   display: inline-flex;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gg-border);
 }
-.qr-code-text {
-  margin: 0;
-  font-family: monospace;
-  font-size: 0.9rem;
-  font-weight: 700;
+
+.gg-point-footer {
+  margin-top: auto;
+}
+
+.gg-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgb(40 54 24 / 48%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.gg-modal {
+  width: 100%;
+  max-width: 34rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.gg-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gg-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
 }
 </style>
