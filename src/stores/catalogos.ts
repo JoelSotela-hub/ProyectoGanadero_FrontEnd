@@ -9,11 +9,17 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-import { catalogoService, type Categoria, type OpcionCatalogo, type UnidadMedida } from '@/services';
+import {
+  catalogoService,
+  type Categoria,
+  type OpcionCatalogo,
+  type OpcionPotreroCatalogo,
+  type UnidadMedida,
+} from '@/services';
 
 export const useCatalogosStore = defineStore('catalogos', () => {
   const razas = ref<OpcionCatalogo[]>([]);
-  const potreros = ref<OpcionCatalogo[]>([]);
+  const potreros = ref<OpcionPotreroCatalogo[]>([]);
   const categorias = ref<Categoria[]>([]);
   const unidadesMedida = ref<UnidadMedida[]>([]);
 

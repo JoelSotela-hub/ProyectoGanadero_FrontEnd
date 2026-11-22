@@ -434,13 +434,30 @@ export const usePotreroStore = defineStore('potrero', () => {
   });
 
   /**
-   * Ocupación real del potrero calculada con `meta.total / capacidad_maxima`
-   * (ya que `PotreroResource` no incluye contador de ocupación).
+   * Ocupación real del potrero.
+   * Usa prioritariamente `ocupacion_actual` y `espacios_disponibles` devueltos
+   * por `PotreroResource` (que excluyen animales en estado `'Vendido'`), manteniendo
+   * fallback a `animalesMeta.value?.total ?? animalesPotrero.value.length` únicamente
+   * si `ocupacion_actual` no viniera definido (compatibilidad con mocks antiguos).
    */
   const ocupacion = computed<ResumenOcupacionPotrero>(() => {
-    const ocupados = animalesMeta.value?.total ?? animalesPotrero.value.length;
     const capacidad = detalle.value?.capacidad_maxima ?? 0;
-    const disponibles = Math.max(0, capacidad - ocupados);
+    const tieneOcupacionBackend =
+      detalle.value !== null &&
+      detalle.value.tiene_ocupacion_api !== false &&
+      typeof detalle.value.ocupacion_actual === 'number' &&
+      Number.isFinite(detalle.value.ocupacion_actual);
+
+    const ocupados = tieneOcupacionBackend
+      ? detalle.value!.ocupacion_actual
+      : (animalesMeta.value?.total ?? animalesPotrero.value.length);
+
+    const disponibles =
+      tieneOcupacionBackend &&
+      typeof detalle.value?.espacios_disponibles === 'number' &&
+      Number.isFinite(detalle.value.espacios_disponibles)
+        ? detalle.value.espacios_disponibles
+        : Math.max(0, capacidad - ocupados);
 
     if (capacidad <= 0) {
       const porcentaje = ocupados > 0 ? 100 : 0;
@@ -457,7 +474,7 @@ export const usePotreroStore = defineStore('potrero', () => {
     const porcentajeReal = Math.round((ocupados / capacidad) * 100);
     const porcentajeBarra = Math.min(100, Math.max(0, porcentajeReal));
     let nivel: ResumenOcupacionPotrero['nivel'] = 'normal';
-    if (porcentajeReal >= 90 || ocupados >= capacidad) {
+    if (porcentajeReal >= 90 || ocupados >= capacidad || disponibles === 0) {
       nivel = 'danger';
     } else if (porcentajeReal >= 75) {
       nivel = 'warning';

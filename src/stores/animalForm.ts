@@ -64,6 +64,8 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
   const errores = reactive<Record<CampoAnimal, string>>(erroresVacios());
 
   const editingId = ref<string | null>(null);
+  /** Potrero originalmente asignado al animal cuando se carga en modo edición. */
+  const originalPotreroId = ref<string>('');
   const cargando = ref<boolean>(false);
   const guardando = ref<boolean>(false);
   const errorCarga = ref<string>('');
@@ -85,6 +87,7 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
     limpiarErrores();
     errorCarga.value = '';
     editingId.value = id;
+    originalPotreroId.value = '';
 
     if (!id) return;
 
@@ -95,6 +98,7 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
       form.codigo_qr = animal.codigo_qr ?? animal.codigoQr ?? '';
       form.raza_id = animal.razaId ? String(animal.razaId) : '';
       form.potrero_id = animal.potreroId ? String(animal.potreroId) : '';
+      originalPotreroId.value = form.potrero_id;
       form.sexo = animal.sexo ?? '';
       form.fecha_nacimiento = (animal.fechaNacimiento ?? '').slice(0, 10);
       form.estado = animal.estado ?? 'Activo';
@@ -207,6 +211,7 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
     form,
     errores,
     editingId,
+    originalPotreroId,
     esEdicion,
     cargando,
     guardando,
