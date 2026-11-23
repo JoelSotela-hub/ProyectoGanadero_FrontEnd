@@ -206,10 +206,20 @@
               <aside v-if="codigoQrValor" class="gg-card gg-qr-card" aria-labelledby="sec-qr-animal">
                 <p class="gg-eyebrow">Identificación por escáner</p>
                 <h2 id="sec-qr-animal" class="gg-section-title">Código QR del animal</h2>
-                <div class="gg-qr-box">
+                <div ref="qrContenedorRef" class="gg-qr-box" data-testid="qr-animal-visual">
                   <qrcode-vue :value="codigoQrValor" :size="176" level="H" render-as="svg" />
                 </div>
                 <p class="gg-qr-text">{{ codigoQrValor }}</p>
+                <button
+                  type="button"
+                  class="gg-btn gg-btn--outline gg-btn--block"
+                  :disabled="descargandoQr"
+                  data-testid="btn-descargar-qr"
+                  @click="descargarQrAnimal"
+                >
+                  <ion-icon :icon="downloadOutline" aria-hidden="true" />
+                  {{ descargandoQr ? 'Generando PNG...' : 'Descargar QR' }}
+                </button>
               </aside>
             </div>
           </div>
@@ -762,6 +772,7 @@ import {
   arrowBackOutline,
   cloudOfflineOutline,
   createOutline,
+  downloadOutline,
   medkitOutline,
   removeOutline,
   scaleOutline,
@@ -780,6 +791,7 @@ import { useRol } from '@/composables/useRol';
 import { esRutaDeListado, obtenerRutaListadoAnterior } from '@/router';
 import { mostrarToast, networkService } from '@/services';
 import { useAnimalDetalleStore } from '@/stores/animalDetalle';
+import { descargarQrPng } from '@/utils/qrDownload';
 
 type TabFicha = 'resumen' | 'pesajes' | 'sanidad';
 
@@ -800,6 +812,8 @@ const animalId = computed<string>(() => String(route.params.id ?? ''));
 const tabActiva = ref<TabFicha>('resumen');
 const modalPesajeAbierto = ref<boolean>(false);
 const modalTratamientoAbierto = ref<boolean>(false);
+const qrContenedorRef = ref<HTMLElement | null>(null);
+const descargandoQr = ref<boolean>(false);
 
 const tituloHeader = computed<string>(() => (store.animal ? `Arete ${store.animal.arete}` : 'Detalle del Animal'));
 
@@ -809,6 +823,25 @@ const codigoQrValor = computed<string>(() => {
   if (!store.animal) return '';
   return store.animal.codigo_qr || store.animal.codigoQr || `VACA-${store.animal.arete}`;
 });
+
+async function descargarQrAnimal(): Promise<void> {
+  if (!store.animal || !codigoQrValor.value || !qrContenedorRef.value || descargandoQr.value) return;
+
+  descargandoQr.value = true;
+  try {
+    const resultado = await descargarQrPng({
+      elementoContenedor: qrContenedorRef.value,
+      titulo: store.animal.arete,
+      subtitulo: codigoQrValor.value,
+      nombreArchivo: `QR_${store.animal.arete}_${codigoQrValor.value}`,
+    });
+    await mostrarToast(`Código QR descargado como ${resultado.nombreArchivo}`, 'success', 2800);
+  } catch {
+    await mostrarToast('No se pudo descargar el código QR.', 'danger', 3500);
+  } finally {
+    descargandoQr.value = false;
+  }
+}
 
 const textoVariacionPeso = computed<string>(() => {
   const diff = store.resumenPesajes.diferenciaKg;
@@ -1037,10 +1070,10 @@ onUnmounted(() => {
 }
 
 .gg-segment ion-segment-button {
-  --color: var(--gg-ink-muted);
-  --color-checked: #283618;
-  --indicator-color: #283618;
-  --background-checked: rgba(96, 108, 56, 0.12);
+  --color: var(--gg-segment-color, var(--gg-ink-muted));
+  --color-checked: var(--gg-segment-color-checked, var(--gg-ink));
+  --indicator-color: var(--gg-segment-indicator, var(--gg-ink));
+  --background-checked: var(--gg-segment-bg-checked, rgba(96, 108, 56, 0.12));
   --border-radius: 0.65rem;
   font-weight: 600;
   min-height: 2.5rem;

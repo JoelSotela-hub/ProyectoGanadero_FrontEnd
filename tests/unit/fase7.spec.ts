@@ -6,20 +6,17 @@ import { createMemoryHistory, createRouter } from 'vue-router';
 
 import App from '@/App.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
-import {
-  alternarTema,
-  CLASES_TEMA_OSCURO,
-  CLAVE_TEMA,
-  inicializarTema,
-  useTheme,
-} from '@/composables/useTheme';
+import { alternarTema, CLASES_TEMA_OSCURO, CLAVE_TEMA, inicializarTema, useTheme } from '@/composables/useTheme';
 import { http, networkService } from '@/services';
 import { useAnimalesStore } from '@/stores/animales';
 import { useAuthStore } from '@/stores/auth';
 import { usePotreroStore } from '@/stores/potrero';
 import { construirNombreArchivoCsv, exportarCsv, generarCsv, type ColumnaCsv } from '@/utils/csv';
+import { descargarQrPng, normalizarNombreArchivoQr } from '@/utils/qrDownload';
 import Animal from '@/views/Animal.vue';
+import AnimalDetail from '@/views/AnimalDetail.vue';
 import LoginPage from '@/views/LoginPage.vue';
+import PotreroDetail from '@/views/PotreroDetail.vue';
 import Potreros from '@/views/Potreros.vue';
 
 const mockPreferencesStore = new Map<string, string>();
@@ -68,8 +65,8 @@ function crearRouterPruebas() {
       { path: '/tabs/dashboard', component: { template: '<div>Dashboard</div>' } },
       { path: '/tabs/animales', component: Animal },
       { path: '/tabs/potreros', component: Potreros },
-      { path: '/potreros/:id', component: { template: '<div>Detalle Potrero</div>' } },
-      { path: '/detalle/:id', component: { template: '<div>Detalle Animal</div>' } },
+      { path: '/potreros/:id', component: PotreroDetail },
+      { path: '/detalle/:id', component: AnimalDetail },
       { path: '/tabs/registro', component: { template: '<div>Registro</div>' } },
       { path: '/tabs/rondas', component: { template: '<div>Rondas</div>' } },
       { path: '/tabs/pesajes', component: { template: '<div>Pesajes</div>' } },
@@ -104,6 +101,7 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
   const originalMatchMedia = window.matchMedia;
   const originalCreateObjectURL = URL.createObjectURL;
   const originalRevokeObjectURL = URL.revokeObjectURL;
+  const originalImage = window.Image;
 
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -135,6 +133,11 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     });
     URL.createObjectURL = originalCreateObjectURL;
     URL.revokeObjectURL = originalRevokeObjectURL;
+    Object.defineProperty(window, 'Image', {
+      configurable: true,
+      writable: true,
+      value: originalImage,
+    });
   });
 
   test('1. generarCsv y exportarCsv aplican BOM UTF-8, escapan caracteres especiales y descargan con fecha', async () => {
@@ -175,11 +178,11 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     URL.createObjectURL = createObjectUrlSpy;
     URL.revokeObjectURL = revokeObjectUrlSpy;
 
-    const clickSpy = vi
-      .spyOn(HTMLAnchorElement.prototype, 'click')
-      .mockImplementation(function (this: HTMLAnchorElement) {
-        nombreDescarga = this.download;
-      });
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      nombreDescarga = this.download;
+    });
 
     const resultado = exportarCsv('potreros', columnas, filas, fechaFija);
 
@@ -416,5 +419,263 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     expect(wrapper.find('[data-testid="gg-boot-splash"]').exists()).toBe(false);
 
     wrapper.unmount();
+  });
+
+  function prepararMocksQrPng() {
+    const urlsCreadas: string[] = [];
+    const urlsRevocadas: string[] = [];
+    const fondosPintados: string[] = [];
+    const coloresTexto: string[] = [];
+    let nombreDescarga = '';
+    let indiceUrl = 0;
+
+    URL.createObjectURL = vi.fn(() => {
+      indiceUrl += 1;
+      const url = `blob:gg-qr-${indiceUrl}`;
+      urlsCreadas.push(url);
+      return url;
+    });
+    URL.revokeObjectURL = vi.fn((url: string) => {
+      urlsRevocadas.push(url);
+    });
+
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      nombreDescarga = this.download;
+    });
+
+    const mockCtx = {
+      fillStyle: '',
+      font: '',
+      textAlign: 'start' as CanvasTextAlign,
+      textBaseline: 'alphabetic' as CanvasTextBaseline,
+      imageSmoothingEnabled: true,
+      fillRect: vi.fn((_x: number, _y: number, _w: number, _h: number) => {
+        fondosPintados.push(String(mockCtx.fillStyle));
+      }),
+      drawImage: vi.fn(),
+      fillText: vi.fn((_texto: string, _x: number, _y: number) => {
+        coloresTexto.push(String(mockCtx.fillStyle));
+      }),
+    };
+
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
+      (() => mockCtx) as unknown as HTMLCanvasElement['getContext'],
+    );
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback) => {
+      callback(new Blob(['png-mock'], { type: 'image/png' }));
+    });
+
+    class MockImage {
+      onload: ((ev: Event) => void) | null = null;
+      onerror: ((ev: Event) => void) | null = null;
+      private _src = '';
+      get src(): string {
+        return this._src;
+      }
+      set src(valor: string) {
+        this._src = valor;
+        queueMicrotask(() => {
+          this.onload?.(new Event('load'));
+        });
+      }
+    }
+
+    Object.defineProperty(window, 'Image', {
+      configurable: true,
+      writable: true,
+      value: MockImage,
+    });
+
+    return {
+      mockCtx,
+      urlsCreadas,
+      urlsRevocadas,
+      fondosPintados,
+      coloresTexto,
+      obtenerNombreDescarga: () => nombreDescarga,
+    };
+  }
+
+  test('6. normalizarNombreArchivoQr y descargarQrPng generan tarjeta blanca imprimible desde SVG y Canvas y liberan URLs', async () => {
+    expect(normalizarNombreArchivoQr('QR_ART-000001_VACA-001')).toBe('QR_ART-000001_VACA-001.png');
+    expect(normalizarNombreArchivoQr('QR_ART-000001_VACA-001.png')).toBe('QR_ART-000001_VACA-001.png');
+    expect(normalizarNombreArchivoQr('QR_Potrero_La Cañada / #1_POT-001')).toBe('QR_Potrero_La_Cañada_#1_POT-001.png');
+
+    const entorno = prepararMocksQrPng();
+
+    // Caso 1: contenedor con <svg>
+    const contenedorSvg = document.createElement('div');
+    contenedorSvg.innerHTML = '<svg viewBox="0 0 29 29"><path d="M0 0h1v1z" /></svg>';
+
+    const resSvg = await descargarQrPng({
+      elementoContenedor: contenedorSvg,
+      titulo: 'ART-000001',
+      subtitulo: 'VACA-001',
+      nombreArchivo: 'QR_ART-000001_VACA-001',
+    });
+
+    expect(resSvg.nombreArchivo).toBe('QR_ART-000001_VACA-001.png');
+    expect(resSvg.ancho).toBe(656);
+    expect(resSvg.alto).toBeGreaterThan(resSvg.ancho);
+    expect(entorno.fondosPintados).toEqual(['#ffffff']);
+    expect(entorno.mockCtx.fillRect).toHaveBeenCalledWith(0, 0, resSvg.ancho, resSvg.alto);
+    expect(entorno.mockCtx.drawImage).toHaveBeenCalledWith(expect.anything(), 72, 72, 512, 512);
+    expect(entorno.mockCtx.fillText).toHaveBeenNthCalledWith(
+      1,
+      'ART-000001',
+      resSvg.ancho / 2,
+      expect.any(Number),
+      expect.any(Number),
+    );
+    expect(entorno.mockCtx.fillText).toHaveBeenNthCalledWith(
+      2,
+      'VACA-001',
+      resSvg.ancho / 2,
+      expect.any(Number),
+      expect.any(Number),
+    );
+    expect(entorno.coloresTexto).toEqual(['#000000', '#111111']);
+    expect(entorno.obtenerNombreDescarga()).toBe('QR_ART-000001_VACA-001.png');
+    expect(entorno.urlsCreadas).toHaveLength(2);
+    expect(entorno.urlsRevocadas).toEqual(entorno.urlsCreadas);
+
+    // Caso 2: contenedor con <canvas>
+    entorno.mockCtx.drawImage.mockClear();
+    const contenedorCanvas = document.createElement('div');
+    const canvasQr = document.createElement('canvas');
+    contenedorCanvas.appendChild(canvasQr);
+
+    const resCanvas = await descargarQrPng({
+      elementoContenedor: contenedorCanvas,
+      titulo: 'POT-001',
+      nombreArchivo: 'QR_POT-001',
+    });
+
+    expect(resCanvas.nombreArchivo).toBe('QR_POT-001.png');
+    expect(entorno.mockCtx.drawImage).toHaveBeenCalledWith(canvasQr, 72, 72, 512, 512);
+    expect(entorno.obtenerNombreDescarga()).toBe('QR_POT-001.png');
+    expect(entorno.urlsRevocadas).toEqual(entorno.urlsCreadas);
+
+    // Caso 3: validaciones de contenedor ausente o sin QR
+    await expect(descargarQrPng({ elementoContenedor: null, titulo: 'X', nombreArchivo: 'X' })).rejects.toThrow(
+      /contenedor/i,
+    );
+    await expect(
+      descargarQrPng({ elementoContenedor: document.createElement('div'), titulo: 'X', nombreArchivo: 'X' }),
+    ).rejects.toThrow(/código QR/i);
+  });
+
+  test('7. AnimalDetail.vue y PotreroDetail.vue exponen botón Descargar QR visible para roles autenticados y disparan descarga PNG + toast', async () => {
+    const entorno = prepararMocksQrPng();
+
+    const authStore = useAuthStore();
+    authStore.user = { id: 2, name: 'Operario Campo', email: 'op@finca.gt', role: 'operario' };
+
+    const router = crearRouterPruebas();
+    await router.push('/detalle/5');
+    await router.isReady();
+
+    vi.spyOn(http, 'get').mockImplementation(async (ruta: string) => {
+      if (ruta === '/animales/5') {
+        return {
+          data: {
+            id_animal: 5,
+            numero_arete: 'ART-000001',
+            codigo_qr: 'VACA-001',
+            sexo: 'Hembra',
+            fecha_nacimiento: '2023-04-15',
+            estado: 'Activo',
+            raza_id: 1,
+            potrero_id: 2,
+            raza: { raza_id: 1, nombre: 'Brahman' },
+            potrero: { potrero_id: 2, nombre: 'Potrero Norte' },
+          },
+        };
+      }
+      if (ruta === '/potreros/1') {
+        return {
+          data: {
+            potrero_id: 1,
+            nombre: 'Potrero Norte',
+            codigo_qr: 'POT-001',
+            hectareas_de_extension: 18,
+            capacidad_maxima: 30,
+            estado_pasto: 'Excelente',
+            ocupacion_actual: 12,
+            espacios_disponibles: 18,
+          },
+        };
+      }
+      if (ruta === '/potreros/1/animales') {
+        return {
+          data: [],
+          meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 },
+          links: { first: null, last: null, prev: null, next: null },
+        };
+      }
+      throw new Error(`Ruta inesperada: ${ruta}`);
+    });
+
+    const animalWrapper = mount(AnimalDetail, { global: { plugins: [router] } });
+    await flushPromises();
+
+    const btnAnimal = animalWrapper.get('[data-testid="btn-descargar-qr"]');
+    await btnAnimal.trigger('click');
+    await flushPromises();
+
+    expect(entorno.obtenerNombreDescarga()).toBe('QR_ART-000001_VACA-001.png');
+    expect(entorno.mockCtx.fillText).toHaveBeenCalledWith(
+      'ART-000001',
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+    );
+    expect(entorno.mockCtx.fillText).toHaveBeenCalledWith(
+      'VACA-001',
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+    );
+    expect(mockToastCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('QR_ART-000001_VACA-001.png'),
+        color: 'success',
+      }),
+    );
+    animalWrapper.unmount();
+
+    // PotreroDetail.vue
+    mockToastCreate.mockClear();
+    entorno.mockCtx.fillText.mockClear();
+    await router.push('/potreros/1');
+    await router.isReady();
+
+    const potreroWrapper = mount(PotreroDetail, { global: { plugins: [router] } });
+    await flushPromises();
+
+    const btnPotrero = potreroWrapper.get('[data-testid="btn-descargar-qr-potrero"]');
+    await btnPotrero.trigger('click');
+    await flushPromises();
+
+    expect(entorno.obtenerNombreDescarga()).toBe('QR_Potrero_Potrero_Norte_POT-001.png');
+    expect(entorno.mockCtx.fillText).toHaveBeenCalledWith(
+      'Potrero Norte',
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+    );
+    expect(entorno.mockCtx.fillText).toHaveBeenCalledWith(
+      'POT-001',
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+    );
+    expect(mockToastCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('QR_Potrero_Potrero_Norte_POT-001.png'),
+        color: 'success',
+      }),
+    );
+    potreroWrapper.unmount();
   });
 });
