@@ -217,14 +217,24 @@
               </section>
             </div>
 
-            <!-- Tarjeta QR visual + botón copiar -->
+            <!-- Tarjeta QR visual + botones de acción -->
             <aside v-if="store.detalle.codigo_qr" class="gg-card gg-qr-card" aria-labelledby="sec-qr-potrero">
               <p class="gg-eyebrow">Escaneo en rondas</p>
               <h2 id="sec-qr-potrero" class="gg-section-title">Código QR del potrero</h2>
-              <div class="gg-qr-box" data-testid="qr-potrero-visual">
+              <div ref="qrContenedorRef" class="gg-qr-box" data-testid="qr-potrero-visual">
                 <qrcode-vue :value="store.detalle.codigo_qr" :size="176" level="H" render-as="svg" />
               </div>
               <p class="gg-qr-text">{{ store.detalle.codigo_qr }}</p>
+              <button
+                type="button"
+                class="gg-btn gg-btn--outline gg-btn--block"
+                :disabled="descargandoQr"
+                data-testid="btn-descargar-qr-potrero"
+                @click="descargarQrPotrero"
+              >
+                <ion-icon :icon="downloadOutline" aria-hidden="true" />
+                {{ descargandoQr ? 'Generando PNG...' : 'Descargar QR' }}
+              </button>
               <button
                 type="button"
                 class="gg-btn gg-btn--outline gg-btn--block"
@@ -355,7 +365,7 @@ import {
   onIonViewWillEnter,
   useBackButton,
 } from '@ionic/vue';
-import { cloudOfflineOutline, copyOutline, createOutline, trashOutline } from 'ionicons/icons';
+import { cloudOfflineOutline, copyOutline, createOutline, downloadOutline, trashOutline } from 'ionicons/icons';
 import QrcodeVue from 'qrcode.vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -367,6 +377,7 @@ import PotreroFormModal from '@/components/PotreroFormModal.vue';
 import { useRol } from '@/composables/useRol';
 import { mostrarToast, networkService } from '@/services';
 import { usePotreroStore } from '@/stores/potrero';
+import { descargarQrPng } from '@/utils/qrDownload';
 
 const route = useRoute();
 const router = useRouter();
@@ -376,6 +387,8 @@ const { esAdmin } = useRol();
 const potreroId = computed<string>(() => String(route.params.id ?? ''));
 const tituloHeader = computed<string>(() => store.detalle?.nombre ?? 'Detalle del Potrero');
 const modalAbierto = ref<boolean>(false);
+const qrContenedorRef = ref<HTMLElement | null>(null);
+const descargandoQr = ref<boolean>(false);
 
 let cancelarSuscripcionRed: (() => void) | null = null;
 
@@ -468,6 +481,26 @@ async function copiarCodigoQr(): Promise<void> {
     await mostrarToast(`Código QR "${codigo}" copiado al portapapeles.`, 'success', 2500);
   } catch {
     await mostrarToast('No se pudo copiar el código QR.', 'danger', 3500);
+  }
+}
+
+async function descargarQrPotrero(): Promise<void> {
+  const potrero = store.detalle;
+  if (!potrero?.codigo_qr || !qrContenedorRef.value || descargandoQr.value) return;
+
+  descargandoQr.value = true;
+  try {
+    const resultado = await descargarQrPng({
+      elementoContenedor: qrContenedorRef.value,
+      titulo: potrero.nombre,
+      subtitulo: potrero.codigo_qr,
+      nombreArchivo: `QR_Potrero_${potrero.nombre}_${potrero.codigo_qr}`,
+    });
+    await mostrarToast(`Código QR descargado como ${resultado.nombreArchivo}`, 'success', 2800);
+  } catch {
+    await mostrarToast('No se pudo descargar el código QR.', 'danger', 3500);
+  } finally {
+    descargandoQr.value = false;
   }
 }
 

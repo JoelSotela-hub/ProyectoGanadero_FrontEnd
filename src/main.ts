@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 
 import App from './App.vue';
+import { inicializarTema } from './composables/useTheme';
 import router from './router';
 import { inicializarServicios } from './services';
 
@@ -40,8 +41,6 @@ import './theme/variables.css';
 import './theme/components.css';
 import './theme/dark.css';
 import './theme/motion.css';
-
-import { inicializarTema } from './composables/useTheme';
 
 /*
  * Aplica el tema (localStorage `gg_theme` o `prefers-color-scheme`) antes de

@@ -78,6 +78,12 @@
 
   --gg-font: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
 
+  /* Segmentos (ion-segment-button) — modo claro idéntico, redefinidos en dark.css */
+  --gg-segment-color: var(--gg-ink-muted);
+  --gg-segment-color-checked: var(--gg-ink);
+  --gg-segment-indicator: var(--gg-ink);
+  --gg-segment-bg-checked: rgba(96, 108, 56, 0.12);
+
   /* ---------- Variables de Ionic ---------- */
   --ion-font-family: var(--gg-font);
 

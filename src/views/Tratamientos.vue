@@ -1127,10 +1127,10 @@ async function exportarListado(): Promise<void> {
 }
 
 .gg-segment-wrap ion-segment-button {
-  --color: var(--gg-ink-muted);
-  --color-checked: #283618;
-  --indicator-color: #283618;
-  --background-checked: rgba(96, 108, 56, 0.12);
+  --color: var(--gg-segment-color, var(--gg-ink-muted));
+  --color-checked: var(--gg-segment-color-checked, var(--gg-ink));
+  --indicator-color: var(--gg-segment-indicator, var(--gg-ink));
+  --background-checked: var(--gg-segment-bg-checked, rgba(96, 108, 56, 0.12));
   --border-radius: 0.55rem;
   font-weight: 600;
 }

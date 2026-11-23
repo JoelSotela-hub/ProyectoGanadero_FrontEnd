@@ -72,6 +72,12 @@
   --gg-skeleton-highlight: #3a4430;
   --gg-backdrop: rgb(4 6 3 / 72%);
 
+  /* Segmentos: texto claro de alto contraste (#f4f7ec) sobre oliva oscuro (#3f4a22) */
+  --gg-segment-color: var(--gg-ink-muted);
+  --gg-segment-color-checked: #f4f7ec;
+  --gg-segment-indicator: var(--gg-olive);
+  --gg-segment-bg-checked: var(--gg-olive-pill);
+
   /* ---------- Variables de Ionic ---------- */
   --ion-color-primary: #a9bb6f;
   --ion-color-primary-rgb: 169, 187, 111;
@@ -234,6 +240,17 @@
 :root.gg-dark .gg-btn--outline:hover {
   background: var(--gg-canvas-alt);
 }
+:root.gg-dark .gg-btn--outline.gg-btn--danger,
+:root.ion-palette-dark .gg-btn--outline.gg-btn--danger,
+:root[data-theme='dark'] .gg-btn--outline.gg-btn--danger {
+  color: var(--gg-danger-fg);
+  border-color: var(--gg-danger-fg);
+}
+:root.gg-dark .gg-btn--outline.gg-btn--danger:hover,
+:root.ion-palette-dark .gg-btn--outline.gg-btn--danger:hover,
+:root[data-theme='dark'] .gg-btn--outline.gg-btn--danger:hover {
+  background: var(--gg-danger-bg);
+}
 :root.gg-dark .gg-btn--ghost {
   background: transparent;
   color: var(--gg-olive);
@@ -301,23 +318,89 @@
   background-size: 200% 100%;
 }
 
-/* Segmentos (los estilos de las vistas fijan #283618) */
-:root.gg-dark ion-segment-button {
+/* Segmentos / pestañas (sobrescriben cualquier especificidad local de vistas en modo oscuro) */
+:root.gg-dark ion-segment,
+:root.ion-palette-dark ion-segment,
+:root[data-theme='dark'] ion-segment {
+  --background: var(--gg-surface);
+}
+:root.gg-dark .gg-segment-bar ion-segment,
+:root.ion-palette-dark .gg-segment-bar ion-segment,
+:root[data-theme='dark'] .gg-segment-bar ion-segment {
+  --background: transparent;
+}
+:root.gg-dark ion-segment ion-segment-button,
+:root.ion-palette-dark ion-segment ion-segment-button,
+:root[data-theme='dark'] ion-segment ion-segment-button {
   --color: var(--gg-ink-muted);
-  --color-checked: var(--gg-ink);
+  --color-hover: #f4f7ec;
+  --color-focused: #f4f7ec;
+  --color-checked: #f4f7ec;
   --indicator-color: var(--gg-olive);
-  --background-checked: rgb(169 187 111 / 16%);
+  --background-checked: var(--gg-olive-pill);
+}
+:root.gg-dark ion-segment ion-segment-button.segment-button-checked,
+:root.ion-palette-dark ion-segment ion-segment-button.segment-button-checked,
+:root[data-theme='dark'] ion-segment ion-segment-button.segment-button-checked,
+:root.gg-dark ion-segment ion-segment-button.segment-button-checked ion-label,
+:root.ion-palette-dark ion-segment ion-segment-button.segment-button-checked ion-label,
+:root[data-theme='dark'] ion-segment ion-segment-button.segment-button-checked ion-label {
+  color: #f4f7ec;
+}
+:root.gg-dark ion-segment ion-segment-button.md::part(indicator-background),
+:root.ion-palette-dark ion-segment ion-segment-button.md::part(indicator-background),
+:root[data-theme='dark'] ion-segment ion-segment-button.md::part(indicator-background) {
+  background: var(--gg-olive);
+}
+:root.gg-dark ion-segment ion-segment-button.ios,
+:root.ion-palette-dark ion-segment ion-segment-button.ios,
+:root[data-theme='dark'] ion-segment ion-segment-button.ios {
+  --indicator-color: var(--gg-olive-pill);
+  --background-checked: transparent;
+  --indicator-box-shadow: 0 1px 4px rgb(0 0 0 / 45%);
+}
+:root.gg-dark ion-segment ion-segment-button.ios::part(indicator-background),
+:root.ion-palette-dark ion-segment ion-segment-button.ios::part(indicator-background),
+:root[data-theme='dark'] ion-segment ion-segment-button.ios::part(indicator-background) {
+  background: var(--gg-olive-pill);
+  border: 1px solid rgb(169 187 111 / 35%);
 }
 
 /* Barra inferior móvil */
-:root.gg-dark ion-tab-button {
+:root.gg-dark ion-tab-button,
+:root.ion-palette-dark ion-tab-button,
+:root[data-theme='dark'] ion-tab-button {
   --color: var(--gg-ink-muted);
-  --color-selected: var(--gg-ink);
+  --color-selected: #f4f7ec;
 }
 
 /* Enlaces de acción "Eliminar" (hover fijo #991b1b en las vistas) */
 :root.gg-dark .gg-action-link--danger:hover {
   color: #fecaca;
+}
+
+/* Avatar del sidebar: alto contraste sobre fondo verde éxito oscuro */
+:root.gg-dark .gg-sidebar__avatar,
+:root.ion-palette-dark .gg-sidebar__avatar,
+:root[data-theme='dark'] .gg-sidebar__avatar {
+  color: var(--gg-success-fg);
+}
+
+/* Botones/enlaces dentro de alertas (ej. Reintentar catálogo) */
+:root.gg-dark .gg-alert .gg-link,
+:root.ion-palette-dark .gg-alert .gg-link,
+:root[data-theme='dark'] .gg-alert .gg-link {
+  background: transparent;
+  border: 0;
+  color: inherit;
+}
+
+/* Selección de texto legible en modo oscuro */
+:root.gg-dark ::selection,
+:root.ion-palette-dark ::selection,
+:root[data-theme='dark'] ::selection {
+  background: var(--gg-olive-pill);
+  color: #f4f7ec;
 }
 
 /* Modales propios (.gg-modal-backdrop) e Ionic */

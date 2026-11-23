@@ -32,7 +32,7 @@ export function escaparCeldaCsv(valor: unknown): string {
 }
 
 /** Genera el contenido CSV completo con BOM UTF-8 y saltos CRLF. */
-export function generarCsv<T>(columnas: ReadonlyArray<ColumnaCsv<T>>, filas: ReadonlyArray<T>): string {
+export function generarCsv<T>(columnas: readonly ColumnaCsv<T>[], filas: readonly T[]): string {
   if (columnas.length === 0) {
     return '\uFEFF';
   }
@@ -63,8 +63,8 @@ export function construirNombreArchivoCsv(prefijoArchivo: string, fecha: Date = 
 /** Genera el CSV y dispara la descarga en el navegador mediante `Blob` y `URL.createObjectURL`. */
 export function exportarCsv<T>(
   prefijoArchivo: string,
-  columnas: ReadonlyArray<ColumnaCsv<T>>,
-  filas: ReadonlyArray<T>,
+  columnas: readonly ColumnaCsv<T>[],
+  filas: readonly T[],
   fecha: Date = new Date(),
 ): ResultadoExportacionCsv {
   const contenido = generarCsv(columnas, filas);
