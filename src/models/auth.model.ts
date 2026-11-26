@@ -35,7 +35,7 @@ export interface AnimalItem {
   sexo: 'Macho' | 'Hembra' | string;
   potrero: string;
   peso: number | null;
-  estado: 'Activo' | 'Tratamiento' | 'Vendido' | string;
+  estado: 'Activo' | 'Enfermo' | 'Vendido' | string;
   fechaNacimiento?: string;
   observaciones?: string;
   razaId?: number;
