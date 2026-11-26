@@ -1,11 +1,3 @@
-/**
- * Ubicacion GPS con `@capacitor/geolocation` (Persona 5).
- *
- * En Android pasa por `asegurarPermiso('ubicacion')` (check -> request ->
- * alerta con "Abrir Ajustes" si queda denegado). En navegador usa la API del
- * navegador y, si falla o se deniega, ofrece introducir las coordenadas a mano
- * (solo para pruebas en web).
- */
 import { Geolocation } from '@capacitor/geolocation';
 import { alertController } from '@ionic/vue';
 
@@ -46,10 +38,6 @@ async function pedirCoordenadasManuales(): Promise<Coordenadas | null> {
   return validas ? { latitud, longitud } : null;
 }
 
-/**
- * Captura las coordenadas reales en este instante.
- * Devuelve null si el usuario cancela o el permiso fue denegado.
- */
 export async function obtenerCoordenadas(): Promise<Coordenadas | null> {
   if (!esPlataformaNativa()) {
     try {

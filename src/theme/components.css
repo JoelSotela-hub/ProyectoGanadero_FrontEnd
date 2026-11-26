@@ -1,24 +1,14 @@
-/**
- * Clases utilitarias reutilizables del sistema de diseño GuateGanado (prefijo gg-).
- * Las fases 1–4 deben construir sus vistas con estas clases.
- *
- * Puntos de quiebre (mobile-first, en rem para escalar al 200 %):
- *   móvil  < 48rem (768px)    tablet >= 48rem    escritorio >= 62rem (992px)
- */
-
 body {
   background: var(--gg-canvas);
   color: var(--gg-ink);
   font-family: var(--gg-font);
 }
 
-/* Contenido de las vistas autenticadas sobre el canvas crema */
 ion-content.gg-content {
   --background: var(--gg-canvas);
   --color: var(--gg-ink);
 }
 
-/* ---------- Foco visible (teclado) ---------- */
 :focus-visible {
   outline: 0.1875rem solid var(--gg-focus);
   outline-offset: 0.125rem;
@@ -36,7 +26,6 @@ ion-tab-button:focus-visible {
   outline-offset: -0.1875rem;
 }
 
-/* Texto solo para lectores de pantalla */
 .gg-sr-only {
   position: absolute;
   width: 1px;
@@ -73,7 +62,6 @@ ion-tab-button:focus-visible {
   }
 }
 
-/* ---------- Contenedor de página ---------- */
 .gg-page {
   width: 100%;
   max-width: 80rem;
@@ -149,7 +137,6 @@ ion-tab-button:focus-visible {
   color: var(--gg-olive-hover);
 }
 
-/* ---------- .gg-card ---------- */
 .gg-card {
   background: var(--gg-surface);
   border: 1px solid var(--gg-border);
@@ -177,7 +164,6 @@ button.gg-card:hover {
   border-color: var(--gg-border-strong);
 }
 
-/* ---------- .gg-kpi-card ---------- */
 .gg-kpi-grid {
   display: grid;
   gap: 1rem;
@@ -251,7 +237,6 @@ a.gg-kpi-card:hover {
   color: var(--gg-ink-muted);
 }
 
-/* ---------- .gg-badge ---------- */
 .gg-badge {
   display: inline-flex;
   align-items: center;
@@ -282,7 +267,6 @@ a.gg-kpi-card:hover {
   color: var(--gg-neutral-fg);
 }
 
-/* ---------- .gg-progress-bar (siempre contenida) ---------- */
 .gg-progress-bar {
   position: relative;
   display: block;
@@ -308,7 +292,6 @@ a.gg-kpi-card:hover {
   background: var(--gg-danger-fg);
 }
 
-/* ---------- .gg-table-wrapper: tabla en escritorio, tarjetas en móvil ---------- */
 .gg-table-wrapper {
   width: 100%;
   max-width: 100%;
@@ -380,7 +363,6 @@ a.gg-kpi-card:hover {
   }
 }
 
-/* ---------- Botones ---------- */
 .gg-btn {
   display: inline-flex;
   align-items: center;
@@ -432,7 +414,6 @@ a.gg-kpi-card:hover {
   cursor: not-allowed;
 }
 
-/* ---------- Campos de formulario ---------- */
 .gg-field {
   display: flex;
   flex-direction: column;
@@ -525,7 +506,6 @@ span.gg-field__icon {
   accent-color: var(--gg-olive);
 }
 
-/* ---------- Alertas y estados ---------- */
 .gg-alert {
   display: flex;
   gap: 0.6rem;
@@ -581,7 +561,6 @@ span.gg-field__icon {
   }
 }
 
-/* ---------- Segmentos (ion-segment / ion-segment-button) ---------- */
 ion-segment-button {
   --color: var(--gg-segment-color, var(--gg-ink-muted));
   --color-checked: var(--gg-segment-color-checked, var(--gg-ink));

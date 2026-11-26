@@ -1,17 +1,3 @@
-/**
- * Gestor centralizado del tema visual de GuateGanado (claro / oscuro).
- *
- * - Lee la preferencia guardada en `localStorage` (`gg_theme`); si no existe,
- *   respeta `prefers-color-scheme: dark` del sistema operativo.
- * - Aplica en `<html>` las marcas de tema oscuro: clases `ion-palette-dark` y
- *   `gg-dark`, atributo `data-theme="dark"` y `color-scheme` (controles nativos).
- * - Persiste cada cambio del usuario en `localStorage`.
- *
- * El estado vive a nivel de módulo (singleton reactivo, sin Pinia) para poder
- * aplicarse en `main.ts` antes de montar la app y evitar parpadeos.
- * Todas las APIs del navegador se consultan con guardas para que funcione en
- * SSR/tests (`jsdom` no implementa `matchMedia`).
- */
 import { computed, readonly, ref, type ComputedRef, type Ref } from 'vue';
 
 export type Tema = 'light' | 'dark';
@@ -26,14 +12,12 @@ function esTemaValido(valor: unknown): valor is Tema {
   return valor === 'light' || valor === 'dark';
 }
 
-/** Preferencia explícita guardada por el usuario o `null` si nunca eligió. */
 export function leerTemaGuardado(): Tema | null {
   try {
     if (typeof localStorage === 'undefined') return null;
     const valor = localStorage.getItem(CLAVE_TEMA);
     return esTemaValido(valor) ? valor : null;
   } catch {
-    // Modo privado / almacenamiento bloqueado.
     return null;
   }
 }
@@ -42,7 +26,7 @@ function guardarTema(tema: Tema): void {
   try {
     if (typeof localStorage !== 'undefined') localStorage.setItem(CLAVE_TEMA, tema);
   } catch {
-    // La preferencia sigue vigente en memoria.
+    return;
   }
 }
 
@@ -55,12 +39,10 @@ function consultaSistema(): MediaQueryList | null {
   }
 }
 
-/** Tema del sistema operativo; `light` como respaldo seguro (jsdom, navegadores antiguos). */
 export function detectarTemaSistema(): Tema {
   return consultaSistema()?.matches ? 'dark' : 'light';
 }
 
-/** Tema con el que debe arrancar la app: preferencia guardada > sistema > claro. */
 export function resolverTemaInicial(): Tema {
   return leerTemaGuardado() ?? detectarTemaSistema();
 }
@@ -77,11 +59,6 @@ function prefiereMenosMovimiento(): boolean {
 
 let temporizadorTransicion: ReturnType<typeof setTimeout> | null = null;
 
-/**
- * Aplica el tema en `document.documentElement`.
- * Con `animar` añade temporalmente `gg-theme-transition` para un fundido suave
- * de colores (se omite si el usuario prefiere menos movimiento).
- */
 export function aplicarTema(tema: Tema, opciones: { animar?: boolean } = {}): void {
   if (typeof document === 'undefined') return;
   const raiz = document.documentElement;
@@ -107,7 +84,6 @@ const temaActual = ref<Tema>('light');
 let inicializado = false;
 let quitarEscuchaSistema: (() => void) | null = null;
 
-/** Sigue al sistema mientras el usuario no haya elegido un tema explícito. */
 function escucharCambiosDelSistema(): void {
   quitarEscuchaSistema?.();
   quitarEscuchaSistema = null;
@@ -123,10 +99,6 @@ function escucharCambiosDelSistema(): void {
   quitarEscuchaSistema = () => consulta.removeEventListener('change', alCambiar);
 }
 
-/**
- * Resuelve y aplica el tema inicial. Se invoca en `main.ts` antes de montar la
- * app (idempotente: llamadas posteriores solo devuelven el tema vigente).
- */
 export function inicializarTema(opciones: { forzar?: boolean } = {}): Tema {
   if (inicializado && !opciones.forzar) return temaActual.value;
   temaActual.value = resolverTemaInicial();
@@ -136,7 +108,6 @@ export function inicializarTema(opciones: { forzar?: boolean } = {}): Tema {
   return temaActual.value;
 }
 
-/** Cambia el tema, lo aplica con transición y lo persiste en `localStorage`. */
 export function establecerTema(tema: Tema): void {
   if (!esTemaValido(tema)) return;
   temaActual.value = tema;
@@ -144,7 +115,6 @@ export function establecerTema(tema: Tema): void {
   guardarTema(tema);
 }
 
-/** Alterna claro ↔ oscuro y devuelve el nuevo tema. */
 export function alternarTema(): Tema {
   const siguiente: Tema = temaActual.value === 'dark' ? 'light' : 'dark';
   establecerTema(siguiente);
@@ -158,7 +128,6 @@ export interface UseTheme {
   alternarTema: () => Tema;
 }
 
-/** Acceso reactivo al tema desde componentes (sidebar, login, etc.). */
 export function useTheme(): UseTheme {
   if (!inicializado) inicializarTema();
   return {

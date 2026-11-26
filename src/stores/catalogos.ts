@@ -1,11 +1,3 @@
-/**
- * Catálogos compartidos para los selectores de formularios y filtros
- * (razas, potreros, categorías y unidades de medida).
- *
- * Se sincroniza/invalida automáticamente tras crear, editar o eliminar en el
- * módulo de Catálogos (`Catalogos.vue`) o Potreros (`Potreros.vue`), de modo que
- * los selectores de Registro de Animales e Insumos reflejen siempre los cambios al instante.
- */
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
@@ -37,7 +29,6 @@ export const useCatalogosStore = defineStore('catalogos', () => {
       potreros.value = listaPotreros;
       cargados.value = true;
     } catch {
-      // Los catálogos son auxiliares: sin ellos los selectores quedan en "Todos".
       error.value = true;
     }
   }
@@ -58,16 +49,11 @@ export const useCatalogosStore = defineStore('catalogos', () => {
     }
   }
 
-  /** Marca los catálogos como obsoletos para forzar su recarga en la próxima lectura. */
   function invalidar(): void {
     cargados.value = false;
     cargadosInsumos.value = false;
   }
 
-  /**
-   * Invalida y refresca inmediatamente los selectores afectados tras operaciones
-   * CRUD en el módulo de Catálogos.
-   */
   async function sincronizar(tipo?: 'razas' | 'categorias' | 'unidades'): Promise<void> {
     if (!tipo || tipo === 'razas') {
       cargados.value = false;

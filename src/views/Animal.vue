@@ -36,7 +36,6 @@
           </div>
         </header>
 
-        <!-- Aviso obligatorio de datos no actualizados (caché offline con marca de tiempo) -->
         <div
           v-if="store.mostrandoAvisoOffline"
           class="gg-alert gg-alert--warning"
@@ -50,7 +49,6 @@
           </span>
         </div>
 
-        <!-- Filtros -->
         <form class="gg-card gg-filters" role="search" aria-label="Filtros de animales" @submit.prevent>
           <div class="gg-field gg-filters__search">
             <label class="gg-field__label" for="f-search">Buscar por número de arete</label>
@@ -145,7 +143,6 @@
           </div>
         </form>
 
-        <!-- Estado: cargando -->
         <section v-if="store.loading" class="gg-card gg-card--flush" aria-busy="true" aria-label="Cargando animales">
           <div v-for="i in 5" :key="i" class="gg-skeleton-row">
             <span class="gg-skeleton" style="width: 22%" />
@@ -154,7 +151,6 @@
           </div>
         </section>
 
-        <!-- Estado: error con reintento -->
         <error-state
           v-else-if="store.error"
           title="No se pudo cargar el listado"
@@ -162,7 +158,6 @@
           @retry="store.recargar()"
         />
 
-        <!-- Estado: vacío -->
         <section v-else-if="!store.items.length" class="gg-card">
           <empty-state
             :title="store.hayFiltrosActivos ? 'Sin resultados' : 'Sin animales'"
@@ -183,7 +178,6 @@
           </empty-state>
         </section>
 
-        <!-- Estado: datos -->
         <section v-else class="gg-card gg-card--flush" aria-label="Listado de animales">
           <p class="gg-count" role="status">{{ store.total }} {{ store.total === 1 ? 'animal' : 'animales' }}</p>
           <div class="gg-table-wrapper">
@@ -273,7 +267,6 @@ const { escaneando, escanearVaca } = useEscanearVaca();
 let cancelarSuscripcionRed: (() => void) | null = null;
 
 onMounted(() => {
-  // Al recuperar la red, refresca el listado y los catálogos; al perderla, marca los datos como cacheados.
   cancelarSuscripcionRed = networkService.suscribirCambioDeRed((conectado) => {
     if (conectado) {
       void catalogos.cargar(true);
@@ -289,7 +282,6 @@ onUnmounted(() => {
   store.cancelarPendiente();
 });
 
-// Al entrar (incluye volver tras registrar/editar un animal) se refresca el listado.
 onIonViewWillEnter(() => {
   void catalogos.cargar();
   void store.recargar();
@@ -347,7 +339,6 @@ async function exportarListado(): Promise<void> {
   );
 }
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

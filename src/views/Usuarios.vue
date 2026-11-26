@@ -36,7 +36,6 @@
           </div>
         </header>
 
-        <!-- Filtros de búsqueda y rol -->
         <form class="gg-card gg-filters" role="search" aria-label="Filtros de usuarios" @submit.prevent>
           <div class="gg-field gg-filters__search">
             <label class="gg-field__label" for="usr-buscar">Buscar por nombre o correo</label>
@@ -74,7 +73,6 @@
           </div>
         </form>
 
-        <!-- Estado 1: Cargando -->
         <section v-if="store.cargando" class="gg-card gg-card--flush" aria-busy="true" aria-label="Cargando usuarios">
           <div v-for="i in 4" :key="i" class="gg-skeleton-row">
             <span class="gg-skeleton" style="width: 28%" />
@@ -84,7 +82,6 @@
           </div>
         </section>
 
-        <!-- Estado 2: Error -->
         <error-state
           v-else-if="store.error"
           title="No se pudo cargar el listado de usuarios"
@@ -92,7 +89,6 @@
           @retry="store.cargarUsuarios()"
         />
 
-        <!-- Estado 3: Vacío -->
         <section v-else-if="!store.usuariosFiltrados.length" class="gg-card">
           <empty-state
             :title="store.hayFiltrosActivos ? 'Sin resultados' : 'Sin usuarios registrados'"
@@ -117,7 +113,6 @@
           </empty-state>
         </section>
 
-        <!-- Estado 4: Datos -->
         <section v-else class="gg-card gg-card--flush" aria-label="Listado de usuarios">
           <p class="gg-count" role="status">
             {{ store.usuariosFiltrados.length }}
@@ -249,7 +244,6 @@ async function exportarListado(): Promise<void> {
   );
 }
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

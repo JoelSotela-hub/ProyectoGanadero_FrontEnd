@@ -87,14 +87,7 @@
 <script setup lang="ts">
 import { IonIcon } from '@ionic/vue';
 import { Preferences } from '@capacitor/preferences';
-import {
-  alertCircleOutline,
-  eyeOffOutline,
-  eyeOutline,
-  mailOutline,
-  moonOutline,
-  sunnyOutline,
-} from 'ionicons/icons';
+import { alertCircleOutline, eyeOffOutline, eyeOutline, mailOutline, moonOutline, sunnyOutline } from 'ionicons/icons';
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -107,7 +100,6 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { esOscuro, alternarTema } = useTheme();
 
-/** "Recordarme" solo recuerda el correo (no es sensible). El token vive en el almacenamiento cifrado. */
 const CLAVE_EMAIL_RECORDADO = 'guateganado_email_recordado';
 
 const email = ref('');
@@ -126,7 +118,7 @@ onMounted(async () => {
       remember.value = true;
     }
   } catch {
-    // Sin almacenamiento: el campo queda vacío.
+    return;
   }
 });
 
@@ -144,10 +136,6 @@ function validar(): boolean {
   return !errores.email && !errores.password;
 }
 
-/**
- * POST /api/v1/auth/login → solo devuelve `token`; el servicio llama enseguida a
- * GET /api/user para cargar { id, name, email, role } en Pinia.
- */
 async function login(): Promise<void> {
   errorGeneral.value = '';
   if (!validar()) return;
@@ -162,16 +150,14 @@ async function login(): Promise<void> {
 
     await authStore.login(sesion);
 
-    try {
-      if (remember.value) await Preferences.set({ key: CLAVE_EMAIL_RECORDADO, value: email.value.trim() });
-      else await Preferences.remove({ key: CLAVE_EMAIL_RECORDADO });
-    } catch {
-      // No es crítico.
-    }
+    await (
+      remember.value
+        ? Preferences.set({ key: CLAVE_EMAIL_RECORDADO, value: email.value.trim() })
+        : Preferences.remove({ key: CLAVE_EMAIL_RECORDADO })
+    ).catch(() => undefined);
 
     void mostrarToast(`Bienvenido, ${sesion.user.name}`, 'success', 1800);
 
-    // Reemplaza el historial al entrar para que el botón físico de retroceso no vuelva al login
     await router.replace('/tabs/dashboard');
   } catch (err) {
     if (err instanceof ApiError && err.status === 422) {
@@ -185,7 +171,6 @@ async function login(): Promise<void> {
   }
 }
 </script>
-
 <style scoped>
 .gg-auth-top {
   display: flex;
@@ -205,9 +190,6 @@ async function login(): Promise<void> {
   font-size: 0.82rem;
 }
 
-/* Garantiza en escritorio que la ilustración y el sol naranja del panel verde bosque
-   permanezcan detrás (z-index: 0) y desplazados al horizonte inferior sin superponerse
-   sobre el título "Control y Registro" ni sobre el subtítulo. */
 :deep(.gg-auth__hero) {
   position: relative;
   z-index: 2;

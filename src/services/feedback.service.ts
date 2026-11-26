@@ -1,10 +1,3 @@
-/**
- * Mensajes al usuario (Persona 5): toasts y lectura uniforme de errores.
- *
- * Los errores de la API llegan como `ApiError` (cliente HTTP unico). Su
- * `message` ya contiene el campo `mensaje` del backend, por ejemplo el de un
- * 409 de regla de negocio: { error: 'Regla de Negocio', mensaje: '...' }.
- */
 import { toastController } from '@ionic/vue';
 
 import { ApiError } from './http';

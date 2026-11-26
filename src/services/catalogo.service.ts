@@ -1,20 +1,3 @@
-/**
- * Servicios de Catálogos Administrativos y Selectores Auxiliares
- * (Contrato API Secciones 9, 10 y 11):
- *   - Razas (`/api/v1/razas`) — RN-05 (409 al eliminar raza con animales asociados)
- *   - Categorías (`/api/v1/categorias`) — RN-04 (409 al eliminar categoría con insumos asociados)
- *   - Unidades de Medida (`/api/v1/unidades-medida`) — RN-07 (409 al eliminar unidad con insumos asociados)
- *
- * ADAPTACIÓN CRÍTICA DE `UnidadMedida` (Sección 11.2, 11.3 y 11.4 del contrato):
- *   - La columna real en BD, `StoreUnidadMedidaRequest`, `UpdateUnidadMedidaRequest` y
- *     `UnidadMedidaResource` se llama **`apertura`** (representa la abreviatura: `kg`, `ml`, `L`).
- *   - `UnidadMedidaService.php` (L22 y L31) referencia por error `abreviatura` en `$allowedSortFields`
- *     y en el filtro `when(!empty($filtros['abreviatura']))`, lo que causa un error SQL `500` si el
- *     frontend envía `?abreviatura=` o `?sort_by=abreviatura`.
- *   - Este servicio sanitiza estrictamente `sort_by` a `['nombre', 'unidad_medida_id', 'created_at']`,
- *     jamás envía `?abreviatura=` en la query, envía `apertura` en `POST`/`PUT`, y normaliza
- *     `apertura` y `abreviatura` en el modelo tipado para consumo seguro en toda la UI.
- */
 import { crearCacheListado, listarConRespaldo, type ListadoPaginado } from './cacheListado';
 import { http } from './http';
 
@@ -30,10 +13,6 @@ export type CampoOrdenRaza = (typeof CAMPOS_ORDEN_RAZA)[number];
 export const CAMPOS_ORDEN_CATEGORIA = ['nombre', 'tipo', 'categoria_id'] as const;
 export type CampoOrdenCategoria = (typeof CAMPOS_ORDEN_CATEGORIA)[number];
 
-/**
- * Campos de ordenamiento seguros para `UnidadMedida` (Sección 11.2).
- * NUNCA incluir `'abreviatura'` porque lanza SQL 500 en el backend.
- */
 export const CAMPOS_ORDEN_UNIDAD_MEDIDA_SEGUROS = ['nombre', 'unidad_medida_id', 'created_at'] as const;
 export type CampoOrdenUnidadMedida = (typeof CAMPOS_ORDEN_UNIDAD_MEDIDA_SEGUROS)[number];
 
@@ -111,9 +90,7 @@ export interface FiltrosCategorias {
 export interface UnidadMedidaApi {
   unidad_medida_id: number;
   nombre: string;
-  /** Nombre real de la columna en `UnidadMedidaResource` y FormRequests. */
   apertura?: string | null;
-  /** Posible alias si el backend corrige el Resource en el futuro. */
   abreviatura?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -122,9 +99,7 @@ export interface UnidadMedidaApi {
 export interface UnidadMedida {
   unidad_medida_id: number;
   nombre: string;
-  /** Columna real del contrato (`StoreUnidadMedidaRequest` / `UnidadMedidaResource`). */
   apertura: string | null;
-  /** Alias normalizado siempre sincronizado con `apertura` para evitar errores de tipado. */
   abreviatura: string | null;
   created_at?: string;
   updated_at?: string;
@@ -132,9 +107,7 @@ export interface UnidadMedida {
 
 export interface UnidadMedidaPayload {
   nombre: string;
-  /** Campo oficial esperado por `StoreUnidadMedidaRequest` / `UpdateUnidadMedidaRequest` (`max:20`). */
   apertura?: string | null;
-  /** Alias opcional: si se provee, el servicio lo traduce limpiamente a `apertura`. */
   abreviatura?: string | null;
 }
 
@@ -204,10 +177,6 @@ export function mapearUnidadMedida(raw: UnidadMedidaApi): UnidadMedida {
   };
 }
 
-/**
- * Garantiza que jamás se envíe `sort_by=abreviatura` (ni otro campo no soportado)
- * hacia `GET /api/v1/unidades-medida` para prevenir el error SQL 500 del backend.
- */
 export function sanitizarOrdenUnidadMedida(sortBy?: string | null): CampoOrdenUnidadMedida {
   if (sortBy && (CAMPOS_ORDEN_UNIDAD_MEDIDA_SEGUROS as readonly string[]).includes(sortBy)) {
     return sortBy as CampoOrdenUnidadMedida;
@@ -216,7 +185,6 @@ export function sanitizarOrdenUnidadMedida(sortBy?: string | null): CampoOrdenUn
 }
 
 export const razaService = {
-  /** GET /api/v1/razas (paginado con respaldo offline). */
   async listar(filtros: FiltrosRazas = {}): Promise<ListadoRazas> {
     const pagina = filtros.page ?? 1;
     const porPagina = filtros.per_page ?? 15;
@@ -242,13 +210,11 @@ export const razaService = {
     });
   },
 
-  /** GET /api/v1/razas/{raza} */
   async obtener(id: number | string): Promise<Raza> {
     const respuesta = await http.get<{ data: RazaApi }>(`/razas/${id}`);
     return mapearRaza(respuesta.data);
   },
 
-  /** POST /api/v1/razas (solo admin). */
   async crear(datos: RazaPayload): Promise<Raza> {
     const respuesta = await http.post<{ data: RazaApi }>('/razas', {
       nombre: datos.nombre.trim(),
@@ -256,7 +222,6 @@ export const razaService = {
     return mapearRaza(respuesta.data);
   },
 
-  /** PUT /api/v1/razas/{raza} (solo admin). */
   async actualizar(id: number | string, datos: Partial<RazaPayload>): Promise<Raza> {
     const cuerpo: Record<string, unknown> = {};
     if (datos.nombre !== undefined) cuerpo.nombre = datos.nombre.trim();
@@ -264,7 +229,6 @@ export const razaService = {
     return mapearRaza(respuesta.data);
   },
 
-  /** DELETE /api/v1/razas/{raza} (solo admin; 409 RN-05 si tiene animales asociados). */
   async eliminar(id: number | string): Promise<void> {
     await http.delete<void>(`/razas/${id}`);
   },
@@ -275,7 +239,6 @@ export const razaService = {
 };
 
 export const categoriaService = {
-  /** GET /api/v1/categorias (paginado con respaldo offline). */
   async listar(filtros: FiltrosCategorias = {}): Promise<ListadoCategorias> {
     const pagina = filtros.page ?? 1;
     const porPagina = filtros.per_page ?? 15;
@@ -303,13 +266,11 @@ export const categoriaService = {
     });
   },
 
-  /** GET /api/v1/categorias/{categoria} */
   async obtener(id: number | string): Promise<Categoria> {
     const respuesta = await http.get<{ data: CategoriaApi }>(`/categorias/${id}`);
     return mapearCategoria(respuesta.data);
   },
 
-  /** POST /api/v1/categorias (solo admin). */
   async crear(datos: CategoriaPayload): Promise<Categoria> {
     const respuesta = await http.post<{ data: CategoriaApi }>('/categorias', {
       nombre: datos.nombre.trim(),
@@ -318,7 +279,6 @@ export const categoriaService = {
     return mapearCategoria(respuesta.data);
   },
 
-  /** PUT /api/v1/categorias/{categoria} (solo admin). */
   async actualizar(id: number | string, datos: Partial<CategoriaPayload>): Promise<Categoria> {
     const cuerpo: Record<string, unknown> = {};
     if (datos.nombre !== undefined) cuerpo.nombre = datos.nombre.trim();
@@ -327,7 +287,6 @@ export const categoriaService = {
     return mapearCategoria(respuesta.data);
   },
 
-  /** DELETE /api/v1/categorias/{categoria} (solo admin; 409 RN-04 si tiene insumos asociados). */
   async eliminar(id: number | string): Promise<void> {
     await http.delete<void>(`/categorias/${id}`);
   },
@@ -338,11 +297,6 @@ export const categoriaService = {
 };
 
 export const unidadMedidaService = {
-  /**
-   * GET /api/v1/unidades-medida (paginado con respaldo offline).
-   * Sanitiza `sort_by` y omite cualquier filtro `abreviatura` para evitar el bug SQL 500
-   * documentado en `UnidadMedidaService.php` (L22 y L31).
-   */
   async listar(filtros: FiltrosUnidadesMedida = {}): Promise<ListadoUnidadesMedida> {
     const pagina = filtros.page ?? 1;
     const porPagina = filtros.per_page ?? 15;
@@ -369,16 +323,11 @@ export const unidadMedidaService = {
     });
   },
 
-  /** GET /api/v1/unidades-medida/{unidad_medida} */
   async obtener(id: number | string): Promise<UnidadMedida> {
     const respuesta = await http.get<{ data: UnidadMedidaApi }>(`/unidades-medida/${id}`);
     return mapearUnidadMedida(respuesta.data);
   },
 
-  /**
-   * POST /api/v1/unidades-medida (solo admin).
-   * Envía estrictamente la clave `apertura` requerida por `StoreUnidadMedidaRequest`.
-   */
   async crear(datos: UnidadMedidaPayload): Promise<UnidadMedida> {
     const valorApertura = datos.apertura !== undefined ? datos.apertura : datos.abreviatura;
     const respuesta = await http.post<{ data: UnidadMedidaApi }>('/unidades-medida', {
@@ -388,10 +337,6 @@ export const unidadMedidaService = {
     return mapearUnidadMedida(respuesta.data);
   },
 
-  /**
-   * PUT /api/v1/unidades-medida/{unidad_medida} (solo admin).
-   * Envía estrictamente la clave `apertura` requerida por `UpdateUnidadMedidaRequest`.
-   */
   async actualizar(id: number | string, datos: Partial<UnidadMedidaPayload>): Promise<UnidadMedida> {
     const cuerpo: Record<string, unknown> = {};
     if (datos.nombre !== undefined) cuerpo.nombre = datos.nombre.trim();
@@ -403,7 +348,6 @@ export const unidadMedidaService = {
     return mapearUnidadMedida(respuesta.data);
   },
 
-  /** DELETE /api/v1/unidades-medida/{unidad_medida} (solo admin; 409 RN-07 si tiene insumos asociados). */
   async eliminar(id: number | string): Promise<void> {
     await http.delete<void>(`/unidades-medida/${id}`);
   },

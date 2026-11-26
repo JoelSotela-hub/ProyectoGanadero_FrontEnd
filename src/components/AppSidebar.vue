@@ -132,7 +132,6 @@ const { rol, modulosVisibles } = useRol();
 const { esEscritorio } = useEscritorio();
 const { esOscuro, alternarTema } = useTheme();
 
-/** El modo compacto (solo íconos) solo aplica en escritorio; en móvil el drawer siempre es completo. */
 const compacto = computed<boolean>(() => esEscritorio.value && ui.sidebarColapsado);
 
 const nombre = computed<string>(() => authStore.user?.name?.trim() || 'Usuario');
@@ -142,7 +141,6 @@ const iniciales = computed<string>(() => {
   return ((partes[0]?.[0] ?? 'U') + (partes[1]?.[0] ?? '')).toUpperCase();
 });
 
-/** Rutas que pertenecen a cada módulo (incluye detalles y formularios). */
 const PREFIJOS: Record<string, string[]> = {
   dashboard: ['/tabs/dashboard', '/tabs/tab1'],
   animales: ['/tabs/animales', '/tabs/registro', '/detalle/', '/items'],
@@ -185,7 +183,6 @@ async function cerrarSesion(): Promise<void> {
   await router.replace('/login');
 }
 </script>
-
 <style scoped>
 .gg-sidebar {
   display: flex;

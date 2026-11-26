@@ -22,7 +22,6 @@
           </div>
         </header>
 
-        <!-- Carga del registro a editar -->
         <section v-if="form.cargando" class="gg-card" aria-busy="true" aria-label="Cargando animal">
           <span v-for="i in 4" :key="i" class="gg-skeleton" style="margin-bottom: 1.1rem; height: 2.5rem" />
         </section>
@@ -254,7 +253,6 @@ const idEnRuta = computed<string | null>(() => {
 
 const titulo = computed<string>(() => (form.esEdicion ? `Editar animal #${form.editingId}` : 'Registrar animal'));
 
-/** Si el animal trae un estado fuera del catálogo habitual, se conserva como opción. */
 const estadosDisponibles = computed<string[]>(() => {
   const actual = form.form.estado;
   return actual && !ESTADOS_ANIMAL.includes(actual) ? [...ESTADOS_ANIMAL, actual] : ESTADOS_ANIMAL;
@@ -301,7 +299,6 @@ async function enviar(): Promise<void> {
 
   if (!resultado.ok) {
     if (form.errorNegocio) {
-      // 409 — regla de negocio (RN-03: potrero en capacidad máxima)
       await mostrarToast(form.errorNegocio, 'warning', 5000);
     } else if (form.errorGeneral) {
       await mostrarToast(form.errorGeneral, 'danger', 4000);
@@ -319,7 +316,6 @@ async function enviar(): Promise<void> {
   await router.replace('/tabs/animales');
 }
 </script>
-
 <style scoped>
 .gg-form-page {
   max-width: 52rem;

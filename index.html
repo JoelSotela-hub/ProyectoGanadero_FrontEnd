@@ -16,15 +16,10 @@
 
   <link rel="shortcut icon" type="image/png" href="/favicon.png" />
 
-  <!-- add to homescreen for ios -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="GuateGanado" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
-  <!--
-    Tema antes del primer pintado (evita destello blanco en modo oscuro).
-    Misma lógica que src/composables/useTheme.ts: localStorage `gg_theme` > prefers-color-scheme > claro.
-  -->
   <script>
     (function () {
       try {
@@ -39,13 +34,9 @@
         raiz.setAttribute('data-theme', tema);
         raiz.style.colorScheme = tema;
       } catch (e) {
-        /* Sin almacenamiento: tema claro por defecto. */
       }
     })();
-  </script>
-
-  <!-- Estilos críticos de la pantalla de arranque (antes de que cargue el CSS de la app) -->
-  <style>
+</script>  <style>
     html,
     body {
       margin: 0;
@@ -122,12 +113,10 @@
       font-size: 0.8rem;
       color: #c9cfb4;
     }
-  </style>
-</head>
+</style></head>
 
 <body>
   <div id="app">
-    <!-- Reemplazado por App.vue al montar (misma pantalla de arranque, que luego se desvanece) -->
     <div class="gg-boot-splash" role="status" aria-live="polite">
       <div class="gg-boot-splash__inner">
         <span class="gg-boot-splash__logo" aria-hidden="true">
@@ -147,7 +136,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="/src/main.ts"></script>
-</body>
+  <script type="module" src="/src/main.ts"></script></body>
 
 </html>

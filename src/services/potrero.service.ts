@@ -1,14 +1,3 @@
-/**
- * Servicio de potreros (Fase 2) con soporte de caché offline (`@capacitor/preferences`).
- *
- * Endpoints consumidos (ver Docs/contrato-api-frontend.md, Sección 3):
- *   GET    /api/v1/potreros?page=&per_page=&nombre=&estado_pasto=&sort_by=&order=
- *   GET    /api/v1/potreros/{potrero}
- *   POST   /api/v1/potreros
- *   PUT    /api/v1/potreros/{potrero}
- *   DELETE /api/v1/potreros/{potrero}
- *   GET    /api/v1/potreros/{potrero}/animales?page=&per_page=
- */
 import { Preferences } from '@capacitor/preferences';
 
 import { mapearAnimal, type AnimalApi } from './animal.service';
@@ -24,7 +13,6 @@ export const ESTADOS_PASTO: readonly EstadoPasto[] = ['Excelente', 'Bueno', 'Reg
 
 export type CampoOrdenPotrero = 'nombre' | 'hectareas_de_extension' | 'capacidad_maxima' | 'potrero_id';
 
-/** Forma exacta en que la API devuelve un potrero (PotreroResource). */
 export interface Potrero {
   potrero_id: number;
   nombre: string;
@@ -34,7 +22,6 @@ export interface Potrero {
   estado_pasto: string | null;
   ocupacion_actual: number;
   espacios_disponibles: number;
-  /** True cuando la respuesta de la API incluyó `ocupacion_actual` explícitamente. */
   tiene_ocupacion_api?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -170,7 +157,7 @@ async function guardarCachePotreros(items: Potrero[], meta: ApiMeta): Promise<st
       value: JSON.stringify({ items, meta, updatedAt } satisfies CacheListadoPotreros),
     });
   } catch {
-    // Si falla por cuota o restricciones del navegador, no interrumpe el flujo.
+    return updatedAt;
   }
   return updatedAt;
 }
@@ -197,7 +184,7 @@ async function actualizarItemEnCache(potrero: Potrero): Promise<string> {
       } satisfies CacheListadoPotreros),
     });
   } catch {
-    // Ignorar errores de cuota
+    return actual?.updatedAt ?? updatedAt;
   }
   return actual?.updatedAt ?? updatedAt;
 }
@@ -216,7 +203,7 @@ async function eliminarItemDeCache(id: number | string): Promise<void> {
       } satisfies CacheListadoPotreros),
     });
   } catch {
-    // Ignorar errores de cuota
+    return;
   }
 }
 
@@ -259,7 +246,6 @@ async function servirListadoDesdeCache(filtros: FiltrosPotreros): Promise<Listad
 }
 
 export const potreroService = {
-  /** GET /api/v1/potreros con filtros, ordenamiento, paginación y respaldo offline. */
   async listar(filtros: FiltrosPotreros = {}): Promise<ListadoPotreros> {
     const conectado = await networkService.verificarConectividad();
 
@@ -318,7 +304,6 @@ export const potreroService = {
     }
   },
 
-  /** GET /api/v1/potreros/{potrero} con respaldo offline desde la caché local. */
   async obtenerConCache(id: number | string): Promise<DetallePotreroResultado> {
     const conectado = await networkService.verificarConectividad();
 
@@ -359,13 +344,11 @@ export const potreroService = {
     }
   },
 
-  /** GET /api/v1/potreros/{potrero} */
   async obtener(id: number | string): Promise<Potrero> {
     const res = await this.obtenerConCache(id);
     return res.item;
   },
 
-  /** POST /api/v1/potreros (solo admin). */
   async crear(payload: PotreroPayload): Promise<Potrero> {
     const respuesta = await http.post<{ data: PotreroApi }>('/potreros', payload);
     const creado = normalizarPotrero(respuesta.data);
@@ -373,7 +356,6 @@ export const potreroService = {
     return creado;
   },
 
-  /** PUT /api/v1/potreros/{potrero} (solo admin). */
   async actualizar(id: number | string, payload: Partial<PotreroPayload>): Promise<Potrero> {
     const respuesta = await http.put<{ data: PotreroApi }>(`/potreros/${id}`, payload);
     const actualizado = normalizarPotrero(respuesta.data);
@@ -381,13 +363,11 @@ export const potreroService = {
     return actualizado;
   },
 
-  /** DELETE /api/v1/potreros/{potrero} (solo admin; 409 RN-02 si tiene animales). */
   async eliminar(id: number | string): Promise<void> {
     await http.delete<void>(`/potreros/${id}`);
     await eliminarItemDeCache(id);
   },
 
-  /** GET /api/v1/potreros/{potrero}/animales (PaginacionUniforme; `meta.total` da la ocupación real). */
   async listarAnimales(
     potreroId: number | string,
     filtros: FiltrosAnimalesPotrero = {},
@@ -412,12 +392,11 @@ export const potreroService = {
     };
   },
 
-  /** Limpia la caché local de potreros. */
   async limpiarCache(): Promise<void> {
     try {
       await Preferences.remove({ key: CACHE_POTREROS_KEY });
     } catch {
-      // Ignorar si no existe
+      return;
     }
   },
 };

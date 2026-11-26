@@ -16,7 +16,6 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false, guestOnly: true },
   },
   {
-    // Shell autenticado: ion-split-pane (escritorio) + drawer y tabs (móvil)
     path: '/tabs/',
     component: () => import('@/views/TabsPage.vue'),
     meta: { requiresAuth: true },
@@ -27,7 +26,6 @@ const routes: RouteRecordRaw[] = [
         name: 'Dashboard',
         alias: ['tab1'],
         component: () => import('@/views/Dashboard.vue'),
-        // Sin `roles`: es el destino de las redirecciones por rol, no debe bloquearse (evita bucles)
         meta: { requiresAuth: true, isRootScreen: true },
       },
       {
@@ -42,7 +40,6 @@ const routes: RouteRecordRaw[] = [
         name: 'AnimalRegistration',
         alias: ['tab3', '/items/new'],
         component: () => import('@/views/AnimalRegistration.vue'),
-        // Solo el admin crea/edita animales (AnimalPolicy)
         meta: { requiresAuth: true, roles: ['admin'] },
       },
       {
@@ -173,15 +170,9 @@ router.afterEach((to) => {
   }
 });
 
-/**
- * Guardián de navegación:
- *  1. Consulta el estado reactivo de la sesión en Pinia (`authStore.isAuthenticated`).
- *  2. Aplica la matriz de roles (`meta.roles`): quien no tenga el rol vuelve al inicio.
- */
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
 
-  // Asegura que se haya intentado restaurar la sesión al arrancar antes de resolver la ruta
   if (!authStore.initialized) {
     await authStore.restoreSession();
   }
@@ -189,17 +180,14 @@ router.beforeEach(async (to) => {
   const requiresAuth = to.matched.some((record) => Boolean(record.meta.requiresAuth));
   const guestOnly = to.matched.some((record) => Boolean(record.meta.guestOnly));
 
-  // Bloquea acceso a cualquier ruta privada si no hay sesión activa
   if (requiresAuth && !authStore.isAuthenticated) {
     return { path: '/login', replace: true };
   }
 
-  // Si ya tiene sesión activa e intenta ir a /login o /register, redirige reemplazando historial
   if (guestOnly && authStore.isAuthenticated) {
     return { path: '/tabs/dashboard', replace: true };
   }
 
-  // Matriz de roles: todas las rutas coincidentes deben permitir el rol actual
   if (requiresAuth) {
     const rol = (authStore.user?.role ?? '').toLowerCase();
     const permitido = to.matched.every((record) => rolPermitido(rol, record.meta.roles as string[] | undefined));

@@ -20,7 +20,6 @@
               }}
             </p>
           </div>
-          <!-- Solo el operario inicia rondas; el admin audita. Sin PUT ni DELETE (no existen en la API). -->
           <div class="gg-actions">
             <button
               type="button"
@@ -46,7 +45,6 @@
           </div>
         </header>
 
-        <!-- Aviso de caché offline con marca de tiempo -->
         <div
           v-if="mostrandoAvisoOffline"
           class="gg-alert gg-alert--warning"
@@ -61,7 +59,6 @@
           </span>
         </div>
 
-        <!-- Filtro por estado (GET /api/v1/rondas?estado=en_progreso|completada) -->
         <form class="gg-card gg-filters" role="search" aria-label="Filtros de rondas" @submit.prevent>
           <div class="gg-field">
             <label class="gg-field__label" for="rondas-filtro-estado">Estado de la ronda</label>
@@ -82,7 +79,6 @@
           </div>
         </form>
 
-        <!-- Estado 1: Carga -->
         <section v-if="loading" class="gg-card gg-card--flush" aria-busy="true" aria-label="Cargando rondas">
           <div v-for="i in 4" :key="i" class="gg-skeleton-row">
             <span class="gg-skeleton" style="width: 18%" />
@@ -92,7 +88,6 @@
           </div>
         </section>
 
-        <!-- Estado 2: Error con reintento -->
         <error-state
           v-else-if="error"
           title="No se pudieron cargar las rondas"
@@ -100,7 +95,6 @@
           @retry="recargar"
         />
 
-        <!-- Estado 3: Vacío -->
         <section v-else-if="!rondas.length" class="gg-card">
           <empty-state
             :title="filtroEstado ? 'Sin rondas con ese estado' : 'Sin rondas registradas'"
@@ -122,7 +116,6 @@
           </empty-state>
         </section>
 
-        <!-- Estado 4: Datos -->
         <section v-else class="gg-card gg-card--flush" aria-label="Listado de rondas">
           <p class="gg-count" role="status">{{ total }} {{ total === 1 ? 'ronda' : 'rondas' }}</p>
           <div class="gg-table-wrapper">
@@ -317,11 +310,6 @@ function abrirRonda(id: number): void {
   void router.push(`/rondas/${id}`);
 }
 
-/**
- * Inicia una ronda (`POST /api/v1/rondas` con `observaciones` plural opcional).
- * Si el backend responde 409 (ya existe una ronda `en_progreso`), muestra alerta/toast
- * con el mensaje exacto del backend y lleva al operario a la ronda activa.
- */
 async function iniciarRonda(): Promise<void> {
   if (iniciando.value || !esOperario.value) return;
 
@@ -365,7 +353,7 @@ async function iniciarRonda(): Promise<void> {
         const existente = await rondaService.buscarActiva();
         if (existente) abrirRonda(existente.id);
       } catch {
-        // El aviso 409 ya informó al usuario.
+        return;
       }
     } else {
       await mostrarError(err, 'No se pudo iniciar la ronda.');
@@ -428,7 +416,6 @@ async function exportarListado(): Promise<void> {
   );
 }
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

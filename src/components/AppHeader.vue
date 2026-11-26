@@ -18,9 +18,7 @@ import { IonBackButton, IonButtons, IonHeader, IonMenuButton, IonTitle, IonToolb
 
 defineProps<{ titulo: string; atras?: string }>();
 </script>
-
 <style>
-/* En escritorio el sidebar ya está visible: la cabecera con botón de menú solo existe en móvil/tablet. */
 @media (min-width: 62rem) {
   ion-header.gg-app-header {
     display: none;

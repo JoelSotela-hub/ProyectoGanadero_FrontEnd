@@ -86,7 +86,6 @@ describe('LoginPage.vue, AuthStore y Capacidades Offline (Persona 2 + Persona 4)
     expect(authStore.isAuthenticated).toBe(true);
     expect(mockVault.get(SECURE_TOKEN_KEY)).toBe(authStore.token);
 
-    // Simular reinicio de la app (nuevo store de Pinia leyendo del almacenamiento cifrado)
     setActivePinia(createPinia());
     const nuevoAuthStore = useAuthStore();
     await nuevoAuthStore.restoreSession();
@@ -115,7 +114,6 @@ describe('LoginPage.vue, AuthStore y Capacidades Offline (Persona 2 + Persona 4)
       { paginaActual: 1, ultimaPagina: 1, porPagina: 15, total: 1 },
     );
 
-    // Desconectar la red (@capacitor/network reporta connected: false)
     mockConnected = false;
 
     const listadoOffline = await animalService.listar();

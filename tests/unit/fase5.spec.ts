@@ -132,7 +132,6 @@ describe('Fase 5 — Eliminación de registro público y módulo de Gestión de 
     authStore.user = { id: 1, name: 'Admin Principal', email: 'admin@guateganado.com', role: 'admin' };
     const loginSpy = vi.spyOn(authStore, 'login');
 
-    // GET /users envuelto en { data: [...] } y arreglo plano [...]
     const getSpy = vi.spyOn(http, 'get').mockResolvedValueOnce({ data: USUARIOS_MOCK });
 
     const store = useUsuariosStore();
@@ -142,12 +141,10 @@ describe('Fase 5 — Eliminación de registro público y módulo de Gestión de 
     expect(lista).toHaveLength(3);
     expect(store.usuarios).toHaveLength(3);
 
-    // También soporta arreglo directo sin data
     getSpy.mockResolvedValueOnce(USUARIOS_MOCK);
     const listaPlana = await usuarioService.listar();
     expect(listaPlana).toHaveLength(3);
 
-    // POST /auth/register con autenticación (sin sinAutenticacion: true), normalizando name y email
     const nuevoUsuario: AuthUser = {
       id: 4,
       name: 'Nuevo Veterinario',
@@ -168,7 +165,6 @@ describe('Fase 5 — Eliminación de registro público y módulo de Gestión de 
       password_confirmation: 'Password1!',
     });
 
-    // Verifica que NO se pase { sinAutenticacion: true }
     expect(postSpy).toHaveBeenCalledTimes(1);
     expect(postSpy.mock.calls[0]?.[0]).toBe('/auth/register');
     expect(postSpy.mock.calls[0]?.[1]).toEqual({
@@ -184,13 +180,11 @@ describe('Fase 5 — Eliminación de registro público y módulo de Gestión de 
     expect(store.usuarios[0]).toEqual(nuevoUsuario);
     expect(store.usuarios).toHaveLength(4);
 
-    // La sesión del administrador permanece intacta
     expect(loginSpy).not.toHaveBeenCalled();
     expect(authStore.token).toBe('admin-bearer-token-123');
     expect(authStore.user?.id).toBe(1);
     expect(authStore.user?.email).toBe('admin@guateganado.com');
 
-    // authService.registrar también funciona directamente sin exigir token en la respuesta
     postSpy.mockResolvedValueOnce({
       message: 'Usuario creado',
       usuario: nuevoUsuario,
@@ -219,7 +213,6 @@ describe('Fase 5 — Eliminación de registro público y módulo de Gestión de 
     const wrapper = mount(Usuarios, { global: { plugins: [router] } });
     await flushPromises();
 
-    // Un solo <h1> y tabla con los 3 usuarios
     expect(wrapper.findAll('h1')).toHaveLength(1);
     expect(wrapper.find('h1').text()).toBe('Usuarios');
 
@@ -231,7 +224,6 @@ describe('Fase 5 — Eliminación de registro público y módulo de Gestión de 
     expect(tabla.text()).toContain('Veterinario');
     expect(tabla.text()).toContain('Operario');
 
-    // Filtro por rol y búsqueda
     await wrapper.get('[data-testid="select-filtro-rol"]').setValue('veterinario');
     await flushPromises();
     expect(wrapper.findAll('tbody tr')).toHaveLength(1);
@@ -241,12 +233,10 @@ describe('Fase 5 — Eliminación de registro público y módulo de Gestión de 
     await flushPromises();
     expect(wrapper.findAll('tbody tr')).toHaveLength(3);
 
-    // Abrir modal "Nuevo usuario"
     await wrapper.get('[data-testid="btn-nuevo-usuario"]').trigger('click');
     await flushPromises();
     expect(wrapper.find('[data-testid="modal-usuario-form"]').exists()).toBe(true);
 
-    // Simular respuesta 422 del backend por correo duplicado y contraseña comprometida
     vi.spyOn(http, 'post').mockRejectedValueOnce(
       new ApiError(422, 'Los datos proporcionados no son válidos.', {
         email: ['El correo electrónico ya ha sido registrado.'],
@@ -269,10 +259,8 @@ describe('Fase 5 — Eliminación de registro público y módulo de Gestión de 
     expect(wrapper.get('[data-testid="error-usuario-password"]').text()).toBe(
       'La contraseña ha aparecido en una filtración de datos.',
     );
-    // El modal permanece abierto tras 422
     expect(wrapper.find('[data-testid="modal-usuario-form"]').exists()).toBe(true);
 
-    // Envío exitoso 201 Created
     vi.spyOn(http, 'post').mockResolvedValueOnce({
       message: 'Usuario creado exitosamente.',
       usuario: {
@@ -288,7 +276,6 @@ describe('Fase 5 — Eliminación de registro público y módulo de Gestión de 
     await wrapper.get('[data-testid="form-crear-usuario"]').trigger('submit.prevent');
     await flushPromises();
 
-    // Cierra modal, muestra toast, agrega fila a la tabla y mantiene sesión del admin
     expect(wrapper.find('[data-testid="modal-usuario-form"]').exists()).toBe(false);
     expect(mockToastCreate).toHaveBeenCalledTimes(1);
     expect(wrapper.findAll('tbody tr')).toHaveLength(4);

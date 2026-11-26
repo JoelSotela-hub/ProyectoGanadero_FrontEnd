@@ -1,15 +1,3 @@
-/**
- * Store de Pinia para el módulo de Insumos (Fase 4 — Contrato API Sección 7).
- *
- * Centraliza:
- *   - Listado paginado (`GET /api/v1/insumos`) con filtros reales:
- *     `buscar`, `categoria_id`, `unidad_medida_id`, `precio_min`, `precio_max`, `sort_by`, `order`.
- *   - Debounce (300 ms) + `AbortController` + caché offline con marca de tiempo.
- *   - Selectores de `Categoria` y `UnidadMedida` sincronizados con `useCatalogosStore`.
- *   - CRUD exclusivo para `admin` (lectura para `veterinario`, bloqueado para `operario`),
- *     con validación real en cliente, mapeo de errores `422` por campo, manejo de `409`
- *     y recarga tras `201`/`200` para obtener las relaciones anidadas (`categoria`, `unidad_medida`).
- */
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 
@@ -76,12 +64,10 @@ export const useInsumoStore = defineStore('insumo', () => {
   const authStore = useAuthStore();
   const catalogosStore = useCatalogosStore();
 
-  // ---------------- Permisos por rol ----------------
   const rolActual = computed<string>(() => (authStore.user?.role ?? '').toLowerCase());
   const puedeVer = computed<boolean>(() => rolActual.value === 'admin' || rolActual.value === 'veterinario');
   const puedeGestionar = computed<boolean>(() => rolActual.value === 'admin');
 
-  // ---------------- Selectores sincronizados con useCatalogosStore ----------------
   const categorias = computed<Categoria[]>(() => catalogosStore.categorias);
   const unidadesMedida = computed<UnidadMedida[]>(() => catalogosStore.unidadesMedida);
 
@@ -90,7 +76,6 @@ export const useInsumoStore = defineStore('insumo', () => {
     await catalogosStore.cargarCatalogosInsumos(forzar);
   }
 
-  // ---------------- 1. Listado ----------------
   const items = ref<Insumo[]>([]);
   const filtros = ref<FiltrosListadoInsumos>(filtrosIniciales());
 
@@ -259,7 +244,6 @@ export const useInsumoStore = defineStore('insumo', () => {
     if (items.value.length > 0) desdeCache.value = true;
   }
 
-  // ---------------- 2. Formulario Crear / Editar (solo admin) ----------------
   const editandoId = ref<number | null>(null);
   const esEdicion = computed<boolean>(() => editandoId.value !== null);
 
@@ -361,8 +345,6 @@ export const useInsumoStore = defineStore('insumo', () => {
           ? await insumoService.actualizar(editandoId.value, payload)
           : await insumoService.crear(payload);
 
-      // POST / PUT en InsumoService no hacen eager-loading de `categoria` ni `unidad_medida`:
-      // recargamos el listado para mostrar los nombres completos al instante.
       await recargar();
       return resultado;
     } catch (err) {
@@ -433,7 +415,6 @@ export const useInsumoStore = defineStore('insumo', () => {
     unidadesMedida,
     cargarSelectores,
 
-    // Listado
     items,
     filtros,
     loading,
@@ -465,7 +446,6 @@ export const useInsumoStore = defineStore('insumo', () => {
     marcarSinConexion,
     limpiarEstado,
 
-    // Formulario
     editandoId,
     esEdicion,
     form,

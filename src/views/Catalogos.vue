@@ -44,7 +44,6 @@
           </div>
         </header>
 
-        <!-- Selector de 3 segmentos para los catálogos administrativos -->
         <div class="gg-segment-wrap">
           <ion-segment
             :value="segmento"
@@ -64,7 +63,6 @@
           </ion-segment>
         </div>
 
-        <!-- ==================== SEGMENTO 1: RAZAS ==================== -->
         <template v-if="segmento === 'razas'">
           <div
             v-if="store.mostrandoAvisoOfflineRazas"
@@ -116,7 +114,6 @@
             </div>
           </form>
 
-          <!-- Estado 1: Cargando -->
           <section
             v-if="store.loadingRazas"
             class="gg-card gg-card--flush"
@@ -130,7 +127,6 @@
             </div>
           </section>
 
-          <!-- Estado 2: Error -->
           <error-state
             v-else-if="store.errorRazas"
             title="No se pudo cargar el catálogo de razas"
@@ -138,7 +134,6 @@
             @retry="store.recargarRazas()"
           />
 
-          <!-- Estado 3: Vacío -->
           <section v-else-if="!store.razas.length" class="gg-card">
             <empty-state
               :title="store.hayFiltrosRazas ? 'Sin resultados' : 'Sin razas registradas'"
@@ -163,7 +158,6 @@
             </empty-state>
           </section>
 
-          <!-- Estado 4: Datos -->
           <section v-else class="gg-card gg-card--flush" aria-label="Catálogo de razas">
             <p class="gg-count" role="status">{{ store.totalRazas }} {{ store.totalRazas === 1 ? 'raza' : 'razas' }}</p>
             <div class="gg-table-wrapper">
@@ -220,7 +214,6 @@
           </ion-infinite-scroll>
         </template>
 
-        <!-- ==================== SEGMENTO 2: CATEGORÍAS ==================== -->
         <template v-else-if="segmento === 'categorias'">
           <div
             v-if="store.mostrandoAvisoOfflineCategorias"
@@ -285,7 +278,6 @@
             </div>
           </form>
 
-          <!-- Estado 1: Cargando -->
           <section
             v-if="store.loadingCategorias"
             class="gg-card gg-card--flush"
@@ -299,7 +291,6 @@
             </div>
           </section>
 
-          <!-- Estado 2: Error -->
           <error-state
             v-else-if="store.errorCategorias"
             title="No se pudo cargar el catálogo de categorías"
@@ -307,7 +298,6 @@
             @retry="store.recargarCategorias()"
           />
 
-          <!-- Estado 3: Vacío -->
           <section v-else-if="!store.categorias.length" class="gg-card">
             <empty-state
               :title="store.hayFiltrosCategorias ? 'Sin resultados' : 'Sin categorías registradas'"
@@ -332,7 +322,6 @@
             </empty-state>
           </section>
 
-          <!-- Estado 4: Datos -->
           <section v-else class="gg-card gg-card--flush" aria-label="Catálogo de categorías">
             <p class="gg-count" role="status">
               {{ store.totalCategorias }} {{ store.totalCategorias === 1 ? 'categoría' : 'categorías' }}
@@ -397,7 +386,6 @@
           </ion-infinite-scroll>
         </template>
 
-        <!-- ==================== SEGMENTO 3: UNIDADES DE MEDIDA ==================== -->
         <template v-else>
           <div
             v-if="store.mostrandoAvisoOfflineUnidades"
@@ -451,7 +439,6 @@
             </div>
           </form>
 
-          <!-- Estado 1: Cargando -->
           <section
             v-if="store.loadingUnidades"
             class="gg-card gg-card--flush"
@@ -465,7 +452,6 @@
             </div>
           </section>
 
-          <!-- Estado 2: Error -->
           <error-state
             v-else-if="store.errorUnidades"
             title="No se pudo cargar el catálogo de unidades de medida"
@@ -473,7 +459,6 @@
             @retry="store.recargarUnidades()"
           />
 
-          <!-- Estado 3: Vacío -->
           <section v-else-if="!store.unidades.length" class="gg-card">
             <empty-state
               :title="store.hayFiltrosUnidades ? 'Sin resultados' : 'Sin unidades de medida'"
@@ -498,7 +483,6 @@
             </empty-state>
           </section>
 
-          <!-- Estado 4: Datos -->
           <section v-else class="gg-card gg-card--flush" aria-label="Catálogo de unidades de medida">
             <p class="gg-count" role="status">
               {{ store.totalUnidades }} {{ store.totalUnidades === 1 ? 'unidad de medida' : 'unidades de medida' }}
@@ -563,7 +547,6 @@
         </template>
       </div>
 
-      <!-- ==================== MODAL 1: CREAR / EDITAR RAZA ==================== -->
       <div
         v-if="modalRazaAbierto && store.esAdmin"
         class="gg-modal-backdrop"
@@ -652,7 +635,6 @@
         </div>
       </div>
 
-      <!-- ==================== MODAL 2: CREAR / EDITAR CATEGORÍA ==================== -->
       <div
         v-if="modalCategoriaAbierto && store.esAdmin"
         class="gg-modal-backdrop"
@@ -775,7 +757,6 @@
         </div>
       </div>
 
-      <!-- ==================== MODAL 3: CREAR / EDITAR UNIDAD DE MEDIDA ==================== -->
       <div
         v-if="modalUnidadAbierto && store.esAdmin"
         class="gg-modal-backdrop"
@@ -987,7 +968,6 @@ function cambiarSegmento(evento: CustomEvent): void {
   void recargarSegmentoActivo();
 }
 
-// -------- Razas --------
 function abrirCrearRaza(): void {
   if (!store.esAdmin) return;
   store.prepararNuevaRaza();
@@ -1052,7 +1032,6 @@ async function confirmarEliminarRaza(item: Raza): Promise<void> {
   }
 }
 
-// -------- Categorías --------
 function abrirCrearCategoria(): void {
   if (!store.esAdmin) return;
   store.prepararNuevaCategoria();
@@ -1121,7 +1100,6 @@ async function confirmarEliminarCategoria(item: Categoria): Promise<void> {
   }
 }
 
-// -------- Unidades de Medida --------
 function abrirCrearUnidad(): void {
   if (!store.esAdmin) return;
   store.prepararNuevaUnidad();
@@ -1219,7 +1197,6 @@ async function onInfiniteUnidades(evento: CustomEvent): Promise<void> {
   (evento.target as HTMLIonInfiniteScrollElement).complete();
 }
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

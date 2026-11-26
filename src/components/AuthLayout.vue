@@ -17,7 +17,6 @@
             </p>
           </div>
 
-          <!-- Ilustración decorativa: colinas, curvas topográficas, sol y cerca -->
           <svg
             class="gg-auth__art"
             viewBox="0 0 600 560"
@@ -81,7 +80,6 @@
 import { IonContent, IonIcon, IonPage } from '@ionic/vue';
 import { pawOutline } from 'ionicons/icons';
 </script>
-
 <style>
 ion-content.gg-auth-content {
   --background: var(--gg-canvas);
@@ -95,7 +93,6 @@ ion-content.gg-auth-content {
   overflow-x: hidden;
 }
 
-/* ---- Panel de marca (móvil: cabecera compacta) ---- */
 .gg-auth__brand {
   position: relative;
   display: flex;
@@ -133,7 +130,6 @@ ion-content.gg-auth-content {
   display: none;
 }
 
-/* ---- Panel del formulario ---- */
 .gg-auth__panel {
   flex: 1;
   display: flex;
@@ -163,7 +159,6 @@ ion-content.gg-auth-content {
   }
 }
 
-/* ---- Escritorio: 2 columnas 50 % / 50 % ---- */
 @media (min-width: 62rem) {
   .gg-auth {
     display: grid;

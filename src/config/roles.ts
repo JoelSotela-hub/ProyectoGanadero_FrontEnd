@@ -1,14 +1,3 @@
-/**
- * Matriz de roles y módulos de navegación (única fuente de verdad).
- *
- * La usan el router (`meta.roles` + `beforeEach`), el sidebar de escritorio y la
- * barra de tabs móvil, de modo que lo que se oculta en el menú coincide
- * exactamente con lo que se bloquea al navegar por URL.
- *
- *   admin       acceso completo
- *   veterinario sin Rondas ni Catálogos
- *   operario    sin Tratamientos, Insumos ni Catálogos
- */
 import {
   cubeOutline,
   homeOutline,
@@ -37,7 +26,6 @@ export interface ModuloNavegacion {
   ruta: string;
   icono: string;
   roles: readonly Rol[];
-  /** Aparece en la barra inferior móvil; el resto vive en el menú lateral. */
   enTabs: boolean;
 }
 

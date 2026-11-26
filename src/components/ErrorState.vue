@@ -21,7 +21,6 @@ defineProps<{
 
 defineEmits<{ (e: 'retry'): void }>();
 </script>
-
 <style scoped>
 .gg-state__icon--error {
   color: var(--gg-danger-fg);

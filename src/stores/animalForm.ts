@@ -1,7 +1,3 @@
-/**
- * Store del formulario de animal (alta y edición). La vista solo enlaza campos:
- * validación, llamadas a la API, 422 por campo y 409 (RN-01 / RN-03) viven aquí.
- */
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 
@@ -55,7 +51,6 @@ function erroresVacios(): Record<CampoAnimal, string> {
 export interface ResultadoGuardado {
   ok: boolean;
   animal?: AnimalItem;
-  /** Aviso no bloqueante (por ejemplo, el animal se guardó pero el peso inicial no). */
   aviso?: string;
 }
 
@@ -64,12 +59,10 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
   const errores = reactive<Record<CampoAnimal, string>>(erroresVacios());
 
   const editingId = ref<string | null>(null);
-  /** Potrero originalmente asignado al animal cuando se carga en modo edición. */
   const originalPotreroId = ref<string>('');
   const cargando = ref<boolean>(false);
   const guardando = ref<boolean>(false);
   const errorCarga = ref<string>('');
-  /** Mensaje de regla de negocio (409) o error general del servidor. */
   const errorNegocio = ref<string>('');
   const errorGeneral = ref<string>('');
 
@@ -81,7 +74,6 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
     errorGeneral.value = '';
   }
 
-  /** Prepara el formulario: vacío para alta o precargado desde GET /animales/{id} para edición. */
   async function iniciar(id: string | null): Promise<void> {
     Object.assign(form, formularioVacio());
     limpiarErrores();
@@ -109,7 +101,6 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
     }
   }
 
-  /** Reglas de StoreAnimalRequest / UpdateAnimalRequest / StorePesajeAnimalRequest. */
   function validar(): boolean {
     limpiarErrores();
 
@@ -138,10 +129,6 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
     return Object.values(errores).every((mensaje) => !mensaje);
   }
 
-  /**
-   * POST /animales (201 sin relaciones anidadas) o PUT /animales/{id}.
-   * Tras un 201 se vuelve a consultar el animal para tener raza y potrero reales.
-   */
   async function guardar(): Promise<ResultadoGuardado> {
     if (!validar()) return { ok: false };
 
@@ -149,7 +136,6 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
     try {
       const datos = {
         numero_arete: form.numero_arete.trim(),
-        // Vacío => el backend autogenera VACA-{numero_arete}
         codigo_qr: form.codigo_qr.trim() || null,
         raza_id: Number(form.raza_id),
         potrero_id: Number(form.potrero_id),
@@ -177,10 +163,9 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
       }
 
       try {
-        // El 201 no trae relaciones: refresco para mostrar raza/potrero reales y actualizar la caché.
         animal = await animalService.obtener(creado.id);
       } catch {
-        // Si falla el refresco se usa la respuesta del 201.
+        animal = creado;
       }
 
       return { ok: true, animal, aviso };
@@ -193,7 +178,6 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
           });
           errorGeneral.value = Object.keys(porCampo).length ? 'Revisa los campos marcados.' : err.message;
         } else if (err.esReglaDeNegocio) {
-          // RN-03: potrero lleno; RN-01 aplica al borrar.
           errorNegocio.value = err.message;
         } else {
           errorGeneral.value = err.message;

@@ -1,16 +1,3 @@
-/**
- * Servicio de Sanidad: Catálogo de Tratamientos y Aplicaciones Sanitarias
- * (Contrato API Secciones 5 y 6).
- *
- *   GET|POST|PUT|DELETE /api/v1/tratamientos
- *   GET|POST|PUT|DELETE /api/v1/tratamientos-aplicaciones
- *   GET                 /api/v1/animales/{animal}/tratamientos
- *
- * CRÍTICO POR ROL:
- * Los endpoints de TratamientoAnimal (`/animales/{animal}/tratamientos` y
- * `/tratamientos-aplicaciones`) están autorizados únicamente para `admin` y
- * `veterinario` (`TratamientoAnimalPolicy`). El rol `operario` recibe `403`.
- */
 import { crearCacheListado, LINKS_VACIOS, listarConRespaldo, type ListadoPaginado } from './cacheListado';
 import type { ApiEnvelope, ApiLinks, ApiMeta } from './http';
 import { http } from './http';
@@ -97,11 +84,6 @@ export interface FiltrosCatalogoTratamientos {
   signal?: AbortSignal;
 }
 
-/**
- * Payload de POST /api/v1/tratamientos-aplicaciones (StoreTratamientoAnimalRequest).
- * No existe POST anidado en `/animales/{animal}/tratamientos`, por lo que siempre
- * se envía `id_animal` en el cuerpo hacia `/tratamientos-aplicaciones`.
- */
 export interface NuevaAplicacionTratamiento {
   id_animal: number;
   tratamiento_id: number;
@@ -163,10 +145,6 @@ export function mapearTratamientoAplicacion(raw: TratamientoAplicacionApi): Trat
 }
 
 export const tratamientoService = {
-  /**
-   * Catálogo sanitario paginado con filtros (`buscar`, `tipo`) y respaldo offline.
-   * GET /api/v1/tratamientos
-   */
   async listarCatalogo(params: FiltrosCatalogoTratamientos = {}): Promise<RespuestaPaginadaCatalogoTratamientos> {
     const pagina = params.page ?? 1;
     const porPagina = params.per_page ?? 100;
@@ -192,7 +170,6 @@ export const tratamientoService = {
     });
   },
 
-  /** POST /api/v1/tratamientos (UI restringida a admin y veterinario). */
   async crearCatalogo(datos: TratamientoCatalogoPayload): Promise<TratamientoCatalogo> {
     const respuesta = await http.post<{ data: TratamientoCatalogo }>('/tratamientos', {
       nombre: datos.nombre.trim(),
@@ -202,7 +179,6 @@ export const tratamientoService = {
     return mapearTratamientoCatalogo(respuesta.data);
   },
 
-  /** PUT /api/v1/tratamientos/{tratamiento} (UI restringida a admin y veterinario). */
   async actualizarCatalogo(
     id: number | string,
     datos: Partial<TratamientoCatalogoPayload>,
@@ -217,15 +193,10 @@ export const tratamientoService = {
     return mapearTratamientoCatalogo(respuesta.data);
   },
 
-  /** DELETE /api/v1/tratamientos/{tratamiento} (solo admin; 409 RN-06 si tiene aplicaciones). */
   async eliminarCatalogo(id: number | string): Promise<void> {
     await http.delete<void>(`/tratamientos/${id}`);
   },
 
-  /**
-   * Listado global de aplicaciones sanitarias con filtros y respaldo offline.
-   * GET /api/v1/tratamientos-aplicaciones (solo admin y veterinario; operario -> 403).
-   */
   async listarAplicaciones(filtros: FiltrosAplicacionesGlobal = {}): Promise<ListadoAplicacionesGlobal> {
     const pagina = filtros.page ?? 1;
     const porPagina = filtros.per_page ?? 15;
@@ -253,10 +224,6 @@ export const tratamientoService = {
     });
   },
 
-  /**
-   * Historial de tratamientos aplicados a un animal en formato PaginacionUniforme.
-   * GET /api/v1/animales/{animal}/tratamientos (solo admin y veterinario).
-   */
   async listarPorAnimal(
     idAnimal: number | string,
     filtros: FiltrosTratamientosAnimal = {},
@@ -282,12 +249,6 @@ export const tratamientoService = {
     };
   },
 
-  /**
-   * Registra una nueva aplicación sanitaria.
-   * POST /api/v1/tratamientos-aplicaciones (solo admin y veterinario).
-   * Nota del contrato: store() devuelve 201 sin eager-loading de `animal`/`tratamiento`,
-   * por lo que el store de Pinia recarga el listado tras crear.
-   */
   async aplicarTratamiento(datos: NuevaAplicacionTratamiento): Promise<TratamientoAplicacion> {
     const respuesta = await http.post<{ data: TratamientoAplicacionApi }>('/tratamientos-aplicaciones', {
       id_animal: Number(datos.id_animal),
@@ -299,7 +260,6 @@ export const tratamientoService = {
     return mapearTratamientoAplicacion(respuesta.data);
   },
 
-  /** PUT /api/v1/tratamientos-aplicaciones/{id} (admin y veterinario). */
   async actualizarAplicacion(
     id: number | string,
     datos: Partial<NuevaAplicacionTratamiento>,
@@ -316,12 +276,10 @@ export const tratamientoService = {
     return mapearTratamientoAplicacion(respuesta.data);
   },
 
-  /** DELETE /api/v1/tratamientos-aplicaciones/{id} (solo admin). */
   async eliminarAplicacion(id: number | string): Promise<void> {
     await http.delete<void>(`/tratamientos-aplicaciones/${id}`);
   },
 
-  /** Limpia las cachés offline del módulo de tratamientos (al cerrar sesión). */
   async limpiarCache(): Promise<void> {
     await Promise.all([cacheAplicaciones.limpiar(), cacheCatalogo.limpiar()]);
   },

@@ -171,19 +171,16 @@ describe('Fase 6 — Ocupación real de potreros, manejo de aforo (Pendiente 3) 
     const wrapper = mount(Potreros, { global: { plugins: [router] } });
     await flushPromises();
 
-    // Potrero 1: 4 / 10 (6 disp.)
     expect(wrapper.get('[data-testid="ocupacion-potrero-1"]').text()).toContain('4 / 10');
     const badge1 = wrapper.get('[data-testid="badge-ocupacion-potrero-1"]');
     expect(badge1.text()).toBe('6 disp.');
     expect(badge1.classes()).toContain('gg-badge--success');
 
-    // Potrero 2: 8 / 10 (Casi lleno)
     expect(wrapper.get('[data-testid="ocupacion-potrero-2"]').text()).toContain('8 / 10');
     const badge2 = wrapper.get('[data-testid="badge-ocupacion-potrero-2"]');
     expect(badge2.text()).toContain('Casi lleno');
     expect(badge2.classes()).toContain('gg-badge--warning');
 
-    // Potrero 3: 10 / 10 (Lleno)
     expect(wrapper.get('[data-testid="ocupacion-potrero-3"]').text()).toContain('10 / 10');
     const badge3 = wrapper.get('[data-testid="badge-ocupacion-potrero-3"]');
     expect(badge3.text()).toBe('Lleno');
@@ -203,7 +200,6 @@ describe('Fase 6 — Ocupación real de potreros, manejo de aforo (Pendiente 3) 
             hectareas_de_extension: 25,
             capacidad_maxima: 10,
             estado_pasto: 'Excelente',
-            // El potrero tiene 12 animales históricos en la tabla, pero 4 son 'Vendido' => ocupacion_actual = 8
             ocupacion_actual: 8,
             espacios_disponibles: 2,
           },
@@ -240,14 +236,12 @@ describe('Fase 6 — Ocupación real de potreros, manejo de aforo (Pendiente 3) 
     await flushPromises();
 
     const store = usePotreroStore();
-    // Prioriza ocupacion_actual (8) y espacios_disponibles (2) del backend sobre animalesMeta.total (12)
     expect(store.ocupacion.ocupados).toBe(8);
     expect(store.ocupacion.disponibles).toBe(2);
     expect(store.ocupacion.porcentajeReal).toBe(80);
     expect(wrapper.get('[data-testid="ocupacion-texto"]').text()).toContain('8 de 10 animales asignados');
     expect(wrapper.get('[data-testid="badge-ocupacion-porcentaje"]').text()).toBe('80% ocupado');
 
-    // Abrir edición en PotreroFormModal y reducir capacidad_maxima por debajo de ocupacion_actual (5 < 8) -> 409 Conflict
     store.prepararEdicion(store.detalle!);
     const modal = mount(PotreroFormModal, {
       props: { open: true },
@@ -269,7 +263,6 @@ describe('Fase 6 — Ocupación real de potreros, manejo de aforo (Pendiente 3) 
     );
     expect(mockToastCreate).toHaveBeenCalled();
 
-    // Guardar con capacidad válida (12) actualiza detalle con nuevo ocupacion_actual y espacios_disponibles
     vi.spyOn(http, 'put').mockResolvedValueOnce({
       data: {
         potrero_id: 1,
@@ -314,24 +307,20 @@ describe('Fase 6 — Ocupación real de potreros, manejo de aforo (Pendiente 3) 
     await flushPromises();
 
     const opciones = wrapper.findAll('#a-potrero option');
-    // 0: placeholder, 1: Potrero Norte, 2: Potrero Sur
     expect(opciones[1]?.text()).toBe('Potrero Norte (8/10 — 2 disp.)');
     expect((opciones[1]?.element as HTMLOptionElement).disabled).toBe(false);
 
     expect(opciones[2]?.text()).toBe('Potrero Sur (10/10 — Lleno)');
     expect((opciones[2]?.element as HTMLOptionElement).disabled).toBe(true);
 
-    // Si el estado seleccionado pasa a 'Vendido', no se bloquea la opción
     await wrapper.get('#a-estado').setValue('Vendido');
     await flushPromises();
     expect((opciones[2]?.element as HTMLOptionElement).disabled).toBe(false);
 
-    // Volver a 'Activo' vuelve a deshabilitar Potrero Sur en modo creación
     await wrapper.get('#a-estado').setValue('Activo');
     await flushPromises();
     expect((opciones[2]?.element as HTMLOptionElement).disabled).toBe(true);
 
-    // En modo edición, si el animal YA pertenece al potrero lleno (id 20), la opción NO se deshabilita
     vi.spyOn(animalService, 'obtener').mockResolvedValueOnce({
       id: 99,
       id_animal: 99,
@@ -353,7 +342,6 @@ describe('Fase 6 — Ocupación real de potreros, manejo de aforo (Pendiente 3) 
     const opcionesEdicion = wrapper.findAll('#a-potrero option');
     expect((opcionesEdicion[2]?.element as HTMLOptionElement).disabled).toBe(false);
 
-    // Si el backend responde 409 Conflict al guardar (p.ej. otro usuario llenó el potrero), se muestra alerta de regla de negocio
     vi.spyOn(http, 'put').mockRejectedValueOnce(
       new ApiError(409, 'El potrero seleccionado ha alcanzado su capacidad máxima de 10 animales.'),
     );
@@ -381,7 +369,6 @@ describe('Fase 6 — Ocupación real de potreros, manejo de aforo (Pendiente 3) 
 
     const tarjetas = await dashboardService.potrerosCapacidad();
 
-    // Exactamente 1 sola petición GET a /potreros (cero peticiones a /potreros/{id}/animales)
     expect(getSpy).toHaveBeenCalledTimes(1);
     expect(getSpy).toHaveBeenCalledWith(
       '/potreros',

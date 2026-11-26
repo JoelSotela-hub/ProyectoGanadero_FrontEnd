@@ -1,24 +1,3 @@
-/**
- * Servicio de animales (Persona 3 + Caché Offline de Persona 4).
- *
- *   GET    /api/v1/animales?page=&per_page=&search=&sexo=&estado=&raza_id=&potrero_id=
- *   GET    /api/v1/animales/{id}
- *   POST   /api/v1/animales
- *   PUT    /api/v1/animales/{id}
- *
- * IMPORTANTE — traduccion de campos.
- * La API y las vistas no usan los mismos nombres. La API devuelve
- * `id_animal`, `numero_arete`, `raza_id`/`potrero_id` con objetos anidados,
- * y no tiene los campos `nombre` ni `peso`: el peso vive en los pesajes.
- * Este modulo traduce la respuesta al modelo `AnimalItem` que ya usan las
- * vistas, para no obligar a reescribirlas.
- *
- * CAPACIDAD SIN CONECTIVIDAD (Persona 4):
- * Cuando `@capacitor/network` reporta que no hay conexion o la peticion falla
- * por un error de red, `listar()` y `obtenerConCache()` sirven los datos desde
- * la cache local (`@capacitor/preferences`) indicando `desdeCache: true` y la
- * marca de tiempo `ultimaActualizacion`.
- */
 import { cacheService } from './cache.service';
 import type { ApiLinks, ApiMeta } from './http';
 import { ApiError, http } from './http';
@@ -26,7 +5,6 @@ import { networkService } from './network.service';
 
 import type { AnimalItem } from '@/models/auth.model';
 
-/** Forma exacta en que la API devuelve un animal (AnimalResource). */
 export interface AnimalApi {
   id_animal: number;
   numero_arete: string;
@@ -43,7 +21,6 @@ export interface AnimalApi {
     fecha_pesaje: string | null;
     observaciones?: string | null;
   }[];
-  /** Persona 5: QR y tratamientos del detalle / consulta por QR. */
   codigo_qr?: string | null;
   tratamientos?: {
     tratamiento_id: number;
@@ -79,11 +56,8 @@ export interface Paginacion {
 export interface ListadoAnimales {
   items: AnimalItem[];
   paginacion: Paginacion;
-  /** True si quedan paginas por cargar (lo usa el scroll infinito). */
   hayMas: boolean;
-  /** True cuando los datos provienen de la cache local por falta de conectividad (Persona 4). */
   desdeCache?: boolean;
-  /** Marca de tiempo ISO de la ultima sincronizacion con la API (Persona 4). */
   ultimaActualizacion?: string | null;
 }
 
@@ -103,11 +77,9 @@ export interface FiltrosAnimales {
   potrero_id?: number | string;
   sort_by?: string;
   order?: 'asc' | 'desc';
-  /** Cancela la peticion en curso (debounce / salir de la vista). */
   signal?: AbortSignal;
 }
 
-/** Datos que acepta POST /animales (StoreAnimalRequest). */
 export interface NuevoAnimal {
   numero_arete: string;
   codigo_qr?: string | null;
@@ -118,7 +90,6 @@ export interface NuevoAnimal {
   estado?: string | null;
 }
 
-/** Ultimo peso registrado, si el animal trae pesajes cargados. */
 function ultimoPeso(animal: AnimalApi): number | null {
   if (!animal.pesajes?.length) return null;
   const ordenados = [...animal.pesajes].sort((a, b) =>
@@ -128,14 +99,12 @@ function ultimoPeso(animal: AnimalApi): number | null {
   return Number.isFinite(peso) ? peso : null;
 }
 
-/** Traduce la respuesta de la API al modelo que consumen las vistas. */
 export function mapearAnimal(animal: AnimalApi): AnimalItem {
   const codigoQrNormalizado = animal.codigo_qr ?? `VACA-${animal.numero_arete}`;
   return {
     id: animal.id_animal,
     id_animal: animal.id_animal,
     arete: animal.numero_arete,
-    // La API no tiene un campo "nombre"; se muestra el arete como identificador.
     nombre: animal.numero_arete,
     raza: animal.raza?.nombre ?? `Raza ${animal.raza_id}`,
     sexo: animal.sexo,
@@ -164,10 +133,6 @@ export function mapearAnimal(animal: AnimalApi): AnimalItem {
   };
 }
 
-/**
- * Aplica los filtros en memoria cuando el usuario filtra o busca sobre el
- * listado cacheado sin conexion.
- */
 function filtrarEnCache(items: AnimalItem[], filtros: FiltrosAnimales): AnimalItem[] {
   const termino = filtros.search?.trim().toLowerCase() ?? '';
   return items.filter((animal) => {
@@ -187,9 +152,6 @@ function filtrarEnCache(items: AnimalItem[], filtros: FiltrosAnimales): AnimalIt
   });
 }
 
-/**
- * Intenta construir la respuesta del listado a partir de la cache local.
- */
 async function servirListadoDesdeCache(filtros: FiltrosAnimales): Promise<ListadoAnimales | null> {
   const cache = await cacheService.obtenerListado();
   if (!cache) return null;
@@ -210,10 +172,6 @@ async function servirListadoDesdeCache(filtros: FiltrosAnimales): Promise<Listad
 }
 
 export const animalService = {
-  /**
-   * Listado paginado con filtros y respaldo automatico en cache local cuando
-   * no hay conectividad (Persona 4).
-   */
   async listar(filtros: FiltrosAnimales = {}): Promise<ListadoAnimales> {
     const conectado = await networkService.verificarConectividad();
 
@@ -247,12 +205,10 @@ export const animalService = {
         total: meta?.total ?? items.length,
       };
 
-      // Persistir en la cache local el listado consultado con su marca de tiempo
       const sinFiltrosActivos =
         !filtros.search && !filtros.sexo && !filtros.estado && !filtros.raza_id && !filtros.potrero_id;
 
       let updatedAt: string;
-      // Solo el listado SIN filtros reemplaza/amplia la cache: un resultado filtrado nunca la sobrescribe.
       if (sinFiltrosActivos) {
         const previo = (filtros.page ?? 1) > 1 ? await cacheService.obtenerListado() : null;
         const combinados = previo
@@ -272,7 +228,6 @@ export const animalService = {
         ultimaActualizacion: updatedAt,
       };
     } catch (error) {
-      // Si fallo por red (modo avion o servidor inalcanzable), servir desde la cache local
       if (error instanceof ApiError && error.esDeRed) {
         const desdeCache = await servirListadoDesdeCache(filtros);
         if (desdeCache) return desdeCache;
@@ -281,17 +236,11 @@ export const animalService = {
     }
   },
 
-  /** Detalle por id. Incluye raza, potrero, pesajes y tratamientos. */
   async obtener(id: number | string): Promise<AnimalItem> {
     const resultado = await this.obtenerConCache(id);
     return resultado.item;
   },
 
-  /**
-   * Detalle por id con soporte offline desde la cache local (Persona 4).
-   * Permite que `AnimalDetail.vue` funcione sin conexion y muestre el aviso de
-   * datos no actualizados con su marca de tiempo.
-   */
   async obtenerConCache(id: number | string): Promise<DetalleAnimalResultado> {
     const conectado = await networkService.verificarConectividad();
 
@@ -331,10 +280,6 @@ export const animalService = {
     }
   },
 
-  /**
-   * Busca una vaca por el texto de su QR (Persona 5): GET /api/v1/animales/qr/{codigo_qr}.
-   * Un 404 llega como ApiError(404): significa que no hay animal con ese codigo.
-   */
   async obtenerPorQr(codigoQr: string): Promise<AnimalItem> {
     const respuesta = await http.get<{ data: AnimalApi }>(`/animales/qr/${encodeURIComponent(codigoQr.trim())}`);
     const mapeado = mapearAnimal(respuesta.data);
@@ -342,7 +287,6 @@ export const animalService = {
     return mapeado;
   },
 
-  /** Registra un animal nuevo. */
   async crear(datos: NuevoAnimal): Promise<AnimalItem> {
     const respuesta = await http.post<{ data: AnimalApi }>('/animales', datos);
     const creado = mapearAnimal(respuesta.data);
@@ -350,10 +294,6 @@ export const animalService = {
     return creado;
   },
 
-  /**
-   * Registra el peso inicial del animal.
-   * POST /api/v1/animales/{id}/pesajes — el backend toma id_animal de la URL.
-   */
   async registrarPesaje(idAnimal: number | string, pesoKg: number, observaciones?: string): Promise<void> {
     await http.post(`/animales/${idAnimal}/pesajes`, {
       peso_kg: pesoKg,
@@ -362,7 +302,6 @@ export const animalService = {
     });
   },
 
-  /** Actualiza un animal existente. */
   async actualizar(id: number | string, datos: Partial<NuevoAnimal>): Promise<AnimalItem> {
     const respuesta = await http.put<{ data: AnimalApi }>(`/animales/${id}`, datos);
     const actualizado = mapearAnimal(respuesta.data);

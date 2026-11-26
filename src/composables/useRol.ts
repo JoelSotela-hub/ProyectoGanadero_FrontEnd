@@ -1,7 +1,3 @@
-/**
- * Rol del usuario autenticado.
- * El backend entrega `role` como 'admin' | 'veterinario' | 'operario'.
- */
 import { computed, type ComputedRef } from 'vue';
 
 import { MODULOS, rolPermitido, type ModuloNavegacion } from '@/config/roles';
@@ -12,7 +8,6 @@ export interface UsoRol {
   esAdmin: ComputedRef<boolean>;
   esVeterinario: ComputedRef<boolean>;
   esOperario: ComputedRef<boolean>;
-  /** Módulos de navegación visibles para el rol actual. */
   modulosVisibles: ComputedRef<ModuloNavegacion[]>;
   puedeVer: (clave: string) => boolean;
 }

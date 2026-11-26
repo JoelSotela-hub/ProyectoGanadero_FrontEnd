@@ -40,7 +40,6 @@
           </div>
         </header>
 
-        <!-- Aviso de caché offline con marca de tiempo -->
         <div
           v-if="store.mostrandoAvisoOffline"
           class="gg-alert gg-alert--warning"
@@ -55,7 +54,6 @@
           </span>
         </div>
 
-        <!-- Filtros conectados al API -->
         <form class="gg-card gg-filters" role="search" aria-label="Filtros de pesajes" @submit.prevent>
           <div class="gg-field">
             <label class="gg-field__label" for="pesaje-filtro-animal">Animal</label>
@@ -143,7 +141,6 @@
           </div>
         </form>
 
-        <!-- Estado 1: Cargando -->
         <section v-if="store.loading" class="gg-card gg-card--flush" aria-busy="true" aria-label="Cargando pesajes">
           <div v-for="i in 5" :key="i" class="gg-skeleton-row">
             <span class="gg-skeleton" style="width: 22%" />
@@ -153,7 +150,6 @@
           </div>
         </section>
 
-        <!-- Estado 2: Error con reintento -->
         <error-state
           v-else-if="store.error"
           title="No se pudo cargar el listado de pesajes"
@@ -161,7 +157,6 @@
           @retry="store.recargar()"
         />
 
-        <!-- Estado 3: Vacío -->
         <section v-else-if="!store.items.length" class="gg-card">
           <empty-state
             :title="store.hayFiltrosActivos ? 'Sin resultados' : 'Sin pesajes registrados'"
@@ -186,7 +181,6 @@
           </empty-state>
         </section>
 
-        <!-- Estado 4: Datos -->
         <section v-else class="gg-card gg-card--flush" aria-label="Listado global de pesajes">
           <p class="gg-count" role="status">{{ store.total }} {{ store.total === 1 ? 'pesaje' : 'pesajes' }}</p>
           <div class="gg-table-wrapper">
@@ -251,7 +245,6 @@
         <ion-infinite-scroll-content loading-spinner="crescent" />
       </ion-infinite-scroll>
 
-      <!-- Modal Crear / Editar Pesaje -->
       <div
         v-if="modalAbierto && (store.esEdicion ? store.puedeEditar : store.puedeCrear)"
         class="gg-modal-backdrop"
@@ -555,7 +548,6 @@ async function exportarListado(): Promise<void> {
   );
 }
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

@@ -28,7 +28,6 @@
           </div>
         </header>
 
-        <!-- Estado 1: Carga -->
         <section v-if="loading" class="gg-card" aria-busy="true" aria-label="Cargando ronda">
           <div class="gg-skeleton-stack">
             <span class="gg-skeleton" style="width: 40%; height: 1.1rem" />
@@ -38,10 +37,8 @@
           </div>
         </section>
 
-        <!-- Estado 2: Error con reintento -->
         <error-state v-else-if="error" title="No se pudo cargar la ronda" :message="errorMessage" @retry="cargar" />
 
-        <!-- Estado 3: Vacío -->
         <section v-else-if="!ronda" class="gg-card">
           <empty-state
             title="Ronda no encontrada"
@@ -49,9 +46,7 @@
           />
         </section>
 
-        <!-- Estado 4: Datos -->
         <template v-else>
-          <!-- Resumen -->
           <section class="gg-card" aria-label="Resumen de la ronda">
             <div class="gg-section-head">
               <div>
@@ -84,7 +79,6 @@
               </div>
             </dl>
 
-            <!-- Acciones: solo el operario en una ronda en progreso (sin PUT ni DELETE) -->
             <div v-if="puedeOperar" class="gg-actions gg-actions--spaced">
               <button
                 type="button"
@@ -109,7 +103,6 @@
             </div>
           </section>
 
-          <!-- Puntos visitados -->
           <section aria-label="Potreros visitados">
             <div class="gg-section-head">
               <h2 class="gg-section-title">Potreros visitados</h2>
@@ -172,7 +165,6 @@
         </template>
       </div>
 
-      <!-- Modal Registrar Potrero (`observacion` singular y `estado_potrero` enum estricto) -->
       <div
         v-if="modalAbierto"
         class="gg-modal-backdrop"
@@ -327,7 +319,6 @@ const formatearFecha = formatearMarcaDeTiempo;
 
 const puntos = computed<PuntoRonda[]>(() => ronda.value?.puntos ?? []);
 
-/** Solo el operario puede registrar potreros y finalizar, y solo en rondas en progreso. */
 const puedeOperar = computed<boolean>(() => esOperario.value && ronda.value?.estado === 'en_progreso');
 
 function claseEstadoPotrero(estado: EstadoPotrero): string {
@@ -364,10 +355,6 @@ async function onRefresh(e: CustomEvent): Promise<void> {
   (e.target as HTMLIonRefresherElement).complete();
 }
 
-/**
- * Registrar potrero: permisos de cámara y GPS -> escanear QR -> capturar
- * coordenadas reales en ese instante -> elegir estado y observación.
- */
 async function registrarPotrero(): Promise<void> {
   if (procesando.value || !ronda.value) return;
 
@@ -421,7 +408,6 @@ async function guardarPunto(): Promise<void> {
     await cargar();
   } catch (err) {
     if (err instanceof ApiError && err.status === 409) {
-      // 409: ronda completada o potrero repetido en la misma ronda.
       errorPunto409.value = err.message;
       const alerta = await alertController.create({
         header: 'No se pudo registrar el punto',
@@ -466,7 +452,6 @@ async function finalizarRonda(): Promise<void> {
     await cargar();
   } catch (err) {
     if (err instanceof ApiError && err.status === 409) {
-      // 409: la ronda ya se encuentra finalizada.
       const alertaConflicto = await alertController.create({
         header: 'Ronda ya finalizada',
         subHeader: 'Regla de negocio',
@@ -501,7 +486,6 @@ onIonViewWillEnter(() => {
   void cargar();
 });
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

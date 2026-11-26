@@ -1,14 +1,3 @@
-/**
- * Store de Pinia para el Hub Administrativo de Catálogos (Fase 4 — Secciones 9, 10 y 11):
- *   - Segmento 1: Razas (`/api/v1/razas`) — RN-05 (409 si tiene animales asociados)
- *   - Segmento 2: Categorías (`/api/v1/categorias`) — RN-04 (409 si tiene insumos asociados)
- *   - Segmento 3: Unidades de Medida (`/api/v1/unidades-medida`) — RN-07 (409 si tiene insumos asociados)
- *
- * Seguridad por rol:
- *   - Exclusivo para `admin` (`meta.roles: ['admin']`).
- *   - Sincroniza `useCatalogosStore` inmediatamente tras crear, editar o eliminar en cualquiera
- *     de los 3 catálogos para mantener actualizados los selectores de Animales e Insumos.
- */
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 
@@ -66,10 +55,6 @@ export const OPCIONES_ORDEN_CATEGORIA: {
   { clave: 'tipo|asc', etiqueta: 'Tipo (A–Z)', sort_by: 'tipo', order: 'asc' },
 ];
 
-/**
- * Opciones de ordenamiento seguras para `UnidadMedida` (Sección 11.2).
- * Excluye explícitamente `abreviatura` para evitar el error SQL 500 del backend.
- */
 export const OPCIONES_ORDEN_UNIDAD_MEDIDA: {
   clave: string;
   etiqueta: string;
@@ -91,7 +76,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
 
   const esAdmin = computed<boolean>(() => (authStore.user?.role ?? '').toLowerCase() === 'admin');
 
-  // ==================== 1. RAZAS ====================
   const razas = ref<Raza[]>([]);
   const filtrosRazas = ref<{ buscar: string; sort_by: CampoOrdenRaza; order: 'asc' | 'desc' }>({
     buscar: '',
@@ -208,7 +192,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
     void recargarRazas();
   }
 
-  // Formulario Raza
   const editandoRazaId = ref<number | null>(null);
   const esEdicionRaza = computed<boolean>(() => editandoRazaId.value !== null);
   const formRaza = reactive({ nombre: '' });
@@ -306,7 +289,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
     }
   }
 
-  // ==================== 2. CATEGORÍAS ====================
   const categorias = ref<Categoria[]>([]);
   const filtrosCategorias = ref<{
     buscar: string;
@@ -441,7 +423,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
     void recargarCategorias();
   }
 
-  // Formulario Categoría
   const editandoCategoriaId = ref<number | null>(null);
   const esEdicionCategoria = computed<boolean>(() => editandoCategoriaId.value !== null);
   const formCategoria = reactive({ nombre: '', tipo: '' });
@@ -549,7 +530,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
     }
   }
 
-  // ==================== 3. UNIDADES DE MEDIDA ====================
   const unidades = ref<UnidadMedida[]>([]);
   const filtrosUnidades = ref<{
     buscar: string;
@@ -673,7 +653,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
     void recargarUnidades();
   }
 
-  // Formulario Unidad de Medida (usa `apertura` según StoreUnidadMedidaRequest / UpdateUnidadMedidaRequest)
   const editandoUnidadId = ref<number | null>(null);
   const esEdicionUnidad = computed<boolean>(() => editandoUnidadId.value !== null);
   const formUnidad = reactive({ nombre: '', apertura: '' });
@@ -787,7 +766,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
     }
   }
 
-  // ==================== UTILIDADES TRANSVERSALES ====================
   function cancelarPendiente(): void {
     if (timerRazas) {
       clearTimeout(timerRazas);
@@ -859,7 +837,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
     marcarSinConexion,
     limpiarEstado,
 
-    // Segmento 1: Razas
     razas,
     filtrosRazas,
     loadingRazas,
@@ -898,7 +875,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
     guardarRaza,
     eliminarRaza,
 
-    // Segmento 2: Categorías
     categorias,
     filtrosCategorias,
     loadingCategorias,
@@ -938,7 +914,6 @@ export const useCatalogoAdminStore = defineStore('catalogoAdmin', () => {
     guardarCategoria,
     eliminarCategoria,
 
-    // Segmento 3: Unidades de Medida
     unidades,
     filtrosUnidades,
     loadingUnidades,

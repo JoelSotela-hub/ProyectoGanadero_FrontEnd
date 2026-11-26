@@ -1,12 +1,3 @@
-/**
- * Store de Pinia para el módulo de Gestión de Usuarios (Fase 5 — exclusivo `admin`).
- *
- * Centraliza:
- *   - Listado de usuarios (`GET /api/v1/users`) con filtro reactivo por rol y búsqueda.
- *   - Creación de cuentas (`POST /api/v1/auth/register`) autenticada con el Bearer token del `admin`,
- *     esperando `{ message, usuario }` (SIN `token`) y SIN tocar `useAuthStore.login(...)`.
- *   - Manejo limpio de `ApiError` (`422` por campo, `403`, y errores generales).
- */
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 
@@ -89,10 +80,6 @@ export const useUsuariosStore = defineStore('usuarios', () => {
     }
   }
 
-  /**
-   * Crea un usuario vía `POST /api/v1/auth/register` usando el token del admin actual.
-   * NUNCA llama a `authStore.login(...)` para preservar intacta la sesión del administrador.
-   */
   async function crearUsuario(payload: RegisterPayload): Promise<AuthUser | null> {
     limpiarErrores();
     guardando.value = true;

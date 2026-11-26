@@ -161,11 +161,9 @@ describe('Fase 1 — Ficha Técnica, Escáner QR, Pesajes y Sanidad por Rol', ()
     });
     await flushPromises();
 
-    // Exactamente un solo <h1>
     expect(wrapper.findAll('h1')).toHaveLength(1);
     expect(wrapper.find('h1').text()).toContain('CR-005-LIB');
 
-    // Datos técnicos completos sin sección de fotografía
     expect(wrapper.get('[data-testid="dato-numero-arete"]').text()).toBe('CR-005-LIB');
     expect(wrapper.get('[data-testid="dato-codigo-qr"]').text()).toBe('VACA-005');
     expect(wrapper.get('[data-testid="dato-sexo"]').text()).toBe('Hembra');
@@ -175,10 +173,8 @@ describe('Fase 1 — Ficha Técnica, Escáner QR, Pesajes y Sanidad por Rol', ()
     expect(wrapper.get('[data-testid="dato-potrero"]').text()).toBe('Potrero Norte');
     expect(wrapper.find('input[type="file"]').exists()).toBe(false);
 
-    // Admin sí ve botón Editar animal
     expect(wrapper.find('[data-testid="btn-editar-animal"]').exists()).toBe(true);
 
-    // Operario NO ve botón Editar animal ni pestaña Sanidad
     authStore.user = { id: 2, name: 'Operario', email: 'op@finca.gt', role: 'operario' };
     await flushPromises();
     expect(wrapper.find('[data-testid="btn-editar-animal"]').exists()).toBe(false);
@@ -215,7 +211,6 @@ describe('Fase 1 — Ficha Técnica, Escáner QR, Pesajes y Sanidad por Rol', ()
     botonAjustes?.handler?.();
     expect(mockNativeSettingsOpen).toHaveBeenCalledTimes(1);
 
-    // El usuario pudo escribir el código manualmente a pesar del permiso denegado
     expect(codigo).toBe('VACA-005');
   });
 
@@ -248,7 +243,6 @@ describe('Fase 1 — Ficha Técnica, Escáner QR, Pesajes y Sanidad por Rol', ()
     expect(store.animal?.arete).toBe('CR-005-LIB');
     expect(router.currentRoute.value.path).toBe('/detalle/5');
 
-    // Caso 404: código inexistente no navega y muestra toast
     await router.push('/tabs/dashboard');
     mockAlertResponse = {
       role: 'confirm',
@@ -293,7 +287,6 @@ describe('Fase 1 — Ficha Técnica, Escáner QR, Pesajes y Sanidad por Rol', ()
     expect(store.resumenPesajes.diferenciaKg).toBe(15);
     expect(store.resumenPesajes.tendencia).toBe('subida');
 
-    // Registrar nuevo pesaje vía POST /animales/5/pesajes
     store.formPesaje.peso_kg = '452.5';
     store.formPesaje.fecha_pesaje = '2026-11-20';
     store.formPesaje.observaciones = 'Nuevo control';
@@ -305,10 +298,8 @@ describe('Fase 1 — Ficha Técnica, Escáner QR, Pesajes y Sanidad por Rol', ()
       fecha_pesaje: '2026-11-20',
       observaciones: 'Nuevo control',
     });
-    // Refresca el historial tras recibir 201
     expect(listarSpy).toHaveBeenCalledTimes(2);
 
-    // Veterinario NO puede registrar pesajes
     authStore.user = { id: 3, name: 'Veterinario', email: 'vet@finca.gt', role: 'veterinario' };
     const okVet = await store.registrarPesaje(5);
     expect(okVet).toBe(false);
@@ -356,14 +347,12 @@ describe('Fase 1 — Ficha Técnica, Escáner QR, Pesajes y Sanidad por Rol', ()
       },
     });
 
-    // 1) Rol operario: NUNCA debe llamar a /animales/{id}/tratamientos ni al catálogo
     authStore.user = { id: 2, name: 'Operario', email: 'op@finca.gt', role: 'operario' };
     await store.cargarTratamientos(5);
     await store.cargarCatalogoTratamientos();
     expect(listarTratSpy).not.toHaveBeenCalled();
     expect(catalogoSpy).not.toHaveBeenCalled();
 
-    // 2) Rol veterinario: sí carga historial, catálogo y envía POST /tratamientos-aplicaciones con id_animal
     authStore.user = { id: 3, name: 'Veterinario', email: 'vet@finca.gt', role: 'veterinario' };
     await store.cargarTratamientos(5);
     await store.cargarCatalogoTratamientos();
@@ -384,7 +373,6 @@ describe('Fase 1 — Ficha Técnica, Escáner QR, Pesajes y Sanidad por Rol', ()
       dosis_ml: 15,
       observaciones: 'Sin reacción',
     });
-    // Recarga historial tras 201 porque store() no devuelve `tratamiento` anidado
     expect(listarTratSpy).toHaveBeenCalledTimes(2);
   });
 });

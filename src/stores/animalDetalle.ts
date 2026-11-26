@@ -1,13 +1,3 @@
-/**
- * Store de Pinia para la Ficha Técnica del Animal (`AnimalDetail.vue`) y búsqueda por QR.
- *
- * Centraliza todo el consumo de API de la Fase 1 (sin tokens manuales):
- *   1. Ficha técnica: GET /api/v1/animales/{id} (con caché offline) y GET /api/v1/animales/qr/{codigo_qr}
- *   2. Pestaña Pesajes: GET /api/v1/animales/{id}/pesajes + POST /api/v1/animales/{id}/pesajes
- *   3. Pestaña Sanidad / Tratamientos (solo admin y veterinario; prohibido para operario):
- *      GET /api/v1/animales/{id}/tratamientos + GET /api/v1/tratamientos?per_page=100 +
- *      POST /api/v1/tratamientos-aplicaciones
- */
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 
@@ -48,7 +38,6 @@ function fechaHoyIso(): string {
 export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
   const authStore = useAuthStore();
 
-  // ---------------- 1. Ficha técnica del animal ----------------
   const animal = ref<AnimalItem | null>(null);
   const loading = ref<boolean>(false);
   const error = ref<boolean>(false);
@@ -62,7 +51,6 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
   );
   const ultimaActualizacionTexto = computed<string>(() => formatearMarcaDeTiempo(ultimaActualizacion.value));
 
-  // ---------------- 2. Pestaña Pesajes ----------------
   const pesajes = ref<PesajeAnimal[]>([]);
   const pesajesMeta = ref<ApiMeta | null>(null);
   const pesajesLinks = ref<ApiLinks | null>(null);
@@ -129,7 +117,6 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
   const errorGeneralPesaje = ref<string>('');
   const guardandoPesaje = ref<boolean>(false);
 
-  // ---------------- 3. Pestaña Sanidad / Tratamientos ----------------
   const tratamientos = ref<TratamientoAplicacion[]>([]);
   const tratamientosMeta = ref<ApiMeta | null>(null);
   const tratamientosLinks = ref<ApiLinks | null>(null);
@@ -166,13 +153,11 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
   const errorGeneralTratamiento = ref<string>('');
   const guardandoTratamiento = ref<boolean>(false);
 
-  /** True únicamente para `admin` y `veterinario`. El `operario` tiene prohibido el módulo Sanidad (403). */
   function rolPuedeVerSanidad(): boolean {
     const rol = (authStore.user?.role ?? '').toLowerCase();
     return rol === 'admin' || rol === 'veterinario';
   }
 
-  /** True únicamente para `admin` y `operario`. El `veterinario` recibe 403 al crear pesajes. */
   function rolPuedeRegistrarPesaje(): boolean {
     const rol = (authStore.user?.role ?? '').toLowerCase();
     return rol === 'admin' || rol === 'operario';
@@ -197,10 +182,6 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
     }
   }
 
-  /**
-   * Carga la ficha técnica desde GET /api/v1/animales/{id} con soporte offline.
-   * Si el animal acaba de resolverse por QR (`buscarPorQr`), reutiliza la ficha ya cargada.
-   */
   async function cargarAnimal(id: number | string, forzar = false): Promise<void> {
     const idStr = String(id);
     limpiarSubmodulosSiCambiaAnimal(idStr);
@@ -234,10 +215,6 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
     }
   }
 
-  /**
-   * Consulta GET /api/v1/animales/qr/{codigo_qr} y deja el animal cargado en el store
-   * para navegar inmediatamente a `AnimalDetail.vue`.
-   */
   async function buscarPorQr(codigoQr: string): Promise<AnimalItem> {
     const encontrado = await animalService.obtenerPorQr(codigoQr);
     const idStr = String(encontrado.id);
@@ -252,7 +229,6 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
     return encontrado;
   }
 
-  // ---------------- Acciones de Pesajes ----------------
   async function cargarPesajes(idAnimal: number | string, pagina = 1, anexar = false): Promise<void> {
     const idStr = String(idAnimal);
     if (!idStr) return;
@@ -372,9 +348,7 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
     }
   }
 
-  // ---------------- Acciones de Sanidad / Tratamientos ----------------
   async function cargarTratamientos(idAnimal: number | string, pagina = 1, anexar = false): Promise<void> {
-    // CRÍTICO POR ROL: nunca llamar a /animales/{id}/tratamientos si el usuario es operario (403).
     if (!rolPuedeVerSanidad()) {
       tratamientos.value = [];
       tratamientosMeta.value = null;
@@ -503,7 +477,6 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
         dosis_ml: Number(formTratamiento.dosis_ml),
         observaciones: formTratamiento.observaciones.trim() || null,
       });
-      // Recargar el historial porque store() devuelve 201 sin la relación `tratamiento` anidada.
       await cargarTratamientos(idAnimal, 1, false);
       return true;
     } catch (err) {
@@ -535,7 +508,6 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
   }
 
   return {
-    // Ficha técnica
     animal,
     loading,
     error,
@@ -548,7 +520,6 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
     buscarPorQr,
     marcarSinConexion,
 
-    // Pesajes
     pesajes,
     pesajesMeta,
     pesajesLinks,
@@ -570,7 +541,6 @@ export const useAnimalDetalleStore = defineStore('animalDetalle', () => {
     validarFormPesaje,
     registrarPesaje,
 
-    // Sanidad / Tratamientos
     tratamientos,
     tratamientosMeta,
     tratamientosLinks,

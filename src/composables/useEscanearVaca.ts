@@ -1,8 +1,3 @@
-/**
- * Acción "Escanear QR de vaca" (Fase 1):
- *   cámara / respaldo manual -> Pinia store `buscarPorQr(codigo)`
- *   (`GET /api/v1/animales/qr/{codigo_qr}`) -> `AnimalDetail.vue` con el animal cargado.
- */
 import { ref, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 

@@ -133,11 +133,9 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
     const wrapper = mount(Potreros, { global: { plugins: [router] } });
     await flushPromises();
 
-    // Exactamente un solo <h1>
     expect(wrapper.findAll('h1')).toHaveLength(1);
     expect(wrapper.find('h1').text()).toBe('Potreros');
 
-    // Datos visibles
     const tabla = wrapper.get('[data-testid="tabla-potreros"]').text();
     expect(tabla).toContain('Potrero Norte');
     expect(tabla).toContain('25.5 ha');
@@ -145,19 +143,16 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
     expect(tabla).toContain('Excelente');
     expect(tabla).toContain('POTRERO-NORTE');
 
-    // Admin ve botones Crear, Editar y Eliminar
     expect(wrapper.find('[data-testid="btn-crear-potrero"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="btn-editar-potrero-1"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="btn-eliminar-potrero-1"]').exists()).toBe(true);
 
-    // Veterinario solo lectura
     authStore.user = { id: 2, name: 'Vet', email: 'vet@finca.gt', role: 'veterinario' };
     await flushPromises();
     expect(wrapper.find('[data-testid="btn-crear-potrero"]').exists()).toBe(false);
     expect(wrapper.find('[data-testid="btn-editar-potrero-1"]').exists()).toBe(false);
     expect(wrapper.find('[data-testid="btn-eliminar-potrero-1"]').exists()).toBe(false);
 
-    // Operario solo lectura
     authStore.user = { id: 3, name: 'Op', email: 'op@finca.gt', role: 'operario' };
     await flushPromises();
     expect(wrapper.find('[data-testid="btn-crear-potrero"]').exists()).toBe(false);
@@ -175,7 +170,6 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
 
     const store = usePotreroStore();
 
-    // Búsqueda con debounce de 300ms
     store.buscar('Nor');
     store.buscar('Norte');
     expect(getSpy).not.toHaveBeenCalled();
@@ -196,7 +190,6 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
       }),
     );
 
-    // Filtro estado_pasto + ordenamiento
     store.establecerEstadoPasto('Excelente');
     await flushPromises();
     expect(getSpy).toHaveBeenLastCalledWith(
@@ -231,13 +224,11 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
     const store = usePotreroStore();
     store.prepararNuevo();
 
-    // Validación cliente falla si campos requeridos están vacíos
     expect(store.validarFormulario()).toBe(false);
     expect(store.errores.nombre).toBeTruthy();
     expect(store.errores.hectareas_de_extension).toBeTruthy();
     expect(store.errores.capacidad_maxima).toBeTruthy();
 
-    // Error 422 del backend mapeado por campo
     vi.spyOn(http, 'post').mockRejectedValueOnce(
       new ApiError(422, 'Hay datos inválidos.', {
         codigo_qr: ['El código QR ya está en uso.'],
@@ -254,7 +245,6 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
     expect(res422).toBeNull();
     expect(store.errores.codigo_qr).toBe('El código QR ya está en uso.');
 
-    // Creación exitosa con codigo_qr vacío (backend autogenera POTRERO-{SLUG})
     const postSpy = vi.spyOn(http, 'post').mockResolvedValueOnce({
       data: {
         potrero_id: 3,
@@ -277,7 +267,6 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
       codigo_qr: null,
     });
 
-    // Edición precarga todos los valores y llama PUT /potreros/{id}
     store.prepararEdicion(POTREROS_MOCK[0]);
     expect(store.esEdicion).toBe(true);
     expect(store.form.nombre).toBe('Potrero Norte');
@@ -325,7 +314,6 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
     await wrapper.get('[data-testid="btn-eliminar-potrero-1"]').trigger('click');
     await flushPromises();
 
-    // 1er alert: confirmación; 2do alert: regla de negocio 409 RN-02
     expect(mockAlertCreate).toHaveBeenCalledTimes(2);
     const alertaRn02 = mockAlertCreate.mock.calls[1]?.[0] as { header: string; subHeader: string; message: string };
     expect(alertaRn02.subHeader).toContain('RN-02');
@@ -364,31 +352,26 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
     const wrapper = mount(PotreroDetail, { global: { plugins: [router] } });
     await flushPromises();
 
-    // Exactamente un solo <h1>
     expect(wrapper.findAll('h1')).toHaveLength(1);
     expect(wrapper.find('h1').text()).toBe('Potrero Norte');
 
-    // Endpoints consultados
     expect(getSpy).toHaveBeenCalledWith('/potreros/1');
     expect(getSpy).toHaveBeenCalledWith(
       '/potreros/1/animales',
       expect.objectContaining({ query: { page: 1, per_page: 15 } }),
     );
 
-    // Ocupación real: 30 / 40 = 75% (nivel warning)
     expect(wrapper.get('[data-testid="ocupacion-texto"]').text()).toContain('30 de 40 animales asignados');
     expect(wrapper.get('[data-testid="badge-ocupacion-porcentaje"]').text()).toBe('75% ocupado');
     const barra = wrapper.get('[data-testid="barra-ocupacion"]');
     expect(barra.attributes('aria-valuenow')).toBe('75');
     expect(barra.classes()).toContain('gg-progress-bar--warning');
 
-    // QR visual + copiar código QR
     expect(wrapper.find('[data-testid="qr-potrero-visual"]').exists()).toBe(true);
     await wrapper.get('[data-testid="btn-copiar-qr"]').trigger('click');
     await flushPromises();
     expect(writeTextMock).toHaveBeenCalledWith('POTRERO-NORTE');
 
-    // Listado paginado de animales con navegación directa a AnimalDetail.vue
     expect(wrapper.find('[data-testid="btn-cargar-mas-animales"]').exists()).toBe(true);
     await wrapper.get('[data-testid="link-animal-5"]').trigger('click');
     await flushPromises();
@@ -402,12 +385,10 @@ describe('Fase 2 — Módulo Potreros (CRUD, filtros, RN-02, detalle, ocupación
       links: { first: null, last: null, prev: null, next: null },
     });
 
-    // Primera carga online guarda en caché
     const online = await potreroService.listar();
     expect(online.desdeCache).toBe(false);
     expect(online.data).toHaveLength(2);
 
-    // Segunda carga offline devuelve desde caché con marca de tiempo y filtro local
     vi.spyOn(networkService, 'verificarConectividad').mockResolvedValue(false);
     const offline = await potreroService.listar({ nombre: 'Norte' });
     expect(offline.desdeCache).toBe(true);

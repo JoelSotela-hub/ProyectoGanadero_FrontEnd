@@ -183,7 +183,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     vi.spyOn(networkService, 'verificarConectividad').mockResolvedValue(true);
   });
 
-  // ==================== 1. PESAJES ====================
   test('1. Pesajes.vue muestra 1 solo h1, arete con enlace al detalle y permisos exactos por rol', async () => {
     vi.spyOn(http, 'get').mockImplementation(async (ruta) => {
       if (ruta === '/animales') {
@@ -196,7 +195,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
       };
     });
 
-    // Admin: ve crear, editar y eliminar
     setRolUsuario('admin');
     const router = crearRouterPruebas();
     await router.push('/tabs/pesajes');
@@ -213,7 +211,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     expect(wrapperAdmin.find('[data-testid="btn-eliminar-pesaje-10"]').exists()).toBe(true);
     wrapperAdmin.unmount();
 
-    // Operario: ve crear, NO ve editar ni eliminar
     setRolUsuario('operario');
     const wrapperOp = mount(Pesajes, { global: { plugins: [router] } });
     await flushPromises();
@@ -222,7 +219,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     expect(wrapperOp.find('[data-testid="btn-eliminar-pesaje-10"]').exists()).toBe(false);
     wrapperOp.unmount();
 
-    // Veterinario: solo lectura (NO ve crear, editar ni eliminar)
     setRolUsuario('veterinario');
     const wrapperVet = mount(Pesajes, { global: { plugins: [router] } });
     await flushPromises();
@@ -263,7 +259,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
       }),
     );
 
-    // Error 422 mapeado por campo
     vi.spyOn(http, 'post').mockRejectedValueOnce(
       new ApiError(422, 'Datos inválidos', { peso_kg: ['El peso debe ser mayor a 0.'] }),
     );
@@ -275,7 +270,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     expect(fallido).toBeNull();
     expect(store.errores.peso_kg).toBe('El peso debe ser mayor a 0.');
 
-    // 201 Created (sin relación `animal`) -> dispara recarga para traer relación `animal`
     getSpy.mockClear();
     vi.spyOn(http, 'post').mockResolvedValueOnce({
       data: { pesaje_id: 11, id_animal: 5, peso_kg: 430, fecha_pesaje: '2026-10-20', observaciones: null },
@@ -304,7 +298,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     expect(mockPreferencesStore.size).toBe(0);
   });
 
-  // ==================== 2. TRATAMIENTOS ====================
   test('4. Tratamientos bloquea completamente a operario y permite admin/veterinario con 2 segmentos', async () => {
     const rolesTratamientos = rolesDeModulo('tratamientos');
     expect(rolPermitido('operario', rolesTratamientos)).toBe(false);
@@ -333,7 +326,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     await router.push('/tabs/tratamientos');
     await router.isReady();
 
-    // Veterinario: ve crear y editar, NO ve eliminar
     setRolUsuario('veterinario');
     const wrapperVet = mount(Tratamientos, { global: { plugins: [router] } });
     await flushPromises();
@@ -343,7 +335,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     expect(wrapperVet.find('[data-testid="btn-eliminar-aplicacion-21"]').exists()).toBe(false);
     wrapperVet.unmount();
 
-    // Admin: ve eliminar en aplicaciones
     setRolUsuario('admin');
     const wrapperAdmin = mount(Tratamientos, { global: { plugins: [router] } });
     await flushPromises();
@@ -370,7 +361,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
 
     const store = useTratamientoStore();
 
-    // 201 Created en aplicación -> recarga listado para mostrar animal y tratamiento
     vi.spyOn(http, 'post').mockResolvedValueOnce({
       data: {
         tratamiento_animal_id: 22,
@@ -390,7 +380,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     expect(creada?.tratamiento_animal_id).toBe(22);
     expect(getSpy).toHaveBeenCalledWith('/tratamientos-aplicaciones', expect.anything());
 
-    // 409 Conflict (RN-06) al eliminar tratamiento con historial
     vi.spyOn(http, 'delete').mockRejectedValueOnce(
       new ApiError(409, 'No se puede eliminar el tratamiento porque tiene aplicaciones registradas.'),
     );
@@ -402,7 +391,6 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     await tratamientoService.limpiarCache();
   });
 
-  // ==================== 3. AUDITORÍA DE RONDAS ====================
   test('6. Rondas bloquea veterinario, usa AppHeader + 1 solo h1 y no expone PUT ni DELETE', async () => {
     const rolesRondas = rolesDeModulo('rondas');
     expect(rolPermitido('veterinario', rolesRondas)).toBe(false);
@@ -447,11 +435,9 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
     const postSpy = vi.spyOn(http, 'post').mockResolvedValue({ data: RONDAS_MOCK[0] });
     const patchSpy = vi.spyOn(http, 'patch').mockResolvedValue({ data: { ...RONDAS_MOCK[0], estado: 'completada' } });
 
-    // POST /rondas -> observaciones (plural)
     await rondaService.iniciar('Salida matutina');
     expect(postSpy).toHaveBeenCalledWith('/rondas', { observaciones: 'Salida matutina' });
 
-    // POST /rondas/{id}/puntos -> observacion (singular) + estado_potrero
     await rondaService.registrarPunto(7, {
       codigo_qr: 'POTRERO-NORTE',
       latitud: 10.45,
@@ -467,11 +453,9 @@ describe('Fase 3 — Pesajes, Tratamientos y Auditoría de Rondas', () => {
       observacion: 'Cerca dañada',
     });
 
-    // PATCH /rondas/{id}/finalizar -> observaciones (plural)
     await rondaService.finalizar(7, 'Recorrido completo');
     expect(patchSpy).toHaveBeenCalledWith('/rondas/7/finalizar', { observaciones: 'Recorrido completo' });
 
-    // 409 #1: ronda en progreso, #2: potrero repetido, #3: ronda completada
     postSpy.mockRejectedValueOnce(new ApiError(409, 'Ya tiene una ronda en progreso (ID: 7).'));
     await expect(rondaService.iniciar()).rejects.toMatchObject({ status: 409 });
 

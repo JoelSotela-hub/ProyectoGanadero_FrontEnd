@@ -1,18 +1,3 @@
-/**
- * Servicio del módulo Insumo (Contrato API Sección 7).
- *
- *   GET    /api/v1/insumos?page=&per_page=&buscar=&categoria_id=&unidad_medida_id=&precio_min=&precio_max=&sort_by=&order=
- *   GET    /api/v1/insumos/{insumo}
- *   POST   /api/v1/insumos
- *   PUT    /api/v1/insumos/{insumo}
- *   DELETE /api/v1/insumos/{insumo}
- *   GET    /api/v1/categorias/{categoria}/insumos
- *
- * Nota del contrato:
- *   - `InsumoResource` NO tiene campo `stock` ni `cantidad`.
- *   - `store()` devuelve `201 Created` sin relaciones anidadas (`categoria`, `unidad_medida`),
- *     por lo que el store de Pinia refresca el listado tras crear o editar.
- */
 import { crearCacheListado, listarConRespaldo, type ListadoPaginado } from './cacheListado';
 import {
   mapearCategoria,
@@ -93,10 +78,6 @@ export function mapearInsumo(raw: InsumoApi): Insumo {
 }
 
 export const insumoService = {
-  /**
-   * Listado paginado de insumos en formato PaginacionUniforme con respaldo offline.
-   * GET /api/v1/insumos
-   */
   async listar(filtros: FiltrosInsumos = {}): Promise<ListadoInsumos> {
     const pagina = filtros.page ?? 1;
     const porPagina = filtros.per_page ?? 15;
@@ -131,10 +112,6 @@ export const insumoService = {
     });
   },
 
-  /**
-   * Listado paginado de insumos pertenecientes a una categoría específica.
-   * GET /api/v1/categorias/{categoria}/insumos
-   */
   async listarPorCategoria(
     categoriaId: number | string,
     filtros: Omit<FiltrosInsumos, 'categoria_id'> = {},
@@ -165,16 +142,11 @@ export const insumoService = {
     });
   },
 
-  /** GET /api/v1/insumos/{insumo} */
   async obtener(id: number | string): Promise<Insumo> {
     const respuesta = await http.get<{ data: InsumoApi }>(`/insumos/${id}`);
     return mapearInsumo(respuesta.data);
   },
 
-  /**
-   * POST /api/v1/insumos (UI restringida a admin).
-   * Nota: el backend devuelve 201 sin eager-loading de `categoria` y `unidad_medida`.
-   */
   async crear(datos: InsumoPayload): Promise<Insumo> {
     const respuesta = await http.post<{ data: InsumoApi }>('/insumos', {
       nombre: datos.nombre.trim(),
@@ -185,7 +157,6 @@ export const insumoService = {
     return mapearInsumo(respuesta.data);
   },
 
-  /** PUT /api/v1/insumos/{insumo} (UI restringida a admin). */
   async actualizar(id: number | string, datos: Partial<InsumoPayload>): Promise<Insumo> {
     const cuerpo: Record<string, unknown> = {};
     if (datos.nombre !== undefined) cuerpo.nombre = datos.nombre.trim();
@@ -197,12 +168,10 @@ export const insumoService = {
     return mapearInsumo(respuesta.data);
   },
 
-  /** DELETE /api/v1/insumos/{insumo} (UI restringida a admin). */
   async eliminar(id: number | string): Promise<void> {
     await http.delete<void>(`/insumos/${id}`);
   },
 
-  /** Limpia la caché offline de insumos (usado al cerrar sesión). */
   async limpiarCache(): Promise<void> {
     await cacheInsumos.limpiar();
   },

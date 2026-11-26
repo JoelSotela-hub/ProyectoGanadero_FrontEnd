@@ -200,7 +200,6 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
   });
 
   test('2. useTheme inicializa desde localStorage o matchMedia (con fallback jsdom), alterna y persiste', () => {
-    // Fallback seguro cuando window.matchMedia no existe en jsdom
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
       writable: true,
@@ -210,7 +209,6 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     expect(document.documentElement.classList.contains('gg-dark')).toBe(false);
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
 
-    // Respeta prefers-color-scheme: dark cuando no hay clave en localStorage
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
       writable: true,
@@ -221,12 +219,10 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     expect(document.documentElement.classList.contains('gg-dark')).toBe(true);
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
 
-    // Prioriza localStorage sobre el sistema
     localStorage.setItem(CLAVE_TEMA, 'light');
     expect(inicializarTema({ forzar: true })).toBe('light');
     expect(document.documentElement.classList.contains('gg-dark')).toBe(false);
 
-    // Alterna light <-> dark y persiste en localStorage
     const { tema, esOscuro } = useTheme();
     expect(tema.value).toBe('light');
     expect(esOscuro.value).toBe(false);
@@ -335,13 +331,11 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     expect(csvPotreros).toContain('Potrero La Cañada,15.5,20,12,8,Excelente,POT-001');
     expect(mockToastCreate).toHaveBeenCalled();
 
-    // Deshabilitado si la lista queda vacía
     usePotreroStore().items = [];
     await nextTick();
     expect((btnExportarPotreros.element as HTMLButtonElement).disabled).toBe(true);
     potreroWrapper.unmount();
 
-    // Animal.vue
     vi.mocked(URL.createObjectURL).mockClear();
     vi.mocked(URL.revokeObjectURL).mockClear();
     mockToastCreate.mockClear();
@@ -407,12 +401,10 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     expect(wrapper.find('[data-testid="gg-boot-splash"]').exists()).toBe(true);
     expect(wrapper.get('[data-testid="gg-boot-splash"]').text()).toContain('GuateGanado');
 
-    // Completa el primer pintado pero la sesión sigue inicializándose
     await vi.advanceTimersByTimeAsync(100);
     await nextTick();
     expect(wrapper.find('[data-testid="gg-boot-splash"]').exists()).toBe(true);
 
-    // Al finalizar restoreSession() desaparece el overlay
     authStore.initialized = true;
     await nextTick();
     await flushPromises();
@@ -503,7 +495,6 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
 
     const entorno = prepararMocksQrPng();
 
-    // Caso 1: contenedor con <svg>
     const contenedorSvg = document.createElement('div');
     contenedorSvg.innerHTML = '<svg viewBox="0 0 29 29"><path d="M0 0h1v1z" /></svg>';
 
@@ -539,7 +530,6 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     expect(entorno.urlsCreadas).toHaveLength(2);
     expect(entorno.urlsRevocadas).toEqual(entorno.urlsCreadas);
 
-    // Caso 2: contenedor con <canvas>
     entorno.mockCtx.drawImage.mockClear();
     const contenedorCanvas = document.createElement('div');
     const canvasQr = document.createElement('canvas');
@@ -556,7 +546,6 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     expect(entorno.obtenerNombreDescarga()).toBe('QR_POT-001.png');
     expect(entorno.urlsRevocadas).toEqual(entorno.urlsCreadas);
 
-    // Caso 3: validaciones de contenedor ausente o sin QR
     await expect(descargarQrPng({ elementoContenedor: null, titulo: 'X', nombreArchivo: 'X' })).rejects.toThrow(
       /contenedor/i,
     );
@@ -644,7 +633,6 @@ describe('Fase 7 — Modo claro/oscuro, transición de arranque y exportación a
     );
     animalWrapper.unmount();
 
-    // PotreroDetail.vue
     mockToastCreate.mockClear();
     entorno.mockCtx.fillText.mockClear();
     await router.push('/potreros/1');
