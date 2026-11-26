@@ -1,15 +1,3 @@
-/**
- * Store de Pinia para el módulo global de Pesajes (Fase 3).
- *
- * Centraliza:
- *   - Listado paginado (`GET /api/v1/pesajes`) con filtros reales:
- *     `id_animal`, `fecha_desde`, `fecha_hasta`, `peso_min`, `peso_max`, `sort_by`, `order`.
- *   - Debounce (300 ms) + `AbortController` + caché offline con marca de tiempo.
- *   - Selector de animales cargado con `per_page=100`.
- *   - Creación (`admin` y `operario`), edición (`admin`) y eliminación (`admin`)
- *     con validación real, mapeo de errores `422` por campo y recarga tras `201 Created`
- *     para traer la relación `animal` completa.
- */
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 
@@ -85,7 +73,6 @@ function filtrosIniciales(): FiltrosListadoPesajes {
 export const usePesajeStore = defineStore('pesaje', () => {
   const authStore = useAuthStore();
 
-  // ---------------- 1. Listado ----------------
   const items = ref<PesajeAnimal[]>([]);
   const filtros = ref<FiltrosListadoPesajes>(filtrosIniciales());
 
@@ -106,7 +93,6 @@ export const usePesajeStore = defineStore('pesaje', () => {
   let controlador: AbortController | null = null;
   let temporizador: ReturnType<typeof setTimeout> | null = null;
 
-  // Selector de animales (`per_page=100`)
   const animales = ref<AnimalItem[]>([]);
   const cargandoAnimales = ref<boolean>(false);
   const animalesCargados = ref<boolean>(false);
@@ -159,7 +145,7 @@ export const usePesajeStore = defineStore('pesaje', () => {
       animales.value = res.items;
       animalesCargados.value = true;
     } catch {
-      // Si falla la carga del selector, se reintentará en el próximo intento.
+      return;
     } finally {
       cargandoAnimales.value = false;
     }
@@ -276,7 +262,6 @@ export const usePesajeStore = defineStore('pesaje', () => {
     if (items.value.length > 0) desdeCache.value = true;
   }
 
-  // ---------------- 2. Formulario Crear / Editar ----------------
   const editandoId = ref<number | null>(null);
   const esEdicion = computed<boolean>(() => editandoId.value !== null);
 
@@ -374,7 +359,6 @@ export const usePesajeStore = defineStore('pesaje', () => {
           ? await pesajeService.actualizar(editandoId.value, payload)
           : await pesajeService.crear(payload);
 
-      // El store() del backend no devuelve `animal` anidado: se refresca el listado completo.
       await recargar();
       return resultado;
     } catch (err) {
@@ -441,7 +425,6 @@ export const usePesajeStore = defineStore('pesaje', () => {
   }
 
   return {
-    // Listado
     items,
     filtros,
     loading,
@@ -479,7 +462,6 @@ export const usePesajeStore = defineStore('pesaje', () => {
     marcarSinConexion,
     limpiarEstado,
 
-    // Formulario
     editandoId,
     esEdicion,
     form,

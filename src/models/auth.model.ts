@@ -28,27 +28,22 @@ export interface AuthSession {
 
 export interface AnimalItem {
   id: number;
-  /** Alias directo al identificador primario del backend (`id_animal`). */
   id_animal?: number;
   arete: string;
   nombre: string;
   raza: string;
   sexo: 'Macho' | 'Hembra' | string;
   potrero: string;
-  /** La API no expone un peso directo: sale del ultimo pesaje, y puede faltar. */
   peso: number | null;
   estado: 'Activo' | 'Tratamiento' | 'Vendido' | string;
   fechaNacimiento?: string;
   observaciones?: string;
-  /** Identificadores reales que exige la API al crear o editar. */
   razaId?: number;
   potreroId?: number;
   ubicacionLat?: number;
   ubicacionLng?: number;
-  /** Codigo del QR del animal (ej. VACA-001). */
   codigoQr?: string;
   codigo_qr?: string;
-  /** Historial de pesajes y tratamientos; solo viene en el detalle y en la consulta por QR. */
   pesajes?: PesajeItem[];
   tratamientos?: TratamientoItem[];
 }

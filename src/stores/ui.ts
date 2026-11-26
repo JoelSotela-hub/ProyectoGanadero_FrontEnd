@@ -1,7 +1,3 @@
-/**
- * Preferencias de interfaz (estado reactivo): menú lateral minimizado.
- * Se persiste en @capacitor/preferences (NO es información sensible).
- */
 import { Preferences } from '@capacitor/preferences';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
@@ -16,7 +12,7 @@ export const useUiStore = defineStore('ui', () => {
       const { value } = await Preferences.get({ key: CLAVE_SIDEBAR });
       sidebarColapsado.value = value === 'true';
     } catch {
-      // Sin almacenamiento: se usa el valor por defecto (expandido).
+      return;
     }
   }
 
@@ -25,7 +21,7 @@ export const useUiStore = defineStore('ui', () => {
     try {
       await Preferences.set({ key: CLAVE_SIDEBAR, value: String(valor) });
     } catch {
-      // La preferencia sigue vigente en memoria.
+      return;
     }
   }
 

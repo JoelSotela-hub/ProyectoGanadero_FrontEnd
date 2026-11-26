@@ -49,10 +49,8 @@ import { useUiStore } from '@/stores/ui';
 const ui = useUiStore();
 const { modulosVisibles } = useRol();
 
-/** Barra inferior móvil: accesos principales según el rol; el resto vive en el menú. */
 const tabsVisibles = computed(() => modulosVisibles.value.filter((modulo) => modulo.enTabs));
 
-/** Ancho del sidebar en escritorio: completo o compacto (solo íconos). */
 const anchoSidebar = computed(() => {
   const ancho = ui.sidebarColapsado ? 'var(--gg-sidebar-width-compact)' : 'var(--gg-sidebar-width)';
   return { '--side-width': ancho, '--side-min-width': ancho, '--side-max-width': ancho };
@@ -74,7 +72,6 @@ function irAlContenido(): void {
   }
 }
 </script>
-
 <style>
 ion-menu.gg-menu {
   --background: var(--gg-forest);
@@ -86,7 +83,6 @@ ion-split-pane.gg-split {
   --border: 0;
 }
 
-/* Barra inferior: solo móvil/tablet; en escritorio manda el sidebar */
 ion-tab-bar.gg-tabbar {
   padding-bottom: var(--ion-safe-area-bottom);
   border-top: 1px solid var(--gg-border);

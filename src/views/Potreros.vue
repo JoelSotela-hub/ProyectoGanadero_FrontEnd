@@ -34,7 +34,6 @@
           </div>
         </header>
 
-        <!-- Aviso obligatorio de datos no actualizados (caché offline con marca de tiempo) -->
         <div
           v-if="store.mostrandoAvisoOffline"
           class="gg-alert gg-alert--warning"
@@ -49,7 +48,6 @@
           </span>
         </div>
 
-        <!-- Filtros conectados al API -->
         <form class="gg-card gg-filters" role="search" aria-label="Filtros de potreros" @submit.prevent>
           <div class="gg-field gg-filters__search">
             <label class="gg-field__label" for="p-search">Buscar por nombre</label>
@@ -104,7 +102,6 @@
           </div>
         </form>
 
-        <!-- Estado 1: Cargando -->
         <section v-if="store.loading" class="gg-card gg-card--flush" aria-busy="true" aria-label="Cargando potreros">
           <div v-for="i in 5" :key="i" class="gg-skeleton-row">
             <span class="gg-skeleton" style="width: 24%" />
@@ -114,7 +111,6 @@
           </div>
         </section>
 
-        <!-- Estado 2: Error con reintento -->
         <error-state
           v-else-if="store.error"
           title="No se pudo cargar el listado de potreros"
@@ -122,7 +118,6 @@
           @retry="store.recargar()"
         />
 
-        <!-- Estado 3: Vacío -->
         <section v-else-if="!store.items.length" class="gg-card">
           <empty-state
             :title="store.hayFiltrosActivos ? 'Sin resultados' : 'Sin potreros registrados'"
@@ -147,7 +142,6 @@
           </empty-state>
         </section>
 
-        <!-- Estado 4: Datos -->
         <section v-else class="gg-card gg-card--flush" aria-label="Listado de potreros">
           <p class="gg-count" role="status">{{ store.total }} {{ store.total === 1 ? 'potrero' : 'potreros' }}</p>
           <div class="gg-table-wrapper">
@@ -403,7 +397,10 @@ async function onInfinite(evento: CustomEvent): Promise<void> {
 
 const COLUMNAS_CSV: ReadonlyArray<ColumnaCsv<Potrero>> = [
   { encabezado: 'Nombre', valor: (p) => p.nombre },
-  { encabezado: 'Extensión (ha)', valor: (p) => (Number.isFinite(p.hectareas_de_extension) ? p.hectareas_de_extension : '') },
+  {
+    encabezado: 'Extensión (ha)',
+    valor: (p) => (Number.isFinite(p.hectareas_de_extension) ? p.hectareas_de_extension : ''),
+  },
   { encabezado: 'Capacidad máx.', valor: (p) => p.capacidad_maxima },
   { encabezado: 'Ocupación actual', valor: (p) => ocupacionActual(p) },
   { encabezado: 'Espacios disponibles', valor: (p) => espaciosDisponibles(p) },
@@ -424,7 +421,6 @@ async function exportarListado(): Promise<void> {
   );
 }
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

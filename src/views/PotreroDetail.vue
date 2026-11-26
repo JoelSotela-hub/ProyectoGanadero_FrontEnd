@@ -75,7 +75,6 @@
           </div>
         </header>
 
-        <!-- Aviso de datos en caché offline -->
         <div
           v-if="store.mostrandoAvisoOfflineDetalle"
           class="gg-alert gg-alert--warning"
@@ -90,7 +89,6 @@
           </span>
         </div>
 
-        <!-- Estado 1: Cargando -->
         <section
           v-if="store.cargandoDetalle"
           class="gg-card"
@@ -104,7 +102,6 @@
           </div>
         </section>
 
-        <!-- Estado 2: Error con reintento -->
         <error-state
           v-else-if="store.errorDetalle"
           title="No se pudo cargar el potrero"
@@ -112,7 +109,6 @@
           @retry="recargarTodo"
         />
 
-        <!-- Estado 3: Vacío / 404 -->
         <section v-else-if="!store.detalle" class="gg-card">
           <empty-state
             title="Potrero no encontrado"
@@ -122,11 +118,9 @@
           </empty-state>
         </section>
 
-        <!-- Estado 4: Datos -->
         <template v-else>
           <div class="gg-summary-layout">
             <div class="gg-main-col">
-              <!-- Ficha técnica -->
               <section class="gg-card" aria-labelledby="sec-ficha-potrero">
                 <div class="gg-section-head">
                   <div>
@@ -163,7 +157,6 @@
                 </dl>
               </section>
 
-              <!-- Ocupación real (meta.total / capacidad_maxima) -->
               <section class="gg-card" aria-labelledby="sec-ocupacion-potrero" data-testid="card-ocupacion">
                 <div class="gg-section-head">
                   <div>
@@ -217,7 +210,6 @@
               </section>
             </div>
 
-            <!-- Tarjeta QR visual + botones de acción -->
             <aside v-if="store.detalle.codigo_qr" class="gg-card gg-qr-card" aria-labelledby="sec-qr-potrero">
               <p class="gg-eyebrow">Escaneo en rondas</p>
               <h2 id="sec-qr-potrero" class="gg-section-title">Código QR del potrero</h2>
@@ -247,7 +239,6 @@
             </aside>
           </div>
 
-          <!-- Listado paginado de animales asignados -->
           <section aria-labelledby="sec-animales-potrero">
             <div class="gg-section-head">
               <div>
@@ -259,7 +250,6 @@
               </span>
             </div>
 
-            <!-- Estado 1: Cargando animales -->
             <section
               v-if="store.cargandoAnimales"
               class="gg-card gg-card--flush"
@@ -273,7 +263,6 @@
               </div>
             </section>
 
-            <!-- Estado 2: Error animales -->
             <error-state
               v-else-if="store.errorAnimales"
               title="No se pudieron cargar los animales del potrero"
@@ -281,7 +270,6 @@
               @retry="store.cargarAnimalesPotrero(potreroId)"
             />
 
-            <!-- Estado 3: Vacío -->
             <section v-else-if="!store.animalesPotrero.length" class="gg-card">
               <empty-state
                 title="Sin animales asignados"
@@ -289,7 +277,6 @@
               />
             </section>
 
-            <!-- Estado 4: Datos -->
             <section v-else class="gg-card gg-card--flush" aria-label="Tabla de animales en el potrero">
               <div class="gg-table-wrapper">
                 <table class="gg-table" data-testid="tabla-animales-potrero">
@@ -535,7 +522,6 @@ onUnmounted(() => {
   cancelarSuscripcionRed?.();
 });
 </script>
-
 <style scoped>
 .gg-back {
   align-self: flex-start;

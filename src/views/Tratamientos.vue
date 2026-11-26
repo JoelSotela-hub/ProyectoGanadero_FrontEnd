@@ -50,7 +50,6 @@
           </div>
         </header>
 
-        <!-- Selector de 2 segmentos -->
         <div class="gg-segment-wrap">
           <ion-segment
             :value="segmento"
@@ -67,7 +66,6 @@
           </ion-segment>
         </div>
 
-        <!-- ==================== SEGMENTO 1: APLICACIONES ==================== -->
         <template v-if="segmento === 'aplicaciones'">
           <div
             v-if="store.mostrandoAvisoOfflineAplicaciones"
@@ -157,7 +155,6 @@
             </div>
           </form>
 
-          <!-- Estado 1: Cargando -->
           <section
             v-if="store.loadingAplicaciones"
             class="gg-card gg-card--flush"
@@ -172,7 +169,6 @@
             </div>
           </section>
 
-          <!-- Estado 2: Error -->
           <error-state
             v-else-if="store.errorAplicaciones"
             title="No se pudieron cargar las aplicaciones"
@@ -180,7 +176,6 @@
             @retry="store.recargarAplicaciones()"
           />
 
-          <!-- Estado 3: Vacío -->
           <section v-else-if="!store.aplicaciones.length" class="gg-card">
             <empty-state
               :title="store.hayFiltrosAplicaciones ? 'Sin resultados' : 'Sin aplicaciones registradas'"
@@ -205,7 +200,6 @@
             </empty-state>
           </section>
 
-          <!-- Estado 4: Datos -->
           <section v-else class="gg-card gg-card--flush" aria-label="Listado de aplicaciones sanitarias">
             <p class="gg-count" role="status">
               {{ store.totalAplicaciones }} {{ store.totalAplicaciones === 1 ? 'aplicación' : 'aplicaciones' }}
@@ -276,7 +270,6 @@
           </ion-infinite-scroll>
         </template>
 
-        <!-- ==================== SEGMENTO 2: CATÁLOGO ==================== -->
         <template v-else>
           <div
             v-if="store.mostrandoAvisoOfflineCatalogo"
@@ -346,7 +339,6 @@
             </div>
           </form>
 
-          <!-- Estado 1: Cargando -->
           <section
             v-if="store.loadingCatalogo"
             class="gg-card gg-card--flush"
@@ -360,7 +352,6 @@
             </div>
           </section>
 
-          <!-- Estado 2: Error -->
           <error-state
             v-else-if="store.errorCatalogo"
             title="No se pudo cargar el catálogo"
@@ -368,7 +359,6 @@
             @retry="store.recargarCatalogo()"
           />
 
-          <!-- Estado 3: Vacío -->
           <section v-else-if="!store.catalogo.length" class="gg-card">
             <empty-state
               :title="store.hayFiltrosCatalogo ? 'Sin resultados' : 'Catálogo vacío'"
@@ -393,7 +383,6 @@
             </empty-state>
           </section>
 
-          <!-- Estado 4: Datos -->
           <section v-else class="gg-card gg-card--flush" aria-label="Catálogo de tratamientos">
             <p class="gg-count" role="status">
               {{ store.totalCatalogo }} {{ store.totalCatalogo === 1 ? 'tratamiento' : 'tratamientos' }}
@@ -458,7 +447,6 @@
         </template>
       </div>
 
-      <!-- Modal Crear / Editar Aplicación -->
       <div
         v-if="modalAplicacionAbierto && store.puedeGestionar"
         class="gg-modal-backdrop"
@@ -638,7 +626,6 @@
         </div>
       </div>
 
-      <!-- Modal Crear / Editar Tratamiento del Catálogo -->
       <div
         v-if="modalCatalogoAbierto && store.puedeGestionar"
         class="gg-modal-backdrop"
@@ -907,7 +894,6 @@ function claseTipoTratamiento(tipo: string | null): string {
   return 'gg-badge--neutral';
 }
 
-// -------- Aplicaciones --------
 function abrirCrearAplicacion(): void {
   if (!store.puedeGestionar) return;
   void store.cargarSelectores();
@@ -967,7 +953,6 @@ async function confirmarEliminarAplicacion(item: TratamientoAplicacion): Promise
   }
 }
 
-// -------- Catálogo --------
 function abrirCrearCatalogo(): void {
   if (!store.puedeGestionar) return;
   store.prepararNuevoCatalogo();
@@ -1107,7 +1092,6 @@ async function exportarListado(): Promise<void> {
   );
 }
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

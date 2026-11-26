@@ -1,31 +1,4 @@
-/**
- * Sistema de diseño GuateGanado — tokens y variables de Ionic.
- *
- * Identidad: lienzo crema cálido + verde bosque (sidebar / marca) + oliva (acción).
- * Todos los pares texto/fondo cumplen WCAG 2.1 AA (>= 4.5:1 texto normal,
- * >= 3:1 bordes de controles, íconos y anillo de foco). Razones calculadas:
- *
- *   Blanco     sobre oliva primario  #55622F ... 6.62:1  (botón primario)
- *   Blanco     sobre oliva activo    #606C38 ... 5.68:1
- *   #F7F5E8    sobre oliva activo    #606C38 ... 5.18:1  (ítem activo del sidebar)
- *   #F7F5E8    sobre bosque          #283618 ... 11.76:1 (texto del sidebar)
- *   #C9CFB4    sobre bosque          #283618 ... 8.01:1  (texto secundario sidebar)
- *   #DDA15E    sobre bosque          #283618 ... 5.72:1  (acento del panel de marca)
- *   #283618    sobre crema           #FEFAE0 ... 12.24:1 (texto principal)
- *   #5C6048    sobre crema/blanco    ........... 6.20:1 / 6.52:1 (texto secundario)
- *   #283618    sobre badge éxito     #E3EBCB ... 10.43:1
- *   #283618    sobre badge advert.   #F6E3C8 ... 10.26:1
- *   #B91C1C    sobre badge error     #FEF2F2 ... 5.91:1
- *   #7A7F62    sobre crema (borde de input) .... 3.96:1 (>= 3:1)
- *   #283618    sobre crema (anillo de foco) .... 12.24:1 (>= 3:1)
- *
- * Regla: el tono tierra (#DDA15E / #BC6C25) NUNCA lleva texto blanco ni se usa
- * como foco; solo en gráficos, fondos suaves de badge con texto #283618, o
- * en la versión oscurecida #8A4F14 (blanco 6.54:1) cuando necesita texto claro.
- */
-
 :root {
-  /* ---------- Tokens GuateGanado ---------- */
   --gg-canvas: #fefae0;
   --gg-canvas-alt: #fcf9e8;
   --gg-surface: #ffffff;
@@ -63,12 +36,10 @@
   --gg-focus: #283618;
   --gg-focus-on-dark: #f7f5e8;
 
-  --gg-radius: 0.875rem; /* 14px */
-  --gg-radius-lg: 1rem; /* 16px */
+  --gg-radius: 0.875rem;
+  --gg-radius-lg: 1rem;
   --gg-shadow: 0 1px 2px rgb(40 54 24 / 6%), 0 4px 14px rgb(40 54 24 / 7%);
 
-  /* Texto sobre el botón de acción, brillo del skeleton y velo de modales
-     (redefinidos en src/theme/dark.css para el modo oscuro) */
   --gg-on-action: #ffffff;
   --gg-skeleton-highlight: #f7f5e8;
   --gg-backdrop: rgb(40 54 24 / 48%);
@@ -78,13 +49,11 @@
 
   --gg-font: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-  /* Segmentos (ion-segment-button) — modo claro idéntico, redefinidos en dark.css */
   --gg-segment-color: var(--gg-ink-muted);
   --gg-segment-color-checked: var(--gg-ink);
   --gg-segment-indicator: var(--gg-ink);
   --gg-segment-bg-checked: rgba(96, 108, 56, 0.12);
 
-  /* ---------- Variables de Ionic ---------- */
   --ion-font-family: var(--gg-font);
 
   --ion-color-primary: #55622f;
@@ -115,7 +84,6 @@
   --ion-color-success-shade: #34491f;
   --ion-color-success-tint: #4f6439;
 
-  /* Advertencia oscurecida: lleva texto blanco (6.54:1), jamás #BC6C25 con blanco */
   --ion-color-warning: #8a4f14;
   --ion-color-warning-rgb: 138, 79, 20;
   --ion-color-warning-contrast: #ffffff;
@@ -165,7 +133,6 @@
   --ion-tab-bar-color-selected: #283618;
   --ion-tab-bar-border-color: #e7e4d3;
 
-  /* Áreas seguras (muescas / barras de gestos) */
   --ion-safe-area-top: env(safe-area-inset-top, 0px);
   --ion-safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --ion-safe-area-left: env(safe-area-inset-left, 0px);

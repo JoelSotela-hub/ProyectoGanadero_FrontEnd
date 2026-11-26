@@ -1,4 +1,3 @@
-/** Reporta si el viewport es de escritorio (>= 992px, 62rem) y reacciona a cambios. */
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 
 const CONSULTA = '(min-width: 992px)';

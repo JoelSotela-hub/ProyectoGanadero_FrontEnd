@@ -1,12 +1,3 @@
-/**
- * Utilidad pura y tipada para generar y descargar listados en formato CSV.
- *
- * - Antepone BOM UTF-8 (`\uFEFF`) para que Excel en Windows reconozca tildes y `ñ` sin corrupción.
- * - Escapa comillas dobles (`"` -> `""`) y envuelve celdas con comas, comillas o saltos de línea.
- * - Convierte `null` / `undefined` en celdas vacías.
- * - Descarga mediante `Blob` + `URL.createObjectURL` y libera con `URL.revokeObjectURL`.
- */
-
 export interface ColumnaCsv<T> {
   encabezado: string;
   valor: (fila: T) => unknown;
@@ -18,7 +9,6 @@ export interface ResultadoExportacionCsv {
   contenido: string;
 }
 
-/** Escapa un valor individual siguiendo RFC 4180 para CSV. */
 export function escaparCeldaCsv(valor: unknown): string {
   if (valor === null || valor === undefined) {
     return '';
@@ -31,21 +21,17 @@ export function escaparCeldaCsv(valor: unknown): string {
   return texto;
 }
 
-/** Genera el contenido CSV completo con BOM UTF-8 y saltos CRLF. */
 export function generarCsv<T>(columnas: readonly ColumnaCsv<T>[], filas: readonly T[]): string {
   if (columnas.length === 0) {
     return '\uFEFF';
   }
 
   const lineaEncabezado = columnas.map((columna) => escaparCeldaCsv(columna.encabezado)).join(',');
-  const lineasDatos = filas.map((fila) =>
-    columnas.map((columna) => escaparCeldaCsv(columna.valor(fila))).join(','),
-  );
+  const lineasDatos = filas.map((fila) => columnas.map((columna) => escaparCeldaCsv(columna.valor(fila))).join(','));
 
   return `\uFEFF${[lineaEncabezado, ...lineasDatos].join('\r\n')}`;
 }
 
-/** Construye `{prefijoArchivo}_YYYY-MM-DD.csv` usando la fecha local. */
 export function construirNombreArchivoCsv(prefijoArchivo: string, fecha: Date = new Date()): string {
   const prefijoNormalizado =
     prefijoArchivo
@@ -60,7 +46,6 @@ export function construirNombreArchivoCsv(prefijoArchivo: string, fecha: Date = 
   return `${prefijoNormalizado}_${anio}-${mes}-${dia}.csv`;
 }
 
-/** Genera el CSV y dispara la descarga en el navegador mediante `Blob` y `URL.createObjectURL`. */
 export function exportarCsv<T>(
   prefijoArchivo: string,
   columnas: readonly ColumnaCsv<T>[],
@@ -70,11 +55,7 @@ export function exportarCsv<T>(
   const contenido = generarCsv(columnas, filas);
   const nombreArchivo = construirNombreArchivoCsv(prefijoArchivo, fecha);
 
-  if (
-    typeof document !== 'undefined' &&
-    typeof URL !== 'undefined' &&
-    typeof URL.createObjectURL === 'function'
-  ) {
+  if (typeof document !== 'undefined' && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
     const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 

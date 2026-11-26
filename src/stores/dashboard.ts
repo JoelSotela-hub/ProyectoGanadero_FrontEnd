@@ -1,7 +1,3 @@
-/**
- * Store del panel de control: todo proviene de la API y respeta el rol para no
- * disparar 403 (tratamientos e insumos solo para admin y veterinario).
- */
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
@@ -63,7 +59,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
         tipoActividad.value = 'pesajes';
         animales.value = [];
       } else {
-        // Sin pesajes todavía: se muestran los últimos animales registrados.
         tipoActividad.value = 'animales';
         pesajes.value = [];
         animales.value = await dashboardService.animalesRecientes(actual.signal).catch(() => []);

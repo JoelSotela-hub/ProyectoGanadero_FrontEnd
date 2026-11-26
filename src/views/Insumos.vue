@@ -40,7 +40,6 @@
           </div>
         </header>
 
-        <!-- Aviso obligatorio de datos no actualizados (caché offline con marca de tiempo) -->
         <div
           v-if="store.mostrandoAvisoOffline"
           class="gg-alert gg-alert--warning"
@@ -55,7 +54,6 @@
           </span>
         </div>
 
-        <!-- Filtros reales conectados a GET /api/v1/insumos -->
         <form class="gg-card gg-filters" role="search" aria-label="Filtros de insumos" @submit.prevent>
           <div class="gg-field gg-filters__search">
             <label class="gg-field__label" for="ins-buscar">Buscar por nombre</label>
@@ -150,7 +148,6 @@
           </div>
         </form>
 
-        <!-- Estado 1: Cargando -->
         <section v-if="store.loading" class="gg-card gg-card--flush" aria-busy="true" aria-label="Cargando insumos">
           <div v-for="i in 5" :key="i" class="gg-skeleton-row">
             <span class="gg-skeleton" style="width: 28%" />
@@ -160,7 +157,6 @@
           </div>
         </section>
 
-        <!-- Estado 2: Error con reintento -->
         <error-state
           v-else-if="store.error"
           title="No se pudo cargar el listado de insumos"
@@ -168,7 +164,6 @@
           @retry="store.recargar()"
         />
 
-        <!-- Estado 3: Vacío -->
         <section v-else-if="!store.items.length" class="gg-card">
           <empty-state
             :title="store.hayFiltrosActivos ? 'Sin resultados' : 'Sin insumos registrados'"
@@ -193,7 +188,6 @@
           </empty-state>
         </section>
 
-        <!-- Estado 4: Datos -->
         <section v-else class="gg-card gg-card--flush" aria-label="Listado de insumos">
           <p class="gg-count" role="status">{{ store.total }} {{ store.total === 1 ? 'insumo' : 'insumos' }}</p>
           <div class="gg-table-wrapper">
@@ -266,7 +260,6 @@
         <ion-infinite-scroll-content loading-spinner="crescent" />
       </ion-infinite-scroll>
 
-      <!-- Modal Crear / Editar Insumo (solo admin) -->
       <div
         v-if="modalAbierto && store.puedeGestionar"
         class="gg-modal-backdrop"
@@ -298,7 +291,6 @@
           </div>
 
           <form class="gg-modal-form" novalidate @submit.prevent="enviarFormulario">
-            <!-- Aviso si aún no existen Categorías o Unidades de Medida (Sección 7.5 del contrato) -->
             <div
               v-if="!store.categorias.length || !store.unidadesMedida.length"
               class="gg-alert gg-alert--warning"
@@ -641,7 +633,6 @@ async function exportarListado(): Promise<void> {
   );
 }
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

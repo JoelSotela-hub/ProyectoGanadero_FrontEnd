@@ -1,12 +1,3 @@
-/**
- * Store del listado de animales (Lab 9): la vista NUNCA habla con la API;
- * filtros, paginación, caché offline y cancelación viven aquí.
- *
- * - Filtros reales: search, raza_id, potrero_id, sexo, estado, sort_by, order.
- * - Debounce de 300 ms en la búsqueda y AbortController: cada nueva consulta
- *   cancela la anterior, por lo que una respuesta lenta nunca pisa a una nueva.
- * - 4 estados: cargando / vacío / error con reintento / datos (+ aviso offline con marca de tiempo).
- */
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
@@ -85,7 +76,6 @@ export const useAnimalesStore = defineStore('animales', () => {
   }
 
   async function cargar(pagina = 1, anexar = false): Promise<void> {
-    // Cada consulta cancela la anterior (AbortController).
     controlador?.abort();
     const actual = new AbortController();
     controlador = actual;
@@ -124,7 +114,6 @@ export const useAnimalesStore = defineStore('animales', () => {
     } catch (err) {
       if (actual.signal.aborted || (err instanceof ApiError && err.cancelada)) return;
       if (anexar) {
-        // Falló una página adicional: se conserva el listado y el usuario puede reintentar con el scroll.
         mensajeError.value = mensajeDeError(err, 'No se pudieron cargar más animales.');
       } else {
         error.value = true;
@@ -149,7 +138,6 @@ export const useAnimalesStore = defineStore('animales', () => {
     await cargar(paginaActual.value + 1, true);
   }
 
-  /** Búsqueda por texto con debounce de 300 ms. */
   function buscar(texto: string): void {
     filtros.value.search = texto;
     if (temporizador) clearTimeout(temporizador);
@@ -159,7 +147,6 @@ export const useAnimalesStore = defineStore('animales', () => {
     }, RETARDO_BUSQUEDA_MS);
   }
 
-  /** Filtros de lista cerrada (select): consulta inmediata. */
   function establecerFiltro(campo: 'raza_id' | 'potrero_id' | 'sexo' | 'estado', valor: string): void {
     filtros.value[campo] = valor;
     void recargar();

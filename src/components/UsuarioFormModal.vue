@@ -272,7 +272,6 @@ watch(
   },
 );
 
-/** Misma política de validación fuerte que RegisterRequest del backend. */
 function validar(): boolean {
   store.limpiarErrores();
 
@@ -334,7 +333,6 @@ async function enviarFormulario(): Promise<void> {
   emit('cerrar');
 }
 </script>
-
 <style scoped>
 .gg-modal-backdrop {
   position: fixed;

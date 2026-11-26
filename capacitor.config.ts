@@ -5,8 +5,7 @@ const config: CapacitorConfig = {
   appName: 'GuateGanado',
   webDir: 'dist',
   server: {
-    cleartext: true,
-    androidScheme: 'http',
+    androidScheme: 'https',
   },
 };
 

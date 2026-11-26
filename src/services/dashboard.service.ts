@@ -1,14 +1,3 @@
-/**
- * Datos reales del panel de control (Dashboard). Cero métricas inventadas:
- * todo sale de `meta.total` de los listados paginados o de los propios listados.
- *
- *   GET /api/v1/animales?per_page=1               -> Total de animales
- *   GET /api/v1/potreros?per_page=3               -> Tarjetas de capacidad
- *   GET /api/v1/potreros/{id}/animales?per_page=1 -> Ocupación (meta.total)
- *   GET /api/v1/tratamientos-aplicaciones         -> Tratamientos aplicados (admin, veterinario)
- *   GET /api/v1/pesajes?per_page=5                -> Actividad reciente
- *   GET /api/v1/insumos                           -> Insumos registrados (admin, veterinario)
- */
 import type { ApiMeta } from './http';
 import { http } from './http';
 
@@ -21,9 +10,7 @@ export interface ConteosPanel {
 }
 
 export interface OpcionesConteos {
-  /** Solo admin y veterinario (el operario recibiría 403). */
   tratamientos: boolean;
-  /** Solo admin y veterinario. */
   insumos: boolean;
 }
 
@@ -31,9 +18,7 @@ export interface PotreroCapacidad {
   id: number;
   nombre: string;
   capacidad: number;
-  /** null si no se pudo consultar la ocupación. */
   ocupados: number | null;
-  /** 0–100, ya acotado para la barra de progreso. */
   porcentaje: number;
 }
 
@@ -81,7 +66,6 @@ export const dashboardService = {
     return { animales, potreros, tratamientos, pesajes, insumos };
   },
 
-  /** Los 3 potreros de mayor capacidad con su ocupación real (`ocupacion_actual` del backend). */
   async potrerosCapacidad(signal?: AbortSignal): Promise<PotreroCapacidad[]> {
     const respuesta = await http.get<
       Listado<{

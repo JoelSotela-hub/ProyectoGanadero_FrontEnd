@@ -1,14 +1,3 @@
-/**
- * Utilidad reutilizable para exportar códigos QR como tarjetas PNG listas para
- * imprimir (aretes de ganado y rótulos de potreros).
- *
- * - Busca el `<canvas>` o `<svg>` renderizado dentro del contenedor del QR.
- * - Genera un `<canvas>` temporal con fondo blanco puro (`#ffffff`), amplio
- *   margen blanco (*quiet zone* para lectura confiable en campo), el QR
- *   nítido centrado y texto en negro de alto contraste debajo (`titulo` / `subtitulo`).
- * - Dispara la descarga `{nombreArchivo}.png` y libera todas las URLs temporales.
- */
-
 export interface OpcionesDescargaQrPng {
   elementoContenedor: HTMLElement | null;
   titulo: string;
@@ -30,7 +19,6 @@ const ESPACIO_ENTRE_TEXTOS_PX = 14;
 const ALTO_SUBTITULO_PX = 28;
 const MARGEN_INFERIOR_PX = 56;
 
-/** Normaliza el nombre base de salida y garantiza la extensión `.png`. */
 export function normalizarNombreArchivoQr(nombreArchivo: string): string {
   const sinExtension = nombreArchivo.trim().replace(/\.png$/i, '');
   const limpio = sinExtension
@@ -117,10 +105,6 @@ function dispararDescargaUrl(url: string, nombreArchivo: string): void {
   }
 }
 
-/**
- * Compone una tarjeta blanca imprimible con el código QR, su quiet zone y texto
- * identificador, genera el PNG y dispara la descarga en el navegador.
- */
 export async function descargarQrPng(opciones: OpcionesDescargaQrPng): Promise<ResultadoDescargaQrPng> {
   const { elementoContenedor, titulo, subtitulo, nombreArchivo } = opciones;
   if (!elementoContenedor) {
@@ -158,7 +142,6 @@ export async function descargarQrPng(opciones: OpcionesDescargaQrPng): Promise<R
   const nombreArchivoFinal = normalizarNombreArchivoQr(nombreArchivo);
 
   try {
-    // Fondo blanco puro para asegurar quiet zone limpia al imprimir sobre aretes o rótulos
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, ancho, alto);
 

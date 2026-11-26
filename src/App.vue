@@ -2,10 +2,6 @@
   <ion-app>
     <ion-router-outlet />
 
-    <!--
-      Pantalla de arranque: visible mientras se restaura la sesión (`!authStore.initialized`)
-      y hasta el primer pintado de la app; luego se desvanece sin destello blanco.
-    -->
     <Transition name="gg-fade">
       <div
         v-if="mostrarArranque"
@@ -49,11 +45,6 @@ import { useAuthStore } from '@/stores/auth';
 const route = useRoute();
 const authStore = useAuthStore();
 
-/**
- * `true` tras el primer pintado de la app. Mantiene la pantalla de arranque un
- * fotograma más para que el relevo con la de `index.html` sea continuo y el
- * desvanecimiento ocurra sobre la vista ya renderizada (sin destello blanco).
- */
 const primerPintado = ref<boolean>(false);
 const mostrarArranque = computed<boolean>(() => !authStore.initialized || !primerPintado.value);
 
@@ -92,12 +83,6 @@ onMounted(async () => {
     return;
   }
 
-  /**
-   * Manejo del botón físico de retroceso de Android:
-   * - Desde las pantallas raíz o el login, sale de la aplicación en lugar de retroceder al login.
-   * - En pantallas internas (detalle, formulario), Ionic ya realiza el retroceso nativo;
-   *   no se invoca `router.back()` manualmente para evitar un doble retroceso.
-   */
   backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
     const currentPath = route.path;
 

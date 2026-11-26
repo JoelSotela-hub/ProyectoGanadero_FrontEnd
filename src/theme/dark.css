@@ -1,41 +1,14 @@
-/**
- * Modo oscuro de GuateGanado.
- *
- * Se activa cuando `<html>` lleva `.gg-dark` / `.ion-palette-dark` /
- * `[data-theme='dark']` (lo aplica `src/composables/useTheme.ts`). Redefine TODOS
- * los tokens `--gg-*` y las variables de Ionic: fondos, superficies, tablas,
- * inputs, bordes, textos, badges, alertas y modales.
- *
- * Paleta: noche de pasto (verde casi negro) + oliva claro como acción.
- * Contraste WCAG 2.1 AA verificado (texto >= 4.5:1, bordes/íconos >= 3:1):
- *
- *   #ECE9D6 sobre lienzo     #13180E ... 14.76:1 (texto principal)
- *   #ECE9D6 sobre superficie #1C2415 ... 13.10:1
- *   #B9BDA5 sobre superficie #1C2415 ...  8.29:1 (texto secundario)
- *   #A9BB6F sobre superficie #1C2415 ...  7.64:1 (enlaces / acción)
- *   #13180E sobre oliva      #A9BB6F ...  8.61:1 (botón primario)
- *   #F7F5E8 sobre activo     #3F4A22 ...  8.66:1 (ítem activo del sidebar)
- *   #F7F5E8 sobre sidebar    #0E1409 ... 17.09:1
- *   #DFE8C4 sobre badge éxito #2C3B1D ... 9.41:1
- *   #F6E3C8 sobre badge adv.  #4A3216 ... 9.52:1
- *   #FCA5A5 sobre badge error #3B1414 ... 8.54:1
- *   #D4D6C4 sobre badge neutro #2A3122 .. 9.11:1
- *   #7F8A6A borde de input sobre superficie 4.38:1 (>= 3:1)
- */
-
 :root.gg-dark,
 :root.ion-palette-dark,
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  /* ---------- Tokens GuateGanado ---------- */
   --gg-canvas: #13180e;
   --gg-canvas-alt: #171e11;
   --gg-surface: #1c2415;
   --gg-border: #313c26;
   --gg-border-strong: #7f8a6a;
 
-  /* Sidebar / marca: más profundo que el lienzo para mantener jerarquía */
   --gg-forest: #0e1409;
   --gg-forest-soft: #1a2412;
   --gg-olive: #a9bb6f;
@@ -72,13 +45,11 @@
   --gg-skeleton-highlight: #3a4430;
   --gg-backdrop: rgb(4 6 3 / 72%);
 
-  /* Segmentos: texto claro de alto contraste (#f4f7ec) sobre oliva oscuro (#3f4a22) */
   --gg-segment-color: var(--gg-ink-muted);
   --gg-segment-color-checked: #f4f7ec;
   --gg-segment-indicator: var(--gg-olive);
   --gg-segment-bg-checked: var(--gg-olive-pill);
 
-  /* ---------- Variables de Ionic ---------- */
   --ion-color-primary: #a9bb6f;
   --ion-color-primary-rgb: 169, 187, 111;
   --ion-color-primary-contrast: #13180e;
@@ -161,7 +132,6 @@
   --ion-tab-bar-color-selected: #ece9d6;
   --ion-tab-bar-border-color: #313c26;
 
-  /* Escalones de Ionic (alertas, toasts, segmentos, refresher) */
   --ion-background-color-step-50: #1e2218;
   --ion-background-color-step-100: #292d22;
   --ion-background-color-step-150: #34372c;
@@ -200,7 +170,6 @@
   --ion-text-color-step-850: #34372c;
   --ion-text-color-step-900: #292d22;
   --ion-text-color-step-950: #1e2218;
-  /* Compatibilidad con la nomenclatura previa de Ionic */
   --ion-color-step-50: #1e2218;
   --ion-color-step-100: #292d22;
   --ion-color-step-150: #34372c;
@@ -222,12 +191,6 @@
   --ion-color-step-950: #e1dfcc;
 }
 
-/* ---------------------------------------------------------------------------
- * Ajustes de componentes cuyo color claro estaba fijo o usaba --gg-forest como
- * texto. La especificidad (:root + clase) supera a los estilos scoped de las vistas.
- * ------------------------------------------------------------------------- */
-
-/* Botón primario: texto oscuro sobre oliva claro (8.61:1) */
 :root.gg-dark .gg-btn {
   color: var(--gg-on-action);
   box-shadow: 0 1px 2px rgb(0 0 0 / 40%);
@@ -266,7 +229,6 @@
   border-color: var(--gg-disabled-border);
 }
 
-/* KPI: el ícono usaba verde bosque sobre fondo claro */
 :root.gg-dark .gg-kpi-card__icon {
   color: var(--gg-success-fg);
 }
@@ -277,7 +239,6 @@
   color: var(--gg-neutral-fg);
 }
 
-/* Inputs / selects: fondo de superficie, flecha y calendario nativos legibles */
 :root.gg-dark .gg-input,
 :root.gg-dark .gg-select,
 :root.gg-dark .gg-textarea {
@@ -293,7 +254,6 @@
   filter: invert(0.9);
 }
 
-/* Tablas */
 :root.gg-dark .gg-table th {
   background: var(--gg-canvas-alt);
   color: var(--gg-ink-muted);
@@ -302,12 +262,10 @@
   background: rgb(236 233 214 / 3%);
 }
 
-/* Alertas */
 :root.gg-dark .gg-alert--warning {
   border-color: #8a5a22;
 }
 
-/* Skeleton: brillo sutil en lugar del crema claro */
 :root.gg-dark .gg-skeleton {
   background: linear-gradient(
     90deg,
@@ -318,7 +276,6 @@
   background-size: 200% 100%;
 }
 
-/* Segmentos / pestañas (sobrescriben cualquier especificidad local de vistas en modo oscuro) */
 :root.gg-dark ion-segment,
 :root.ion-palette-dark ion-segment,
 :root[data-theme='dark'] ion-segment {
@@ -366,7 +323,6 @@
   border: 1px solid rgb(169 187 111 / 35%);
 }
 
-/* Barra inferior móvil */
 :root.gg-dark ion-tab-button,
 :root.ion-palette-dark ion-tab-button,
 :root[data-theme='dark'] ion-tab-button {
@@ -374,19 +330,16 @@
   --color-selected: #f4f7ec;
 }
 
-/* Enlaces de acción "Eliminar" (hover fijo #991b1b en las vistas) */
 :root.gg-dark .gg-action-link--danger:hover {
   color: #fecaca;
 }
 
-/* Avatar del sidebar: alto contraste sobre fondo verde éxito oscuro */
 :root.gg-dark .gg-sidebar__avatar,
 :root.ion-palette-dark .gg-sidebar__avatar,
 :root[data-theme='dark'] .gg-sidebar__avatar {
   color: var(--gg-success-fg);
 }
 
-/* Botones/enlaces dentro de alertas (ej. Reintentar catálogo) */
 :root.gg-dark .gg-alert .gg-link,
 :root.ion-palette-dark .gg-alert .gg-link,
 :root[data-theme='dark'] .gg-alert .gg-link {
@@ -395,7 +348,6 @@
   color: inherit;
 }
 
-/* Selección de texto legible en modo oscuro */
 :root.gg-dark ::selection,
 :root.ion-palette-dark ::selection,
 :root[data-theme='dark'] ::selection {
@@ -403,7 +355,6 @@
   color: #f4f7ec;
 }
 
-/* Modales propios (.gg-modal-backdrop) e Ionic */
 :root.gg-dark .gg-modal-backdrop {
   background: var(--gg-backdrop);
 }

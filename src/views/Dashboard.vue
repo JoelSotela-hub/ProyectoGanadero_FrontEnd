@@ -39,7 +39,6 @@
           </div>
         </header>
 
-        <!-- Estado: cargando -->
         <template v-if="store.cargando">
           <div class="gg-kpi-grid" aria-busy="true" aria-label="Cargando métricas">
             <div v-for="i in 3" :key="i" class="gg-kpi-card">
@@ -52,7 +51,6 @@
           </div>
         </template>
 
-        <!-- Estado: error con reintento -->
         <error-state
           v-else-if="store.error"
           title="No se pudieron cargar las métricas"
@@ -60,7 +58,6 @@
           @retry="cargar"
         />
 
-        <!-- Estado: datos -->
         <template v-else>
           <section aria-label="Resumen general">
             <div class="gg-kpi-grid">
@@ -231,7 +228,6 @@ const { escaneando, escanearVaca } = useEscanearVaca();
 const fecha = new Date().toLocaleDateString('es-GT', { weekday: 'long', day: 'numeric', month: 'long' });
 const primerNombre = computed<string>(() => authStore.user?.name?.trim().split(/\s+/)[0] ?? '');
 
-/** Tratamientos e Insumos solo para admin y veterinario: el operario recibiría 403. */
 const veTratamientosEInsumos = computed<boolean>(() => esAdmin.value || esVeterinario.value);
 
 interface Kpi {
@@ -351,7 +347,6 @@ async function onRefresh(evento: CustomEvent): Promise<void> {
 
 onIonViewWillEnter(cargar);
 </script>
-
 <style scoped>
 .gg-actions {
   display: flex;

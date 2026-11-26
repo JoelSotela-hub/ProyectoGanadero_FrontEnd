@@ -1,9 +1,3 @@
-/**
- * Utilidades de listados paginados (PaginacionUniforme) con caché offline (Fase 3).
- *
- * Reutiliza `@capacitor/preferences` (nunca el token) para guardar el último listado
- * consultado con su marca de tiempo; la interfaz muestra el aviso de datos obsoletos.
- */
 import { Preferences } from '@capacitor/preferences';
 
 import { ApiError, http, type ApiEnvelope, type ApiLinks, type ApiMeta } from './http';
@@ -49,7 +43,7 @@ export function crearCacheListado<T>(key: string): CacheDeListado<T> {
       try {
         await Preferences.set({ key, value: JSON.stringify({ items, meta, updatedAt } satisfies CacheListado<T>) });
       } catch {
-        // Cuota agotada o almacenamiento no disponible: no interrumpe el flujo.
+        return updatedAt;
       }
       return updatedAt;
     },
@@ -57,7 +51,7 @@ export function crearCacheListado<T>(key: string): CacheDeListado<T> {
       try {
         await Preferences.remove({ key });
       } catch {
-        // Nada que limpiar.
+        return;
       }
     },
   };
@@ -69,7 +63,6 @@ export interface OpcionesListarConRespaldo<T, A> {
   signal?: AbortSignal;
   pagina: number;
   porPagina: number;
-  /** True si no hay filtros activos: solo entonces el resultado reemplaza/amplía la caché. */
   sinFiltros: boolean;
   mapear: (raw: A) => T;
   clave: (item: T) => number | string;
@@ -89,7 +82,6 @@ async function desdeCache<T>(cache: CacheDeListado<T>): Promise<ListadoPaginado<
   };
 }
 
-/** GET paginado con respaldo en caché cuando no hay conectividad o falla la red. */
 export async function listarConRespaldo<T, A>(op: OpcionesListarConRespaldo<T, A>): Promise<ListadoPaginado<T>> {
   const conectado = await networkService.verificarConectividad();
   if (!conectado) {

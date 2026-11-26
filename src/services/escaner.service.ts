@@ -1,14 +1,3 @@
-/**
- * Escaner de codigos QR (Persona 5) con `@capacitor-mlkit/barcode-scanning`.
- *
- * Flujo completo de permisos en tiempo de ejecucion:
- *   1. Declara y solicita permiso de camara (`checkPermissions` -> `requestPermissions`).
- *   2. Si el permiso es denegado permanentemente (`denied`), muestra explicacion
- *      clara con boton para abrir los ajustes del dispositivo Y un campo
- *      alternativo para escribir el codigo QR manualmente (ej. `VACA-001`).
- *   3. En navegador web o dispositivos sin camara soportada, ofrece el campo
- *      alternativo para ingresar el codigo QR manualmente.
- */
 import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { alertController } from '@ionic/vue';
 
@@ -19,7 +8,6 @@ import {
   solicitarPermiso,
 } from './permisos.service';
 
-/** Pide el codigo escrito a mano. Devuelve null si el usuario cancela. */
 export async function pedirCodigoManual(titulo: string, ejemplo: string): Promise<string | null> {
   const alerta = await alertController.create({
     header: titulo,
@@ -48,10 +36,6 @@ export async function pedirCodigoManual(titulo: string, ejemplo: string): Promis
   return codigo ? codigo : null;
 }
 
-/**
- * Abre la camara nativa (o el respaldo manual si el permiso fue denegado
- * permanentemente o se ejecuta en web) y devuelve el texto del QR leido.
- */
 export async function escanearQr(titulo = 'Escanear código QR', ejemplo = 'VACA-001'): Promise<string | null> {
   if (!esPlataformaNativa()) {
     return pedirCodigoManual(titulo, ejemplo);
@@ -63,7 +47,6 @@ export async function escanearQr(titulo = 'Escanear código QR', ejemplo = 'VACA
   }
 
   if (estado !== 'granted') {
-    // Permiso denegado permanentemente: explicacion + Abrir Ajustes + campo manual alternativo
     return mostrarAlertaCamaraDenegadaConManual('Permiso de cámara denegado', ejemplo);
   }
 
@@ -72,7 +55,6 @@ export async function escanearQr(titulo = 'Escanear código QR', ejemplo = 'VACA
     return pedirCodigoManual(titulo, ejemplo);
   }
 
-  // El lector de Google se descarga una vez; si aun no esta, se solicita y se ofrece ingreso manual.
   const { available } = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
   if (!available) {
     await BarcodeScanner.installGoogleBarcodeScannerModule();
@@ -85,7 +67,6 @@ export async function escanearQr(titulo = 'Escanear código QR', ejemplo = 'VACA
     return valor ? valor : null;
   } catch (error) {
     const texto = error instanceof Error ? error.message.toLowerCase() : '';
-    // El usuario cerro el lector sin escanear: no es un error.
     if (texto.includes('cancel')) return null;
     throw error;
   }

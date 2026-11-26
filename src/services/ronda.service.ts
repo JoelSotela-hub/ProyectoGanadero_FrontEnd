@@ -1,15 +1,3 @@
-/**
- * Servicio de Rondas de Inspección (Contrato API Sección 8).
- *
- *   GET   /api/v1/rondas?page=&per_page=&estado=  Operario: propias | Admin: todas
- *   POST  /api/v1/rondas                          Inicia ronda (409 si ya hay una activa; payload: `observaciones` plural)
- *   GET   /api/v1/rondas/{id}                     Detalle con operador y puntos
- *   POST  /api/v1/rondas/{id}/puntos              Registra un potrero visitado (payload: `observacion` singular)
- *   PATCH /api/v1/rondas/{id}/finalizar           Cierra la ronda (payload: `observaciones` plural)
- *
- * No existen rutas PUT ni DELETE en routes/api.php.
- * Los errores 409 llegan como `ApiError` cuyo `message` ya es el campo `mensaje` del backend.
- */
 import { crearCacheListado, listarConRespaldo } from './cacheListado';
 import { http } from './http';
 
@@ -69,14 +57,12 @@ export const rondaService = {
     return respuesta.data;
   },
 
-  /** Inicia una ronda (`observaciones` plural). Lanza ApiError 409 si ya tiene una en progreso. */
   async iniciar(observaciones?: string): Promise<Ronda> {
     const limpio = observaciones?.trim();
     const respuesta = await http.post<{ data: Ronda }>('/rondas', limpio ? { observaciones: limpio } : {});
     return respuesta.data;
   },
 
-  /** Registra un punto de inspección (`observacion` singular, `estado_potrero` enum estricto). */
   async registrarPunto(idRonda: number | string, punto: NuevoPuntoRonda): Promise<PuntoRonda> {
     const payload: NuevoPuntoRonda = {
       codigo_qr: punto.codigo_qr.trim(),
@@ -89,7 +75,6 @@ export const rondaService = {
     return respuesta.data;
   },
 
-  /** Finaliza una ronda (`observaciones` plural). Lanza ApiError 409 si ya fue completada. */
   async finalizar(idRonda: number | string, observaciones?: string): Promise<Ronda> {
     const limpio = observaciones?.trim();
     const respuesta = await http.patch<{ data: Ronda }>(
@@ -99,16 +84,11 @@ export const rondaService = {
     return respuesta.data;
   },
 
-  /**
-   * Busca la ronda activa del operario autenticado (la primera `en_progreso`
-   * del listado), para llevarlo a ella en lugar de crear otra.
-   */
   async buscarActiva(): Promise<Ronda | null> {
     const listado = await this.listar(1, 50, { estado: 'en_progreso' });
     return listado.items.find((ronda) => ronda.estado === 'en_progreso') ?? null;
   },
 
-  /** Limpia la caché offline de rondas (al cerrar sesión). */
   async limpiarCache(): Promise<void> {
     await cacheRondas.limpiar();
   },

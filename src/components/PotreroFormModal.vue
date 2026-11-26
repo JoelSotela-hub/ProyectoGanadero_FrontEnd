@@ -203,7 +203,6 @@ async function enviar(): Promise<void> {
   emit('saved', guardado);
 }
 </script>
-
 <style scoped>
 .gg-modal-backdrop {
   position: fixed;

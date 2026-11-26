@@ -1,15 +1,3 @@
-/**
- * Store de Pinia para el módulo Potreros (Fase 2).
- *
- * Centraliza:
- *   - Listado paginado con filtros reales (`nombre`, `estado_pasto`, `sort_by`, `order`),
- *     debounce de 300 ms + `AbortController` y caché offline con marca de tiempo.
- *   - Formulario Crear / Editar Potrero (solo `admin`) con validación real, mapeo de
- *     errores `422` por campo y manejo de reglas de negocio `409`.
- *   - Eliminación con manejo de `409` (RN-02: potrero con animales asignados).
- *   - Detalle de potrero + listado paginado de animales asignados (`GET /potreros/{id}/animales`)
- *     con cálculo de ocupación real (`meta.total / capacidad_maxima`).
- */
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 
@@ -84,7 +72,6 @@ export const usePotreroStore = defineStore('potrero', () => {
   const authStore = useAuthStore();
   const catalogosStore = useCatalogosStore();
 
-  // ---------------- 1. Listado ----------------
   const items = ref<Potrero[]>([]);
   const filtros = ref<FiltrosListadoPotreros>(filtrosIniciales());
 
@@ -221,7 +208,6 @@ export const usePotreroStore = defineStore('potrero', () => {
     if (items.value.length > 0) desdeCache.value = true;
   }
 
-  // ---------------- 2. Formulario Crear / Editar (solo admin) ----------------
   const editandoId = ref<number | null>(null);
   const esEdicion = computed<boolean>(() => editandoId.value !== null);
 
@@ -404,7 +390,6 @@ export const usePotreroStore = defineStore('potrero', () => {
     }
   }
 
-  // ---------------- 3. Detalle y Animales Asignados ----------------
   const detalle = ref<Potrero | null>(null);
   const cargandoDetalle = ref<boolean>(false);
   const errorDetalle = ref<boolean>(false);
@@ -433,13 +418,6 @@ export const usePotreroStore = defineStore('potrero', () => {
     return animalesMeta.value.current_page < animalesMeta.value.last_page;
   });
 
-  /**
-   * Ocupación real del potrero.
-   * Usa prioritariamente `ocupacion_actual` y `espacios_disponibles` devueltos
-   * por `PotreroResource` (que excluyen animales en estado `'Vendido'`), manteniendo
-   * fallback a `animalesMeta.value?.total ?? animalesPotrero.value.length` únicamente
-   * si `ocupacion_actual` no viniera definido (compatibilidad con mocks antiguos).
-   */
   const ocupacion = computed<ResumenOcupacionPotrero>(() => {
     const capacidad = detalle.value?.capacidad_maxima ?? 0;
     const tieneOcupacionBackend =
@@ -569,7 +547,6 @@ export const usePotreroStore = defineStore('potrero', () => {
   }
 
   return {
-    // Listado
     items,
     filtros,
     loading,
@@ -597,7 +574,6 @@ export const usePotreroStore = defineStore('potrero', () => {
     cancelarPendiente,
     marcarSinConexion,
 
-    // Formulario CRUD (solo admin)
     editandoId,
     esEdicion,
     form,
@@ -613,7 +589,6 @@ export const usePotreroStore = defineStore('potrero', () => {
     guardar,
     eliminar,
 
-    // Detalle y animales asignados
     detalle,
     cargandoDetalle,
     errorDetalle,

@@ -1,39 +1,22 @@
-/**
- * Servicio de cache local del listado y detalle de animales (Persona 4).
- *
- * Cumple el punto 6 del enunciado:
- *   "Implemente una cache local del ultimo listado consultado, de modo que la
- *    aplicacion muestre datos cuando no haya conectividad... e indique en la
- *    interfaz que la informacion no esta actualizada, con su marca de tiempo."
- *
- * Utiliza `@capacitor/preferences` (permitido expresamente para la cache de
- * datos; el token jamas pasa por aqui).
- */
 import { Preferences } from '@capacitor/preferences';
 
 import type { Paginacion } from './animal.service';
 
 import type { AnimalItem } from '@/models/auth.model';
 
-/** Clave donde se persiste el ultimo listado consultado con su marca de tiempo. */
 export const CACHE_LISTADO_KEY = 'guateganado_animales_cache_v1';
 
-/** Estructura persistida en `@capacitor/preferences`. */
 export interface CacheListadoAnimales {
   items: AnimalItem[];
   paginacion: Paginacion;
   updatedAt: string;
 }
 
-/** Resultado al recuperar un animal individual desde la cache en modo avion. */
 export interface CacheDetalleAnimal {
   item: AnimalItem;
   updatedAt: string;
 }
 
-/**
- * Formatea una marca de tiempo ISO 8601 a texto legible en espanol (fecha y hora).
- */
 export function formatearMarcaDeTiempo(isoString: string | null | undefined): string {
   if (!isoString) return 'Sin registro previo';
   const fecha = new Date(isoString);
@@ -49,11 +32,6 @@ export function formatearMarcaDeTiempo(isoString: string | null | undefined): st
 }
 
 export const cacheService = {
-  /**
-   * Guarda el listado de animales consultado junto con la marca de tiempo actual.
-   * Si se pagino o se consulto un subconjunto, conserva tambien los animales previos
-   * por ID para que el detalle funcione en modo avion sobre cualquier animal visto.
-   */
   async guardarListado(items: AnimalItem[], paginacion: Paginacion): Promise<string> {
     const updatedAt = new Date().toISOString();
 
@@ -69,15 +47,12 @@ export const cacheService = {
         value: JSON.stringify(payload),
       });
     } catch {
-      // Si el almacenamiento falla por cuota, no interrumpe la navegacion.
+      return updatedAt;
     }
 
     return updatedAt;
   },
 
-  /**
-   * Recupera el ultimo listado de animales almacenado en la cache local.
-   */
   async obtenerListado(): Promise<CacheListadoAnimales | null> {
     try {
       const { value } = await Preferences.get({ key: CACHE_LISTADO_KEY });
@@ -92,10 +67,6 @@ export const cacheService = {
     }
   },
 
-  /**
-   * Actualiza o inserta un animal individual dentro de la cache local cuando se
-   * consulta su detalle o se crea/edita con conexion.
-   */
   async guardarDetalleAnimal(animal: AnimalItem): Promise<string> {
     const actual = await this.obtenerListado();
     const updatedAt = new Date().toISOString();
@@ -122,16 +93,12 @@ export const cacheService = {
         } satisfies CacheListadoAnimales),
       });
     } catch {
-      // Si el almacenamiento falla por cuota o restricciones del navegador, no interrumpe la navegacion.
+      return actual?.updatedAt ?? updatedAt;
     }
 
     return actual?.updatedAt ?? updatedAt;
   },
 
-  /**
-   * Busca un animal por su ID dentro de la cache local para que la pantalla de
-   * Detalle (`AnimalDetail.vue`) funcione tambien sin conectividad.
-   */
   async obtenerAnimalPorId(id: number | string): Promise<CacheDetalleAnimal | null> {
     const cache = await this.obtenerListado();
     if (!cache) return null;
@@ -145,14 +112,11 @@ export const cacheService = {
     };
   },
 
-  /**
-   * Limpia la cache local de animales si es necesario.
-   */
   async limpiar(): Promise<void> {
     try {
       await Preferences.remove({ key: CACHE_LISTADO_KEY });
     } catch {
-      // Ignorar si no existe
+      return;
     }
   },
 };

@@ -1,9 +1,3 @@
-/**
- * Modelos de las Rondas de Inspeccion (Persona 5).
- * Reflejan exactamente `RondaResource` del backend. Ojo con las claves:
- * la ronda y sus puntos usan `id`, el potrero usa `potrero_id`.
- */
-
 export type EstadoRonda = 'en_progreso' | 'completada';
 export type EstadoPotrero = 'bueno' | 'regular' | 'requiere_atencion';
 
@@ -47,7 +41,6 @@ export interface Ronda {
   puntos?: PuntoRonda[];
 }
 
-/** Payload de POST /rondas/{ronda}/puntos. */
 export interface NuevoPuntoRonda {
   codigo_qr: string;
   latitud: number;

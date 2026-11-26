@@ -54,7 +54,6 @@
           </div>
         </header>
 
-        <!-- Aviso obligatorio de datos no actualizados cuando el detalle se sirve desde la caché (Persona 4) -->
         <div
           v-if="store.mostrandoAvisoOffline"
           class="gg-alert gg-alert--warning"
@@ -69,7 +68,6 @@
           </span>
         </div>
 
-        <!-- Estado 1: Cargando -->
         <section v-if="store.loading" class="gg-card" aria-busy="true" aria-label="Cargando ficha del animal">
           <span class="gg-skeleton" style="width: 35%; height: 1.1rem; margin-bottom: 0.75rem" />
           <span class="gg-skeleton" style="width: 65%; height: 1.8rem; margin-bottom: 1.25rem" />
@@ -78,7 +76,6 @@
           </div>
         </section>
 
-        <!-- Estado 2: Error con opción de reintento -->
         <error-state
           v-else-if="store.error"
           title="No se pudo cargar el detalle"
@@ -86,7 +83,6 @@
           @retry="recargarTodo"
         />
 
-        <!-- Estado 3: Vacío / 404 No encontrado -->
         <section v-else-if="!store.animal" class="gg-card">
           <empty-state
             title="Animal no encontrado"
@@ -96,7 +92,6 @@
           </empty-state>
         </section>
 
-        <!-- Estado 4: Datos con pestañas internas (ion-segment) -->
         <template v-else>
           <div class="gg-segment-bar">
             <ion-segment
@@ -111,7 +106,6 @@
               <ion-segment-button value="pesajes" data-testid="tab-pesajes" @click="cambiarTab('pesajes')">
                 <ion-label>Pesajes</ion-label>
               </ion-segment-button>
-              <!-- CRÍTICO POR ROL: Oculta completamente esta pestaña si el rol es operario -->
               <ion-segment-button
                 v-if="puedeVerSanidad"
                 value="sanidad"
@@ -123,7 +117,6 @@
             </ion-segment>
           </div>
 
-          <!-- ==================== PESTAÑA 1: RESUMEN (Sin fotografía) ==================== -->
           <div v-if="tabActiva === 'resumen'" class="gg-tab-panel" data-testid="panel-resumen">
             <div class="gg-summary-layout">
               <section class="gg-card" aria-labelledby="sec-ficha-tecnica">
@@ -202,7 +195,6 @@
                 </div>
               </section>
 
-              <!-- Tarjeta de Código QR generada dinámicamente en cliente (sin guardar imágenes ni fotos) -->
               <aside v-if="codigoQrValor" class="gg-card gg-qr-card" aria-labelledby="sec-qr-animal">
                 <p class="gg-eyebrow">Identificación por escáner</p>
                 <h2 id="sec-qr-animal" class="gg-section-title">Código QR del animal</h2>
@@ -224,14 +216,12 @@
             </div>
           </div>
 
-          <!-- ==================== PESTAÑA 2: PESAJES ==================== -->
           <div v-else-if="tabActiva === 'pesajes'" class="gg-tab-panel" data-testid="panel-pesajes">
             <div class="gg-section-head">
               <div>
                 <p class="gg-eyebrow">Control de crecimiento</p>
                 <h2 class="gg-section-title">Historial de pesajes</h2>
               </div>
-              <!-- Botón rápido visible SOLO para admin y operario (oculto para veterinario -> 403) -->
               <button
                 v-if="puedeRegistrarPesaje"
                 type="button"
@@ -244,7 +234,6 @@
               </button>
             </div>
 
-            <!-- Resumen y tendencia de peso -->
             <div class="gg-kpi-grid" aria-label="Resumen y tendencia de peso">
               <div class="gg-kpi-card">
                 <span class="gg-kpi-card__icon" aria-hidden="true">
@@ -310,7 +299,6 @@
               </div>
             </div>
 
-            <!-- Estado 1 de Pesajes: Cargando -->
             <section
               v-if="store.cargandoPesajes"
               class="gg-card gg-card--flush"
@@ -324,7 +312,6 @@
               </div>
             </section>
 
-            <!-- Estado 2 de Pesajes: Error con reintento -->
             <error-state
               v-else-if="store.errorPesajes"
               title="No se pudo cargar el historial de pesajes"
@@ -332,7 +319,6 @@
               @retry="store.cargarPesajes(animalId)"
             />
 
-            <!-- Estado 3 de Pesajes: Vacío -->
             <section v-else-if="!store.pesajes.length" class="gg-card">
               <empty-state
                 title="Sin pesajes registrados"
@@ -349,7 +335,6 @@
               </empty-state>
             </section>
 
-            <!-- Estado 4 de Pesajes: Datos -->
             <section v-else class="gg-card gg-card--flush" aria-label="Tabla de pesajes del animal">
               <div class="gg-table-wrapper">
                 <table class="gg-table" data-testid="tabla-pesajes">
@@ -388,8 +373,6 @@
             </section>
           </div>
 
-          <!-- ==================== PESTAÑA 3: SANIDAD / TRATAMIENTOS ==================== -->
-          <!-- CRÍTICO POR ROL: nunca renderizar ni invocar si el rol es operario -->
           <div v-else-if="puedeVerSanidad && tabActiva === 'sanidad'" class="gg-tab-panel" data-testid="panel-sanidad">
             <div class="gg-section-head">
               <div>
@@ -407,7 +390,6 @@
               </button>
             </div>
 
-            <!-- Estado 1 de Sanidad: Cargando -->
             <section
               v-if="store.cargandoTratamientos"
               class="gg-card gg-card--flush"
@@ -422,7 +404,6 @@
               </div>
             </section>
 
-            <!-- Estado 2 de Sanidad: Error con reintento -->
             <error-state
               v-else-if="store.errorTratamientos"
               title="No se pudo cargar el historial sanitario"
@@ -430,7 +411,6 @@
               @retry="store.cargarTratamientos(animalId)"
             />
 
-            <!-- Estado 3 de Sanidad: Vacío -->
             <section v-else-if="!store.tratamientos.length" class="gg-card">
               <empty-state
                 title="Sin tratamientos registrados"
@@ -442,7 +422,6 @@
               </empty-state>
             </section>
 
-            <!-- Estado 4 de Sanidad: Datos -->
             <section v-else class="gg-card gg-card--flush" aria-label="Tabla de tratamientos aplicados">
               <div class="gg-table-wrapper">
                 <table class="gg-table" data-testid="tabla-tratamientos">
@@ -491,7 +470,6 @@
         </template>
       </div>
 
-      <!-- ==================== MODAL RÁPIDO: REGISTRAR PESAJE ==================== -->
       <div
         v-if="modalPesajeAbierto && puedeRegistrarPesaje"
         class="gg-modal-backdrop"
@@ -601,7 +579,6 @@
         </div>
       </div>
 
-      <!-- ==================== MODAL RÁPIDO: APLICAR TRATAMIENTO ==================== -->
       <div
         v-if="modalTratamientoAbierto && puedeVerSanidad"
         class="gg-modal-backdrop"
@@ -801,10 +778,8 @@ const store = useAnimalDetalleStore();
 
 const { esAdmin, esVeterinario, esOperario } = useRol();
 
-/** CRÍTICO POR ROL: Sanidad/Tratamientos solo existe para admin y veterinario (403 para operario). */
 const puedeVerSanidad = computed<boolean>(() => (esAdmin.value || esVeterinario.value) && !esOperario.value);
 
-/** Solo admin y operario registran pesajes (403 para veterinario). */
 const puedeRegistrarPesaje = computed<boolean>(() => esAdmin.value || esOperario.value);
 
 const animalId = computed<string>(() => String(route.params.id ?? ''));
@@ -928,7 +903,6 @@ async function onRefresh(evento: CustomEvent): Promise<void> {
   (evento.target as HTMLIonRefresherElement).complete();
 }
 
-// ---------------- Modales rápidos ----------------
 function abrirModalPesaje(): void {
   if (!puedeRegistrarPesaje.value) return;
   store.reiniciarFormPesaje();
@@ -974,7 +948,6 @@ async function enviarTratamiento(): Promise<void> {
   await mostrarToast('Tratamiento aplicado correctamente.', 'success', 2500);
 }
 
-// ---------------- Navegación y botón físico atrás de Android ----------------
 function goToEdit(): void {
   if (!esAdmin.value) return;
   void router.push({
@@ -983,10 +956,6 @@ function goToEdit(): void {
   });
 }
 
-/**
- * Regresa siempre al listado anterior (ej. `/tabs/animales`), nunca al Dashboard.
- * Si hay un modal abierto, el botón atrás cierra primero el modal.
- */
 function volverAlListado(): void {
   if (modalPesajeAbierto.value) {
     cerrarModalPesaje();
@@ -1007,7 +976,6 @@ function volverAlListado(): void {
   }
 }
 
-// Intercepta el botón físico atrás de Android en Ionic con prioridad superior a IonTabs
 useBackButton(20, () => {
   volverAlListado();
 });
@@ -1033,7 +1001,6 @@ onUnmounted(() => {
   cancelarSuscripcionRed?.();
 });
 </script>
-
 <style scoped>
 .gg-back {
   align-self: flex-start;
@@ -1188,7 +1155,6 @@ onUnmounted(() => {
   justify-content: center;
 }
 
-/* Modales accesibles con estética GuateGanado */
 .gg-modal-backdrop {
   position: fixed;
   inset: 0;

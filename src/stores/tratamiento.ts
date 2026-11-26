@@ -1,13 +1,3 @@
-/**
- * Store de Pinia para el módulo de Tratamientos (Fase 3):
- *   - Segmento 1: Aplicaciones (`/api/v1/tratamientos-aplicaciones`)
- *   - Segmento 2: Catálogo de Tratamientos (`/api/v1/tratamientos`)
- *
- * Seguridad por rol:
- *   - Módulo bloqueado para `operario` (evita 403 en backend).
- *   - `admin` y `veterinario` ven, crean y editan aplicaciones y catálogo.
- *   - Solo `admin` elimina aplicaciones y tratamientos del catálogo (409 RN-06).
- */
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 
@@ -124,7 +114,6 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
   const puedeGestionar = computed<boolean>(() => rolActual.value === 'admin' || rolActual.value === 'veterinario');
   const puedeEliminar = computed<boolean>(() => rolActual.value === 'admin');
 
-  // ---------------- Selectores compartidos ----------------
   const animales = ref<AnimalItem[]>([]);
   const cargandoAnimales = ref<boolean>(false);
   const animalesCargados = ref<boolean>(false);
@@ -145,7 +134,7 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
             animales.value = res.items;
             animalesCargados.value = true;
           } catch {
-            // Reintentar en la siguiente apertura
+            return;
           } finally {
             cargandoAnimales.value = false;
           }
@@ -162,7 +151,7 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
             catalogoOpciones.value = res.data;
             catalogoOpcionesCargado.value = true;
           } catch {
-            // Reintentar en la siguiente apertura
+            return;
           } finally {
             cargandoCatalogoOpciones.value = false;
           }
@@ -173,7 +162,6 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
     await Promise.all(tareas);
   }
 
-  // ---------------- Segmento 1: Aplicaciones ----------------
   const aplicaciones = ref<TratamientoAplicacion[]>([]);
   const filtrosAplicaciones = ref<FiltrosListadoAplicaciones>(filtrosAplicacionesIniciales());
   const loadingAplicaciones = ref<boolean>(false);
@@ -310,7 +298,6 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
     void recargarAplicaciones();
   }
 
-  // Formulario Aplicaciones (Crear / Editar)
   const editandoAplicacionId = ref<number | null>(null);
   const esEdicionAplicacion = computed<boolean>(() => editandoAplicacionId.value !== null);
 
@@ -421,7 +408,6 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
           ? await tratamientoService.actualizarAplicacion(editandoAplicacionId.value, payload)
           : await tratamientoService.aplicarTratamiento(payload);
 
-      // Tras 201 Created, refresca el listado para mostrar `animal` y `tratamiento` anidados.
       await recargarAplicaciones();
       return resultado;
     } catch (err) {
@@ -471,7 +457,6 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
     }
   }
 
-  // ---------------- Segmento 2: Catálogo de Tratamientos ----------------
   const catalogo = ref<TratamientoCatalogo[]>([]);
   const filtrosCatalogo = ref<FiltrosListadoCatalogo>(filtrosCatalogoIniciales());
   const loadingCatalogo = ref<boolean>(false);
@@ -609,7 +594,6 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
     void recargarCatalogo();
   }
 
-  // Formulario Catálogo (Crear / Editar)
   const editandoCatalogoId = ref<number | null>(null);
   const esEdicionCatalogo = computed<boolean>(() => editandoCatalogoId.value !== null);
 
@@ -790,7 +774,6 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
     marcarSinConexion,
     limpiarEstado,
 
-    // Segmento 1: Aplicaciones
     aplicaciones,
     filtrosAplicaciones,
     loadingAplicaciones,
@@ -832,7 +815,6 @@ export const useTratamientoStore = defineStore('tratamiento', () => {
     guardarAplicacion,
     eliminarAplicacion,
 
-    // Segmento 2: Catálogo
     catalogo,
     filtrosCatalogo,
     loadingCatalogo,
