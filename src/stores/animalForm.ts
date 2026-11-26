@@ -19,7 +19,7 @@ export interface FormularioAnimal {
   observaciones: string;
 }
 
-export const ESTADOS_ANIMAL = ['Activo', 'Tratamiento', 'Vendido'];
+export const ESTADOS_ANIMAL = ['Activo', 'Enfermo', 'Vendido'];
 
 function formularioVacio(): FormularioAnimal {
   return {
@@ -119,8 +119,9 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
     }
     if (form.estado.length > 50) errores.estado = 'Máximo 50 caracteres.';
 
-    if (form.peso_kg.trim() !== '') {
-      const peso = Number(form.peso_kg);
+    const textoPeso = String(form.peso_kg ?? '').trim();
+    if (textoPeso !== '') {
+      const peso = Number(textoPeso);
       if (!Number.isFinite(peso) || peso <= 0 || peso > 9999.99) {
         errores.peso_kg = 'Ingresa un peso entre 0.01 y 9999.99 kg.';
       }
@@ -153,8 +154,9 @@ export const useAnimalFormStore = defineStore('animalForm', () => {
       let animal = creado;
       let aviso: string | undefined;
 
-      const peso = Number(form.peso_kg);
-      if (form.peso_kg.trim() !== '' && Number.isFinite(peso) && peso > 0) {
+      const textoPeso = String(form.peso_kg ?? '').trim();
+      const peso = Number(textoPeso);
+      if (textoPeso !== '' && Number.isFinite(peso) && peso > 0) {
         try {
           await animalService.registrarPesaje(creado.id, peso, form.observaciones.trim() || undefined);
         } catch (errPeso) {

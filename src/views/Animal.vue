@@ -299,7 +299,7 @@ function fechaCorta(fecha?: string): string {
 
 function claseEstado(estado: string): string {
   if (estado === 'Activo') return 'gg-badge--success';
-  if (estado === 'Tratamiento') return 'gg-badge--warning';
+  if (estado === 'Enfermo') return 'gg-badge--warning';
   return 'gg-badge--neutral';
 }
 

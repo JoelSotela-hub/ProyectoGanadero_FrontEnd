@@ -418,9 +418,13 @@ describe('Fase 6 — Ocupación real de potreros, manejo de aforo (Pendiente 3) 
     formStore.form.sexo = 'Hembra';
     formStore.form.fecha_nacimiento = '2024-01-10';
     formStore.form.estado = 'Activo';
+    (formStore.form as unknown as { peso_kg: number }).peso_kg = 250;
+
+    vi.spyOn(animalService, 'registrarPesaje').mockResolvedValueOnce(undefined);
 
     const resultado = await formStore.guardar();
     expect(resultado.ok).toBe(true);
+    expect(animalService.registrarPesaje).toHaveBeenCalledWith(15, 250, undefined);
 
     const payloadCreacion = postSpy.mock.calls[0]?.[1] as Record<string, unknown>;
     expect(payloadCreacion).toBeDefined();
@@ -434,13 +438,13 @@ describe('Fase 6 — Ocupación real de potreros, manejo de aforo (Pendiente 3) 
         codigo_qr: 'VACA-CR-015',
         sexo: 'Hembra',
         fecha_nacimiento: '2024-01-10',
-        estado: 'Tratamiento',
+        estado: 'Enfermo',
         raza_id: 1,
         potrero_id: 2,
       },
     });
 
-    await animalService.actualizar(15, { estado: 'Tratamiento' });
+    await animalService.actualizar(15, { estado: 'Enfermo' });
     const payloadActualizacion = putSpy.mock.calls[0]?.[1] as Record<string, unknown>;
     expect('foto' in payloadActualizacion).toBe(false);
   });
